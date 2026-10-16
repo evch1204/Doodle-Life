@@ -1,0 +1,87 @@
+:root {
+  --paper: #efe9dc;
+  --ink: #1c1a18;
+  --panel: rgba(28, 26, 24, 0.9);
+  --panel-text: #f3eee3;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--paper); }
+body { font-family: 'Patrick Hand', 'Comic Sans MS', cursive; color: var(--ink); user-select: none; }
+#app, #app canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+#hud { position: fixed; inset: 0; pointer-events: none; }
+.panel {
+  position: absolute; background: var(--panel); color: var(--panel-text);
+  border-radius: 10px; padding: 12px 18px; font-size: 19px; line-height: 1.45;
+}
+#objective { top: 22px; left: 22px; min-width: 250px; }
+#objective .title { margin-bottom: 2px; }
+#objective .obj { transition: opacity .4s; position: relative; padding-left: 16px; }
+#objective .obj::before { content: ''; position: absolute; left: 3px; top: 50%; width: 5px; height: 5px; margin-top: -2px; border-radius: 50%; background: currentColor; }
+#objective .obj.done { opacity: .55; text-decoration: line-through; text-decoration-thickness: 1.5px; }
+#obj-stars span { display: inline-block; }
+#star-count.pop { animation: pop .5s ease-out; }
+@keyframes pop { 0% { transform: scale(1); } 40% { transform: scale(1.8); } 100% { transform: scale(1); } }
+
+#controls { left: 22px; bottom: 22px; padding: 12px 16px; }
+#controls .row { display: flex; align-items: center; gap: 12px; height: 32px; font-size: 18px; }
+#controls .row.dim { opacity: .7; font-size: 16px; }
+#controls .keys { display: inline-flex; gap: 3px; min-width: 78px; }
+kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 23px; padding: 0 4px; border: 1.5px solid currentColor; border-radius: 5px;
+  font-family: inherit; font-size: 15px; line-height: 1;
+}
+kbd.wide { min-width: 34px; }
+.mouse {
+  width: 16px; height: 23px; border: 1.5px solid var(--panel-text); border-radius: 8px; position: relative; margin-left: 3px;
+}
+.mouse::after { content: ''; position: absolute; left: 50%; top: 3px; width: 1.5px; height: 6px; background: var(--panel-text); transform: translateX(-50%); }
+
+#minimap { position: absolute; top: 14px; right: 18px; width: 120px; height: 120px; }
+#minimap canvas { width: 100%; height: 100%; }
+
+#prompt {
+  position: absolute; transform: translate(-50%, -100%); display: flex; align-items: center; gap: 8px;
+  background: var(--paper); color: var(--ink); border: 2px solid var(--ink); border-radius: 8px;
+  padding: 4px 12px 4px 6px; font-size: 19px; white-space: nowrap; transition: opacity .15s;
+  box-shadow: 2px 3px 0 rgba(28,26,24,.85);
+}
+#prompt kbd { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+#caption {
+  position: absolute; left: 50%; bottom: 13%; transform: translateX(-50%);
+  font-size: 32px; color: var(--ink); background: rgba(239,233,220,.92);
+  padding: 6px 22px; border-radius: 6px; border: 2px solid var(--ink);
+  transition: opacity .8s; white-space: nowrap;
+}
+#clickhint {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  font-size: 22px; padding: 6px 16px; border-radius: 8px; background: var(--panel); color: var(--panel-text);
+  opacity: 0; transition: opacity .4s;
+}
+#clickhint.show { opacity: .85; }
+.hidden { opacity: 0 !important; pointer-events: none !important; }
+
+#journal {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(28, 26, 24, 0.35); transition: opacity .3s; z-index: 10;
+}
+#journal .page {
+  position: relative; width: min(480px, 88vw); min-height: 560px; padding: 44px 44px 36px 74px;
+  background: var(--paper); border: 2.5px solid var(--ink); border-radius: 6px 12px 10px 6px;
+  box-shadow: 6px 8px 0 rgba(28,26,24,.9);
+  background-image: repeating-linear-gradient(to bottom, transparent 0 35px, rgba(28,26,24,.16) 35px 36.5px);
+  background-position: 0 70px;
+  transform: rotate(-1.2deg) scale(.96); transition: transform .3s;
+}
+#journal:not(.hidden) .page { transform: rotate(-1.2deg) scale(1); }
+#journal .spiral {
+  position: absolute; left: 18px; top: 26px; bottom: 26px; width: 26px;
+  background: radial-gradient(circle at 13px 13px, transparent 6px, var(--ink) 6.5px 8.5px, transparent 9px) 0 0 / 26px 36px repeat-y;
+}
+#journal .note { font-size: 24px; line-height: 36px; }
+#journal .note p { margin: 0 0 18px; }
+#journal .date { font-size: 28px; text-decoration: underline; margin-bottom: 18px; }
+#journal .doodle { font-size: 36px; text-align: right; transform: rotate(12deg); }
+#journal .close { position: absolute; right: 22px; bottom: 12px; font-size: 17px; opacity: .7; }
