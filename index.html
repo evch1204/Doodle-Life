@@ -18,15 +18,15 @@
     <div id="minimap"><canvas id="minimap-canvas" width="240" height="240"></canvas></div>
 
     <div class="panel" id="controls">
-      <div class="row"><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>Move</div>
-      <div class="row"><span class="keys"><span class="mouse"></span></span>Look around</div>
-      <div class="row"><span class="keys"><kbd>E</kbd></span>Interact</div>
-      <div class="row dim"><span class="keys"><kbd class="wide">Esc</kbd></span>Release mouse</div>
+      <div class="row"><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span data-i18n="Move">Move</span></div>
+      <div class="row"><span class="keys"><span class="mouse"></span></span><span data-i18n="Look around">Look around</span></div>
+      <div class="row"><span class="keys"><kbd>E</kbd></span><span data-i18n="Interact">Interact</span></div>
+      <div class="row dim"><span class="keys"><kbd class="wide">Esc</kbd></span><span data-i18n="Settings">Settings</span></div>
     </div>
 
     <div id="prompt" class="hidden"><kbd>E</kbd><span id="prompt-text"></span></div>
     <div id="caption" class="hidden"></div>
-    <div id="clickhint">Click to look around</div>
+    <div id="clickhint" data-i18n="Click to look around">Click to look around</div>
   </div>
 
   <div id="travel" class="off">
@@ -37,7 +37,7 @@
         <path d="M300 250 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3z" />
         <circle cx="110" cy="230" r="2.5" /><circle cx="260" cy="40" r="2" /><circle cx="40" cy="170" r="1.8" />
       </svg>
-      <div class="text" id="travel-text">Traveling to Taipei…</div>
+      <div class="text" id="travel-text">Traveling to Taiwan…</div>
       <svg class="plane" viewBox="0 0 64 48" aria-hidden="true">
         <path d="M4 26 L60 4 L44 44 L30 30 Z M30 30 L60 4 M30 30 L28 42 L36 35" />
       </svg>
@@ -48,13 +48,32 @@
     <div class="page">
       <div class="spiral"></div>
       <div class="note">
-        <div class="date">Oct 16</div>
-        <p>Moved in today. The boxes are mostly unpacked, and the window light is perfect in the afternoon.</p>
-        <p>Small steps, big dreams. I keep telling myself that.</p>
-        <p>Tomorrow: shelve the books, call home, find a good noodle place nearby.</p>
+        <div class="date" data-i18n="Oct 16">Oct 16</div>
+        <p data-i18n="Moved in today. The boxes are mostly unpacked, and the window light is perfect in the afternoon.">Moved in today. The boxes are mostly unpacked, and the window light is perfect in the afternoon.</p>
+        <p data-i18n="Small steps, big dreams. I keep telling myself that.">Small steps, big dreams. I keep telling myself that.</p>
+        <p data-i18n="Tomorrow: shelve the books, call home, find a good noodle place nearby.">Tomorrow: shelve the books, call home, find a good noodle place nearby.</p>
         <div class="doodle">☆</div>
       </div>
-      <div class="close">press <kbd>E</kbd> to close</div>
+      <div class="close" data-i18n="press {key} to close" data-i18n-key="E">press <kbd>E</kbd> to close</div>
+    </div>
+  </div>
+
+  <div id="settings" class="hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="sheet">
+      <div class="title" id="settings-title" data-i18n="Settings">Settings</div>
+      <div class="row">
+        <div class="label" data-i18n="Language">Language</div>
+        <div class="choices" role="radiogroup">
+          <button type="button" class="choice" data-lang="en" lang="en">English</button>
+          <button type="button" class="choice" data-lang="zh" lang="zh-Hant">中文</button>
+        </div>
+      </div>
+      <div class="row">
+        <label class="label" for="sens" data-i18n="Mouse sensitivity">Mouse sensitivity</label>
+        <input id="sens" type="range" min="0.4" max="2" step="0.1" value="1" />
+      </div>
+      <button type="button" class="resume" id="resume" data-i18n="Resume">Resume</button>
+      <div class="hint" data-i18n="Press Esc to resume">Press Esc to resume</div>
     </div>
   </div>
 
