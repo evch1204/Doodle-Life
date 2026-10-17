@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Doodle Loft</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%276%27 fill=%27%23efe9dc%27/%3E%3Cpath d=%27M16 4l3.5 8 8.5.7-6.5 5.6 2 8.4L16 22.3 8.5 26.7l2-8.4L4 12.7l8.5-.7z%27 fill=%27none%27 stroke=%27%231c1a18%27 stroke-width=%272.2%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E" />
+</head>
+<body>
+  <div id="app"></div>
+
+  <div id="hud">
+    <div class="panel" id="objective">
+      <div class="title">Objective:</div>
+      <div class="obj" id="obj-explore">Explore the room</div>
+      <div class="obj" id="obj-journal">Find the hidden journal ☆</div>
+      <div class="obj" id="obj-stars">Stars collected <span id="star-count">0</span>/<span id="star-total">3</span></div>
+    </div>
+
+    <div id="minimap"><canvas id="minimap-canvas" width="240" height="240"></canvas></div>
+
+    <div class="panel" id="controls">
+      <div class="row"><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span>Move</div>
+      <div class="row"><span class="keys"><span class="mouse"></span></span>Look around</div>
+      <div class="row"><span class="keys"><kbd>E</kbd></span>Interact</div>
+      <div class="row dim"><span class="keys"><kbd class="wide">Esc</kbd></span>Release mouse</div>
+    </div>
+
+    <div id="prompt" class="hidden"><kbd>E</kbd><span id="prompt-text"></span></div>
+    <div id="caption" class="hidden"></div>
+    <div id="clickhint">Click to look around</div>
+  </div>
+
+  <div id="journal" class="hidden">
+    <div class="page">
+      <div class="spiral"></div>
+      <div class="note">
+        <div class="date">Oct 16</div>
+        <p>Moved in today. The boxes are mostly unpacked, and the window light is perfect in the afternoon.</p>
+        <p>Small steps, big dreams. I keep telling myself that.</p>
+        <p>Tomorrow: shelve the books, call home, find a good noodle place nearby.</p>
+        <div class="doodle">☆</div>
+      </div>
+      <div class="close">press <kbd>E</kbd> to close</div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
