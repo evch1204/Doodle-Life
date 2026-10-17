@@ -1,0 +1,122 @@
+[
+  {
+    "name": "walk center -> desk area",
+    "ok": true,
+    "detail": "{\"x\":-4.438,\"z\":-2.034,\"facing\":3.909,\"speed\":0.017}"
+  },
+  {
+    "name": "desk blocks movement",
+    "ok": true,
+    "detail": "stopped at z=-2.82"
+  },
+  {
+    "name": "walk around table, no penetration",
+    "ok": true,
+    "detail": "{\"x\":2.086,\"z\":2.009,\"facing\":4.629,\"speed\":0.017}"
+  },
+  {
+    "name": "table blocks straight walk",
+    "ok": true,
+    "detail": "stopped at z=2.32"
+  },
+  {
+    "name": "turn around + walk to loft bed",
+    "ok": true,
+    "detail": "{\"x\":-1.755,\"z\":-3.125,\"facing\":3.753,\"speed\":0.018}"
+  },
+  {
+    "name": "camera 360 orbit",
+    "ok": true,
+    "detail": "dists=3.1,3.1,1.185,1.22,1.229,1.232,1.466,2.599,2.966,3.069,3.092,3.098"
+  },
+  {
+    "name": "left wall blocks (reached it, stopped at it)",
+    "ok": true,
+    "detail": "x=-5.74"
+  },
+  {
+    "name": "camera stays inside room near wall",
+    "ok": true,
+    "detail": "{\"x\":-2.846,\"y\":2.392,\"z\":0.147,\"yaw\":7.87,\"pitch\":0.36,\"dist\":3.1}"
+  },
+  {
+    "name": "front wall blocks (reached it, stopped at it)",
+    "ok": true,
+    "detail": "z=5.74"
+  },
+  {
+    "name": "slides along wall",
+    "ok": true,
+    "detail": "from x=-2.984 to x=-4.446"
+  },
+  {
+    "name": "returns to idle when keys released",
+    "ok": true,
+    "detail": "speed=0 bob=0.0001633597377482532"
+  },
+  {
+    "name": "S moves backward relative to camera",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "A strafes left relative to camera",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "journal prompt appears near journal",
+    "ok": true,
+    "detail": "interact=journal"
+  },
+  {
+    "name": "E opens journal overlay",
+    "ok": true
+  },
+  {
+    "name": "E closes journal",
+    "ok": true
+  },
+  {
+    "name": "no prompt when far from objects",
+    "ok": true,
+    "detail": "interact=null"
+  },
+  {
+    "name": "window prompt appears",
+    "ok": true,
+    "detail": "interact=window at {\"x\":1.094,\"z\":-4.216,\"facing\":2.556,\"speed\":0}"
+  },
+  {
+    "name": "E on window shows caption",
+    "ok": true
+  },
+  {
+    "name": "star 1: prompt + pickup increments counter",
+    "ok": true,
+    "detail": "interact=true stars=1 at {\"x\":-1.857,\"z\":-4.077,\"facing\":-3.219,\"speed\":0}"
+  },
+  {
+    "name": "star 2: prompt + pickup increments counter",
+    "ok": true,
+    "detail": "interact=true stars=2 at {\"x\":4.544,\"z\":-3.243,\"facing\":-3.261,\"speed\":0}"
+  },
+  {
+    "name": "star 3: prompt + pickup increments counter",
+    "ok": true,
+    "detail": "interact=true stars=3 at {\"x\":-4.576,\"z\":-0.874,\"facing\":-2.384,\"speed\":0}"
+  },
+  {
+    "name": "collected star no longer prompts",
+    "ok": true
+  },
+  {
+    "name": "objectives update (explore + journal)",
+    "ok": true
+  },
+  {
+    "name": "no sampled position ever inside furniture/walls",
+    "ok": true,
+    "detail": "996 samples, 0 inside []"
+  }
+]

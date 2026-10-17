@@ -1,0 +1,221 @@
+[
+  {
+    "name": "walk center -> desk",
+    "ok": true,
+    "detail": "{\"x\":-3.36,\"z\":-1.62,\"facing\":3.929,\"speed\":0.009}"
+  },
+  {
+    "name": "desk chair prompt is the only prompt shown",
+    "ok": true,
+    "detail": "interact=deskchair"
+  },
+  {
+    "name": "sits in desk chair (settled, sit pose, at seat)",
+    "ok": true,
+    "detail": "{\"x\":-3.25,\"y\":0.32,\"z\":-2.2,\"pose\":\"sit\"}"
+  },
+  {
+    "name": "monitors wake up when seated",
+    "ok": true
+  },
+  {
+    "name": "E while seated cycles monitor text",
+    "ok": true,
+    "detail": "caption=\"Mom: did you eat yet?  (yes… noodles again)\""
+  },
+  {
+    "name": "camera can rotate while seated, character stays put",
+    "ok": true
+  },
+  {
+    "name": "movement key stands up to a free floor spot",
+    "ok": true,
+    "detail": "{\"x\":-3.25,\"z\":-1.5,\"facing\":6.229,\"speed\":0}"
+  },
+  {
+    "name": "monitors sleep after standing",
+    "ok": true
+  },
+  {
+    "name": "walked around desk chair + dining chairs",
+    "ok": true,
+    "detail": "{\"x\":2.496,\"z\":1.454,\"facing\":4.761,\"speed\":0.017}"
+  },
+  {
+    "name": "dining table blocks",
+    "ok": true,
+    "detail": "z=1.54"
+  },
+  {
+    "name": "kitchen counter blocks",
+    "ok": true,
+    "detail": "x=3.8"
+  },
+  {
+    "name": "fridge prompt",
+    "ok": true,
+    "detail": "interact=fridge"
+  },
+  {
+    "name": "fridge opens with caption",
+    "ok": true,
+    "detail": "caption=\"Milk, three eggs, one apple. Grocery day tomorrow.\""
+  },
+  {
+    "name": "fridge closes again",
+    "ok": true
+  },
+  {
+    "name": "kettle prompt",
+    "ok": true,
+    "detail": "interact=kettle"
+  },
+  {
+    "name": "kettle: steam + \"Tea’s ready.\"",
+    "ok": true,
+    "detail": "caption=\"Tea’s ready.\""
+  },
+  {
+    "name": "dining chair prompt",
+    "ok": true,
+    "detail": "interact=chairE"
+  },
+  {
+    "name": "sits at dining table",
+    "ok": true,
+    "detail": "{\"x\":3.74,\"y\":0.28,\"z\":2.25,\"pose\":\"sit\"}"
+  },
+  {
+    "name": "camera 360 orbit in kitchen corner stays in room",
+    "ok": true,
+    "detail": "dists=2.02,2.01,1.78,1.79,1.13,0.71,0.72,0.53,0.82,1.68,1.91,1.98"
+  },
+  {
+    "name": "Esc stands up from dining chair, free spot",
+    "ok": true,
+    "detail": "{\"x\":3.72,\"z\":3.02,\"facing\":6.238,\"speed\":0}"
+  },
+  {
+    "name": "bed prompt at ladder",
+    "ok": true,
+    "detail": "interact=bed"
+  },
+  {
+    "name": "climbs ladder and lies in loft bed",
+    "ok": true,
+    "detail": "{\"x\":-0.3,\"y\":2.04,\"z\":-4.22,\"pose\":\"lie\"} caption=\"Just five more minutes…\""
+  },
+  {
+    "name": "camera 360 orbit near bed stays in room",
+    "ok": true,
+    "detail": "dists=1.51,0.65,0.73,0.68,0.49,0.59,0.99,1.39,1.59,1.75,1.78,1.79"
+  },
+  {
+    "name": "E gets out of bed, back on the floor, not clipped",
+    "ok": true,
+    "detail": "{\"x\":0.28,\"z\":-2.25,\"facing\":0.511,\"speed\":0}"
+  },
+  {
+    "name": "sofa prompt",
+    "ok": true,
+    "detail": "interact=sofa"
+  },
+  {
+    "name": "sits on sofa with caption",
+    "ok": true,
+    "detail": "caption=\"The afternoon light is nice from here.\""
+  },
+  {
+    "name": "E stands up from sofa, free spot",
+    "ok": true,
+    "detail": "{\"x\":2.12,\"z\":-2.62,\"facing\":0,\"speed\":0}"
+  },
+  {
+    "name": "plush: prompt + reaction",
+    "ok": true,
+    "detail": "interact=plush caption=\"Squeak!\""
+  },
+  {
+    "name": "lamp: prompt + reaction",
+    "ok": true,
+    "detail": "interact=lamp caption=\"Click. The afternoon is bright enough.\""
+  },
+  {
+    "name": "window: prompt + reaction",
+    "ok": true,
+    "detail": "interact=window caption=\"A quiet afternoon, somewhere far from home.\""
+  },
+  {
+    "name": "guitar: prompt + reaction",
+    "ok": true,
+    "detail": "interact=guitar caption=\"♪ A slightly out-of-tune G chord.\""
+  },
+  {
+    "name": "bookshelf: prompt + reaction",
+    "ok": true,
+    "detail": "interact=bookshelf caption=\"“The Little Prince” — what is essential is invisible to the eye.\""
+  },
+  {
+    "name": "journal opens sketchbook overlay",
+    "ok": true,
+    "detail": "interact=journal"
+  },
+  {
+    "name": "journal closes",
+    "ok": true
+  },
+  {
+    "name": "every corner reachable, can back out (no stuck spots)",
+    "ok": true,
+    "detail": "[]"
+  },
+  {
+    "name": "star 1/5: prompt + pickup + counter",
+    "ok": true,
+    "detail": "interact=star stars=1"
+  },
+  {
+    "name": "star 2/5: prompt + pickup + counter",
+    "ok": true,
+    "detail": "interact=star stars=2"
+  },
+  {
+    "name": "star 3/5: prompt + pickup + counter",
+    "ok": true,
+    "detail": "interact=star stars=3"
+  },
+  {
+    "name": "star 4/5: prompt + pickup + counter",
+    "ok": true,
+    "detail": "interact=star stars=4"
+  },
+  {
+    "name": "star 5/5: prompt + pickup + counter",
+    "ok": true,
+    "detail": "interact=star stars=5"
+  },
+  {
+    "name": "all stars collected, counter matches",
+    "ok": true
+  },
+  {
+    "name": "idle after stopping (no velocity, no walk bob)",
+    "ok": true,
+    "detail": "speed=0 bob=-1.6165883213056974e-9"
+  },
+  {
+    "name": "objectives update (explore, journal, stars)",
+    "ok": true,
+    "detail": "[true,true,true]"
+  },
+  {
+    "name": "no sampled walking position inside furniture/walls",
+    "ok": true,
+    "detail": "2521 samples, 0 inside []"
+  },
+  {
+    "name": "no page errors",
+    "ok": true,
+    "detail": ""
+  }
+]

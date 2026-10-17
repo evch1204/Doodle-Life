@@ -1,0 +1,69 @@
+PASS  starts in the room  
+PASS  door prompt in the room  interact=door
+PASS  travel card shows  {"on":true,"text":"Traveling to Taipei…"}
+PASS  arrives in Taipei at the start point  scene=taipei at 0,1.4
+PASS  top of the street -> lookout on foot  at 4.483,-27.535 y=-3.9
+PASS  lookout -> back to the top on foot  at 0.003,1.189 y=0
+PASS  stairs: no popping (fastest vertical body speed, frame-rate independent)  max vertical speed 2.225 m/s (a 0.15 m pop in one frame would be ~9 m/s)
+PASS  stairs: feet on the ground (no floating / sinking)  float=0 sink=0 of 455, highest above ground 0.015 m
+PASS  climb the shrine steps  y=-1.35
+PASS  descend the shrine steps  y=-1.8
+  push left fronts (top): away=1.47 ground=0 pen=false
+  push left fronts (bubble tea): away=1.40 ground=-0.974 pen=false
+  push left fronts (lower): away=1.44 ground=-1.8 pen=false
+  push right fronts (top): away=1.32 ground=0 pen=false
+  push right fronts (taro): away=1.47 ground=-0.6 pen=false
+  push tea house counter: away=1.51 ground=-1.8 pen=false
+  push end of street: away=1.42 ground=0 pen=false
+  push plaza overlook rail: away=1.45 ground=-1.8 pen=false
+  push plaza east shop: away=1.40 ground=-1.8 pen=false
+  push steamer cart: away=1.61 ground=-1.8 pen=false
+  push cat ledge: away=1.52 ground=-1.8 pen=false
+  push lower street rail: away=1.43 ground=-2.91 pen=false
+  push lower street fronts: away=1.39 ground=-2.4 pen=false
+  push lookout rail (front): away=1.42 ground=-3.9 pen=false
+  push lookout rail (west): away=1.43 ground=-3.9 pen=false
+  push lookout rail (east): away=1.43 ground=-3.9 pen=false
+  push shrine: away=1.42 ground=-1.35 pen=false
+  push alley wall: away=1.46 ground=-1.5 pen=false
+PASS  building fronts / railings / stalls: never walk through  0 of 18
+PASS  building fronts / railings / stalls: never stuck  0 of 18
+PASS  never off the walkable ground (no falls)  fell=0 monitor=0
+PASS  camera orbit (narrow street): never inside a building or under the ground  0/16 bad samples, closest 1.36m
+PASS  camera orbit (shrine alley): never inside a building or under the ground  0/16 bad samples, closest 0.66m
+PASS  camera orbit (lower street): never inside a building or under the ground  0/16 bad samples, closest 1.35m
+PASS  camera orbit (lookout): never inside a building or under the ground  0/16 bad samples, closest 2.83m
+PASS  camera pulls in on the narrow street, opens up at the lookout  street 2.45 vs lookout 3.399
+PASS  talk to the tea house auntie  Welcome, welcome! The oolong is fresh today.
+PASS  auntie has more than one line  You walked all the way down? Rest your feet, have a cup.
+PASS  objective: Find the tea house  
+PASS  tea lantern sways when touched  The lantern sways. 茶 — tea, this way.
+PASS  talk to the cat  Mrrp. The cat blinks slowly at you.
+PASS  steamer puffs steam  Fresh xiaolongbao. Careful, they’re hot!
+PASS  shrine incense  A quiet wish for safe travels.
+PASS  bench prompt  bench
+PASS  sit on the bench  {"id":"bench","settled":true,"dir":1}
+PASS  camera orbits while sitting  
+PASS  stand up from the bench to a free spot  2.3,-26.9
+PASS  lookout prompt  lookout
+PASS  lookout: camera pans slowly toward Taipei 101  yaw 30.78 -> 31.46 (target 0.12)
+PASS  objective: Watch the sunset  The sun sinks behind Taipei. Worth every step.
+  collect star at 0.6,-8.7: 0 -> 1 
+  collect star at -4.6,-15: 1 -> 2 
+  collect star at -0.4,-15.6: 2 -> 3 
+  collect star at 7.7,-27.9: 3 -> 4 
+  collect boba at -0.75,-5.9: 4 -> 5 Good food, good mood.
+PASS  bubble tea: pick up + caption  Good food, good mood.
+PASS  all collectibles picked up  5/5
+PASS  objective: Explore the old streets  explored 4
+PASS  all objectives ticked  explore,teahouse,sunset,stars
+PASS  home signpost prompt  home
+PASS  travel card shows (going home)  
+PASS  back in the room at its start point  room -0.3,1.4
+PASS  room still works after the trip (desk chair + monitors)  {"id":"deskchair","settled":true,"dir":1}
+PASS  repeat trips are clean (fps after 3 loads)  fps=143
+PASS  Taipei frame rate (headless Chrome, 1280x853)  min 72, avg 85
+PASS  no page errors  
+PASS  never inside a collider during the whole run  0/3803 samples
+
+44/44 checks passed
