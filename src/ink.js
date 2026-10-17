@@ -11,6 +11,9 @@ const shared = {
   uPaper: { value: PAPER },
   uInk: { value: INK },
   uLightI: { value: 1 },
+  // 1 = ignore shadow-map results on surfaces the light barely grazes (acne);
+  // set per scene (outdoors), 0 keeps the original room look.
+  uGrazeFix: { value: 0 },
 };
 export const inkShared = shared;
 
@@ -25,6 +28,7 @@ const FRAG_DECL = /* glsl */`
 uniform vec3 uPaper;
 uniform vec3 uInk;
 uniform float uLightI;
+uniform float uGrazeFix;
 uniform float uTone;
 uniform float uFacing;
 uniform float uHatchAmt;
@@ -76,6 +80,7 @@ const FRAG_MAIN = /* glsl */`
     float expected = max(facing, 0.0) * uLightI;
     float got = dot(reflectedLight.directDiffuse, vec3(0.33333)) * PI;
     shadowF = expected > 0.04 ? clamp(got / expected, 0.0, 1.0) : 1.0;
+    shadowF = mix(shadowF, 1.0, uGrazeFix * (1.0 - smoothstep(0.1, 0.4, facing)));
   #endif
 
   // turned away -> one layer of hatching, in shadow -> one layer,
