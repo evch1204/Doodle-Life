@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { InkRenderer, inkShared, tagOutlines } from './ink.js';
 import { createCharacter } from './character.js';
 import { playSound } from './sound.js';
+import { t as tr, getLang, setLang, onLang } from './i18n.js';
 
 // The shared game: renderer + ink post pass, one player character, the
 // third-person controller and camera, collision, HUD, interactions and the
@@ -23,6 +24,8 @@ const flat = () => 0;
 
 export async function startGame(SCENES, firstId) {
   await document.fonts.load('100px "Patrick Hand"');
+  // the CJK face loads per unicode subset; fetch the common ones up front (bounded wait)
+  await Promise.race([document.fonts.load('40px "LXGW WenKai TC"', '台灣九份老街中文設定繼續語言'), new Promise((r) => setTimeout(r, 2500))]).catch(() => {});
 
   // ---- renderer -------------------------------------------------------------
   const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: true });
@@ -74,34 +77,41 @@ export async function startGame(SCENES, firstId) {
 
   // ---- input ----------------------------------------------------------------
   const keys = new Set();
+  // Automated runs (Playwright sets navigator.webdriver) never ask for pointer
+  // lock: in headless Chrome it can capture the real OS cursor of whoever is
+  // using the machine. Those runs look around with click-drag instead.
+  const automated = navigator.webdriver === true;
   const canvas = renderer.domElement;
   const hint = document.getElementById('clickhint');
   let dragging = false;
   const look = (dx, dy) => {
     if (view.goal?.lock && view.goal.t < view.goal.lock) return;
     view.goal = null; // the player takes over from any automatic framing
-    view.yaw -= dx * 0.0026;
-    view.pitch = THREE.MathUtils.clamp(view.pitch + dy * 0.0022, -0.1, 1.1);
+    view.yaw -= dx * 0.0026 * sensitivity;
+    view.pitch = THREE.MathUtils.clamp(view.pitch + dy * 0.0022 * sensitivity, -0.1, 1.1);
   };
   const MOVE_KEYS = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
   window.addEventListener('keydown', (e) => {
     if (e.repeat && (e.code === 'KeyE' || e.code === 'Escape')) return;
     keys.add(e.code);
     if (traveling) return;
-    if (e.code === 'KeyE') onInteract();
     if (e.code === 'Escape') {
-      if (journalOpen) closeJournal();
+      // Esc that just released the mouse was already handled by pointerlockchange
+      if (performance.now() - escHandledAt < 400) return;
+      if (settingsOpen) closeSettings();
+      else if (journalOpen) closeJournal();
       else if (occ && occ.settled) standUp();
+      else openSettings();
+      return;
     }
+    if (settingsOpen) return;
+    if (e.code === 'KeyE') onInteract();
     if (MOVE_KEYS.includes(e.code) && occ && occ.settled && !journalOpen) standUp();
   });
   window.addEventListener('keyup', (e) => keys.delete(e.code));
   window.addEventListener('blur', () => keys.clear());
-  // Automated runs (Playwright sets navigator.webdriver) never ask for pointer
-  // lock: in headless Chrome it can capture the real OS cursor of whoever is
-  // using the machine. Those runs look around with click-drag instead.
-  const automated = navigator.webdriver === true;
   canvas.addEventListener('mousedown', () => {
+    if (settingsOpen) return;
     dragging = true;
     if (!automated && document.pointerLockElement !== canvas && canvas.requestPointerLock) {
       try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch { /* not available */ }
@@ -114,9 +124,63 @@ export async function startGame(SCENES, firstId) {
   });
   let hintDismissed = false;
   const updateHint = () => hint.classList.toggle('show', document.pointerLockElement !== canvas && !hintDismissed);
-  document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement === canvas) hintDismissed = true; updateHint(); });
+  document.addEventListener('pointerlockchange', () => {
+    if (document.pointerLockElement === canvas) hintDismissed = true;
+    else if (!releasingMouse && !traveling) {
+      // the browser swallows the Esc that releases a captured mouse: treat the release as that Esc
+      escHandledAt = performance.now();
+      if (journalOpen) closeJournal();
+      else if (occ && occ.settled) standUp();
+      else if (!settingsOpen) openSettings();
+    }
+    releasingMouse = false;
+    updateHint();
+  });
   setTimeout(() => { hintDismissed = true; updateHint(); }, 6000);
   updateHint();
+
+  // ---- settings: language + mouse sensitivity --------------------------------
+  const settingsEl = document.getElementById('settings');
+  const sensEl = document.getElementById('sens');
+  let settingsOpen = false, escHandledAt = -1e9, releasingMouse = false;
+  let sensitivity = 1;
+  try { const v = parseFloat(localStorage.getItem('doodleworld.sensitivity')); if (v >= 0.4 && v <= 2) sensitivity = v; } catch { /* storage unavailable */ }
+  sensEl.value = String(sensitivity);
+  sensEl.addEventListener('input', () => {
+    sensitivity = parseFloat(sensEl.value);
+    try { localStorage.setItem('doodleworld.sensitivity', String(sensitivity)); } catch { /* storage unavailable */ }
+  });
+  function releaseMouse() {
+    if (document.pointerLockElement) { releasingMouse = true; document.exitPointerLock(); }
+  }
+  function openSettings() {
+    settingsOpen = true;
+    paused = true;
+    dragging = false;
+    keys.clear();
+    releaseMouse();
+    settingsEl.classList.remove('hidden');
+    syncLangButtons();
+    settingsEl.querySelector('.choice[aria-checked="true"]')?.focus({ preventScroll: true });
+  }
+  function closeSettings(relock = false) {
+    settingsOpen = false;
+    paused = journalOpen;
+    settingsEl.classList.add('hidden');
+    document.activeElement?.blur?.();
+    if (relock && !automated && canvas.requestPointerLock) {
+      try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch { /* not available */ }
+    }
+  }
+  function syncLangButtons() {
+    for (const b of settingsEl.querySelectorAll('.choice')) b.setAttribute('aria-checked', b.dataset.lang === getLang() ? 'true' : 'false');
+  }
+  for (const b of settingsEl.querySelectorAll('.choice')) {
+    b.setAttribute('role', 'radio');
+    b.addEventListener('click', () => { setLang(b.dataset.lang); syncLangButtons(); });
+  }
+  document.getElementById('resume').addEventListener('click', () => closeSettings(true));
+  settingsEl.addEventListener('mousedown', (e) => { if (e.target === settingsEl) closeSettings(); });
 
   // ---- collisions -----------------------------------------------------------
   function resolve(p, r) {
@@ -389,8 +453,8 @@ export async function startGame(SCENES, firstId) {
 
   function buildHud() {
     const h = def.hud;
-    document.getElementById('obj-title').textContent = h.title;
-    document.getElementById('obj-sub').textContent = h.sub ?? '';
+    document.getElementById('obj-title').textContent = tr(h.title);
+    document.getElementById('obj-sub').textContent = h.sub ? tr(h.sub) : '';
     objEl.className = h.style ?? 'single';
     objList.innerHTML = '';
     objEls = {};
@@ -400,12 +464,13 @@ export async function startGame(SCENES, firstId) {
       d.className = 'obj';
       d.id = `obj-${o.id}`;
       if (o.count) {
-        d.append(`${o.text} `);
-        const c = document.createElement('span'); c.id = 'star-count'; c.textContent = '0';
+        d.append(`${tr(o.text)} `);
+        const c = document.createElement('span'); c.id = 'star-count'; c.textContent = String(starsCollected);
         const tot = document.createElement('span'); tot.id = 'star-total'; tot.textContent = world.stars.length;
         d.append(c, '/', tot);
         countEl = c;
-      } else d.textContent = o.text;
+      } else d.textContent = world.objectiveText?.(o.id, done.has(o.id)) ?? tr(o.text);
+      if (done.has(o.id)) d.classList.add('done');
       objList.appendChild(d);
       objEls[o.id] = d;
     }
@@ -415,6 +480,7 @@ export async function startGame(SCENES, firstId) {
     if (done.has(id)) return;
     done.add(id);
     objEls[id]?.classList.add('done');
+    if (objEls[id] && !def.hud.objectives.find((o) => o.id === id)?.count) objEls[id].textContent = tr(def.hud.objectives.find((o) => o.id === id).text);
     world.onComplete?.(id, ictx);
   }
 
@@ -478,8 +544,10 @@ export async function startGame(SCENES, firstId) {
     paused = false;
     journalEl.classList.add('hidden');
   }
+  let captionSrc = null;
   function showCaption(text, secs = 4) {
-    captionEl.textContent = text;
+    captionSrc = text;
+    captionEl.textContent = tr(text);
     captionEl.classList.remove('hidden');
     captionTimer = secs;
   }
@@ -544,9 +612,9 @@ export async function startGame(SCENES, firstId) {
     mctx.fill();
     mctx.restore();
     mctx.fillStyle = '#f3eee3';
-    mctx.font = '20px "Patrick Hand"';
+    mctx.font = '20px "Patrick Hand", "LXGW WenKai TC"';
     mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
-    mctx.fillText('N', c, 16); mctx.fillText('S', c, S - 15); mctx.fillText('W', 15, c); mctx.fillText('E', S - 15, c);
+    mctx.fillText(tr('N'), c, 16); mctx.fillText(tr('S'), c, S - 15); mctx.fillText(tr('W'), 15, c); mctx.fillText(tr('E'), S - 15, c);
   }
   // Compass: the dial turns with the camera; the needle always points north (-z).
   function drawCompass() {
@@ -567,10 +635,10 @@ export async function startGame(SCENES, firstId) {
       mctx.beginPath(); mctx.moveTo(Math.sin(a) * r0, -Math.cos(a) * r0); mctx.lineTo(Math.sin(a) * 92, -Math.cos(a) * 92); mctx.stroke();
     }
     mctx.fillStyle = '#f3eee3';
-    mctx.font = '24px "Patrick Hand"';
+    mctx.font = '24px "Patrick Hand", "LXGW WenKai TC"';
     mctx.textAlign = 'center'; mctx.textBaseline = 'middle';
     for (const [l, a] of [['N', 0], ['E', Math.PI / 2], ['S', Math.PI], ['W', -Math.PI / 2]]) {
-      mctx.save(); mctx.translate(Math.sin(a) * 58, -Math.cos(a) * 58); mctx.rotate(-view.yaw); mctx.fillText(l, 0, 0); mctx.restore();
+      mctx.save(); mctx.translate(Math.sin(a) * 58, -Math.cos(a) * 58); mctx.rotate(-view.yaw); mctx.fillText(tr(l), 0, 0); mctx.restore();
     }
     // north needle
     mctx.beginPath(); mctx.moveTo(0, -46); mctx.lineTo(9, 0); mctx.lineTo(0, 6); mctx.lineTo(-9, 0); mctx.closePath(); mctx.fill();
@@ -659,9 +727,11 @@ export async function startGame(SCENES, firstId) {
   async function travel(id, { fast = false } = {}) {
     if (traveling || !SCENES[id]) return;
     traveling = true;
+    pendingTravel = id;
+    if (settingsOpen) closeSettings();
     if (occ) occ = null;
     keys.clear();
-    travelText.textContent = SCENES[id].travelText ?? `Traveling to ${SCENES[id].name}…`;
+    travelText.textContent = tr(SCENES[id].travelText);
     playSound('whoosh');
     travelEl.classList.remove('off');
     await wait(fast ? 120 : 750);
@@ -700,6 +770,29 @@ export async function startGame(SCENES, firstId) {
     void snap;
   }
 
+  // ---- language: static HTML text, and re-render everything on a switch -------------
+  function applyStaticText() {
+    for (const el of document.querySelectorAll('[data-i18n]')) {
+      const key = el.dataset.i18n;
+      if (el.dataset.i18nKey) {
+        // "press {key} to close": keep the key cap as a <kbd>
+        const [a, b] = tr(key).split('{key}');
+        const k = document.createElement('kbd');
+        k.textContent = el.dataset.i18nKey;
+        el.replaceChildren(a ?? '', k, b ?? '');
+      } else el.textContent = tr(key);
+    }
+    document.title = 'Doodle World';
+  }
+  applyStaticText();
+  onLang(() => {
+    applyStaticText();
+    buildHud();
+    if (captionSrc) captionEl.textContent = tr(captionSrc);
+    if (traveling && pendingTravel) travelText.textContent = tr(SCENES[pendingTravel].travelText);
+  });
+  let pendingTravel = null;
+
   // ---- resize -------------------------------------------------------------------
   function onResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -724,10 +817,12 @@ export async function startGame(SCENES, firstId) {
     const vis = projected.z < 1 && Math.abs(projected.x) < 1.1 && Math.abs(projected.y) < 1.1;
     const px = (projected.x * 0.5 + 0.5) * window.innerWidth;
     const py = (-projected.y * 0.5 + 0.5) * window.innerHeight;
-    promptEl.style.left = `${THREE.MathUtils.clamp(px, 120, window.innerWidth - 120)}px`;
-    promptEl.style.top = `${THREE.MathUtils.clamp(vis ? py : window.innerHeight * 0.7, 60, window.innerHeight - 40)}px`;
-    promptText.textContent = label;
+    if (promptText.textContent !== label) promptText.textContent = label;
     promptKey.textContent = key;
+    // keep the whole prompt on screen, whatever the length of the label
+    const half = promptEl.offsetWidth / 2 + 10, h = promptEl.offsetHeight;
+    promptEl.style.left = `${THREE.MathUtils.clamp(px, half, Math.max(half, window.innerWidth - half))}px`;
+    promptEl.style.top = `${THREE.MathUtils.clamp(vis ? py : window.innerHeight * 0.7, h + 10, window.innerHeight - 10)}px`;
     promptEl.classList.remove('hidden');
   }
 
@@ -778,9 +873,9 @@ export async function startGame(SCENES, firstId) {
       const s = occ.it.seat;
       const p = hero.root.position.clone();
       p.y += s.pose === 'lie' ? 0.6 : 1.25;
-      placePrompt(p, s.onUse ? `${s.useLabel}  ·  Esc to get up` : (s.pose === 'lie' ? 'Get up' : 'Stand up'), 'E');
+      placePrompt(p, s.onUse ? `${tr(s.useLabel)}  ·  ${tr('Esc to get up')}` : tr(s.pose === 'lie' ? 'Get up' : 'Stand up'), 'E');
     } else if (current) {
-      placePrompt(current.pos, current.label, 'E');
+      placePrompt(current.pos, tr(current.label), 'E');
     } else {
       promptEl.classList.add('hidden');
     }
@@ -833,5 +928,26 @@ export async function startGame(SCENES, firstId) {
     loadScene,
     scenes: () => Object.keys(SCENES),
     walkable: () => world.walkable ?? null,
+    settingsOpen: () => settingsOpen,
+    setLang,
+    getLang,
+    // every label / caption reachable in the current scene (for the i18n check)
+    collectStrings() {
+      const out = new Set();
+      const fake = {
+        caption: (x) => out.add(x), sound() {}, hero: { reach() {}, pickup() {} }, openJournal() {}, complete() {}, travel() {},
+        frame() {}, pan() {}, face() {}, player, camera, view,
+      };
+      for (const o of def.hud.objectives) out.add(o.text);
+      out.add(def.hud.title); if (def.hud.sub) out.add(def.hud.sub);
+      out.add(def.travelText);
+      for (const it of world.interactables) {
+        out.add(it.label);
+        if (it.star?.caption) out.add(it.star.caption);
+        if (it.seat) { if (it.seat.caption) out.add(it.seat.caption); if (it.seat.useLabel) out.add(it.seat.useLabel); for (let i = 0; i < 6; i++) it.seat.onUse?.(fake); }
+        if (it.act && !it.star) for (let i = 0; i < 6; i++) { it.act(fake); out.add(it.label); }
+      }
+      return [...out].filter(Boolean);
+    },
   };
 }
