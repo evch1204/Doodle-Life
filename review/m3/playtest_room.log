@@ -1,0 +1,48 @@
+PASS  walk center -> desk  {"x":-3.29,"z":-1.576,"y":0,"facing":3.929,"speed":0.013}
+PASS  desk chair prompt is the only prompt shown  interact=deskchair
+PASS  sits in desk chair (settled, sit pose, at seat)  {"x":-3.25,"y":0.32,"z":-2.2,"pose":"sit"}
+PASS  monitors wake up when seated  
+PASS  E while seated cycles monitor text  caption="Mom: did you eat yet?  (yes… noodles again)"
+PASS  camera can rotate while seated, character stays put  
+PASS  movement key stands up to a free floor spot  {"x":-3.25,"z":-1.5,"y":0,"facing":6.229,"speed":0}
+PASS  monitors sleep after standing  
+PASS  walked around desk chair + dining chairs  {"x":2.57,"z":1.45,"y":0,"facing":-1.515,"speed":0.014}
+PASS  dining table blocks  z=1.54
+PASS  kitchen counter blocks  x=3.8
+PASS  fridge prompt  interact=fridge
+PASS  fridge opens with caption  caption="Milk, three eggs, one apple. Grocery day tomorrow."
+PASS  fridge closes again  
+PASS  kettle prompt  interact=kettle
+PASS  kettle: steam + "Tea’s ready."  caption="Tea’s ready."
+PASS  dining chair prompt  interact=chairE
+PASS  sits at dining table  {"x":3.74,"y":0.28,"z":2.25,"pose":"sit"}
+PASS  camera 360 orbit in kitchen corner stays in room  dists=2.04,2.02,1.78,1.79,1.15,0.70,0.72,0.53,0.84,1.69,1.91,1.97
+PASS  Esc stands up from dining chair, free spot  {"x":3.72,"z":3.02,"y":0,"facing":6.238,"speed":0}
+PASS  bed prompt at ladder  interact=bed
+PASS  climbs ladder and lies in loft bed  {"x":-0.3,"y":2.04,"z":-4.22,"pose":"lie"} caption="Just five more minutes…"
+PASS  camera 360 orbit near bed stays in room  dists=1.40,0.64,0.72,0.66,0.49,0.60,1.00,1.37,1.57,1.73,1.78,1.79
+PASS  E gets out of bed, back on the floor, not clipped  {"x":0.28,"z":-2.25,"y":0,"facing":0.51,"speed":0}
+PASS  sofa prompt  interact=sofa
+PASS  sits on sofa with caption  caption="The afternoon light is nice from here."
+PASS  E stands up from sofa, free spot  {"x":2.12,"z":-2.62,"y":0,"facing":0,"speed":0}
+PASS  plush: prompt + reaction  interact=plush caption="Squeak!"
+PASS  lamp: prompt + reaction  interact=lamp caption="Click. The afternoon is bright enough."
+PASS  window: prompt + reaction  interact=window caption="A quiet afternoon, somewhere far from home."
+PASS  guitar: prompt + reaction  interact=guitar caption="♪ A slightly out-of-tune G chord."
+PASS  bookshelf: prompt + reaction  interact=bookshelf caption="“The Little Prince” — what is essential is invisible to the eye."
+PASS  journal opens sketchbook overlay  interact=journal
+PASS  journal closes  
+PASS  every corner reachable, can back out (no stuck spots)  []
+PASS  star 1/5: prompt + pickup + counter  interact=star stars=1
+PASS  star 2/5: prompt + pickup + counter  interact=star stars=2
+PASS  star 3/5: prompt + pickup + counter  interact=star stars=3
+PASS  star 4/5: prompt + pickup + counter  interact=star stars=4
+PASS  star 5/5: prompt + pickup + counter  interact=star stars=5
+PASS  all stars collected, counter matches  
+PASS  idle after stopping (no velocity, no walk bob)  speed=0 bob=0
+PASS  objectives update (explore, journal, stars)  [true,true,true]
+PASS  no sampled walking position inside furniture/walls  2346 samples, 0 inside []
+PASS  no page errors  
+fps min/avg 111 148
+
+45/45 checks passed
