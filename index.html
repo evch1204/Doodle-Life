@@ -10,11 +10,9 @@
   <div id="app"></div>
 
   <div id="hud">
-    <div class="panel" id="objective">
-      <div class="title">Objective:</div>
-      <div class="obj" id="obj-explore">Explore the room</div>
-      <div class="obj" id="obj-journal">Find the hidden journal ☆</div>
-      <div class="obj" id="obj-stars">Stars collected <span id="star-count">0</span>/<span id="star-total">3</span></div>
+    <div id="objective">
+      <div class="panel" id="obj-head"><div class="title" id="obj-title">Objective:</div><div class="sub" id="obj-sub"></div></div>
+      <div class="panel" id="obj-list"></div>
     </div>
 
     <div id="minimap"><canvas id="minimap-canvas" width="240" height="240"></canvas></div>
@@ -29,6 +27,21 @@
     <div id="prompt" class="hidden"><kbd>E</kbd><span id="prompt-text"></span></div>
     <div id="caption" class="hidden"></div>
     <div id="clickhint">Click to look around</div>
+  </div>
+
+  <div id="travel" class="off">
+    <div class="card">
+      <svg class="sparkles" viewBox="0 0 400 300" aria-hidden="true">
+        <path d="M70 60 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4z" />
+        <path d="M330 90 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3z" />
+        <path d="M300 250 l3 9 9 3 -9 3 -3 9 -3 -9 -9 -3 9 -3z" />
+        <circle cx="110" cy="230" r="2.5" /><circle cx="260" cy="40" r="2" /><circle cx="40" cy="170" r="1.8" />
+      </svg>
+      <div class="text" id="travel-text">Traveling to Taipei…</div>
+      <svg class="plane" viewBox="0 0 64 48" aria-hidden="true">
+        <path d="M4 26 L60 4 L44 44 L30 30 Z M30 30 L60 4 M30 30 L28 42 L36 35" />
+      </svg>
+    </div>
   </div>
 
   <div id="journal" class="hidden">
