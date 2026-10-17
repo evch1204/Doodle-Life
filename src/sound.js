@@ -71,5 +71,11 @@ const FX = {
   fridgeOpen: () => { noise(0.12, 0.1, 300, 0.8); tone('sine', 60, 58, 0.8, 0.04, 0.05); },
   fridgeClose: () => noise(0.08, 0.15, 180, 0.8),
   sit: () => noise(0.18, 0.06, 500, 0.7),
+  meow: () => { tone('sine', 620, 900, 0.12, 0.08); tone('sine', 900, 520, 0.32, 0.08, 0.11); },
+  talk: () => [0, 0.08, 0.15].forEach((d, i) => tone('sine', 440 + i * 70 + Math.random() * 40, 400 + i * 50, 0.06, 0.05, d)),
+  chime: () => [1046, 1318, 1568].forEach((f, i) => tone('sine', f, f, 0.6, 0.05, i * 0.07)),
+  steam: () => noise(0.9, 0.06, 1800, 0.5),
+  whoosh: () => noise(1.1, 0.09, 700, 0.4),
+  swish: () => noise(0.3, 0.05, 1400, 0.7),
 };
 export function playSound(name) { try { FX[name]?.(); } catch { /* audio unavailable */ } }
