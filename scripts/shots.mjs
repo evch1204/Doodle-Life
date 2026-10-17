@@ -6,7 +6,8 @@ const out = process.argv[2] || 'review';
 const only = process.argv.slice(3);
 fs.mkdirSync(out, { recursive: true });
 
-const VIEWS = {
+const SCENE = process.env.SCENE || "room";
+const ROOM_VIEWS = {
   char_front: { player: [0.0, 0.6, 0], free: [[0.0, 0.78, 1.95], [0.0, 0.58, 0.6]] },
   char_side: { player: [0.0, 0.6, 0], free: [[1.4, 0.78, 0.6], [0.0, 0.58, 0.6]] },
   char_back: { player: [0.0, 0.6, 0], free: [[0.0, 0.95, -0.75], [0.0, 0.58, 0.6]] },
@@ -23,12 +24,30 @@ const VIEWS = {
   fridge_int: { free: [[2.9, 1.5, 0.55], [4.3, 0.9, 1.33]] },
   walking: { player: [-0.3, 1.8, Math.PI], view: [0.35, 0.38] },
 };
+const TAIPEI_VIEWS = {
+  t_start: { player: [0, 1.4, Math.PI], view: [0, 0.36] },
+  t_wide_top: { player: [0, 1.2, Math.PI], free: [[0.55, 5.6, 3.7], [-0.5, 2.1, -14]] },
+  t_char_front: { player: [1.6, -14.4, Math.PI], free: [[1.75, -0.95, -16.0], [1.6, -1.25, -14.4]] },
+  t_char_back: { player: [1.6, -14.4, Math.PI], free: [[1.45, -0.75, -12.85], [1.6, -1.3, -14.4]] },
+  t_mid: { player: [0.2, -5.6, Math.PI], view: [0.1, 0.34] },
+  t_tea: { player: [0.3, -9.6, Math.PI], view: [0.5, 0.3] },
+  t_plaza: { player: [1.4, -14.6, Math.PI * 0.75], view: [-0.8, 0.35] },
+  t_plaza_back: { player: [2.5, -15.6, 0], view: [Math.PI, 0.35] },
+  t_shrine: { player: [-3.4, -14.6, -Math.PI / 2], view: [Math.PI / 2, 0.32] },
+  t_lower: { player: [4.0, -18.0, Math.PI], view: [0.25, 0.32] },
+  t_lookout: { player: [4.5, -28.2, Math.PI], view: [0.12, 0.08, 3.4] },
+  t_close_tea: { free: [[0.2, -0.3, -10.4], [1.6, -0.9, -11.6]] },
+  t_close_boba: { free: [[-0.55, 0.55, -5.4], [-1.45, 0.05, -5.95]] },
+  t_cat: { free: [[2.4, -0.55, -14.6], [2.55, -0.85, -13.2]] },
+  t_wide_plaza: { free: [[-1.0, 3.0, -21.5], [1.5, -1.5, -12]] },
+};
+const VIEWS = SCENE === 'taipei' ? TAIPEI_VIEWS : ROOM_VIEWS;
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1536, height: 1024 } });
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') console.log('[page]', m.text().slice(0, 400)); });
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
-await page.goto(process.env.URL || 'http://localhost:5173/');
+await page.goto((process.env.URL || 'http://localhost:5173/') + '?scene=' + SCENE);
 await page.waitForFunction(() => window.__dw && window.__dw.ready, null, { timeout: 60000 });
 await page.waitForTimeout(Number(process.env.DELAY || 800));
 for (const [name, v] of Object.entries(VIEWS)) {
@@ -46,7 +65,7 @@ for (const [name, v] of Object.entries(VIEWS)) {
   console.log('shot', name, JSON.stringify(await page.evaluate(() => window.__dw.state())));
 }
 // mid-walk frame from gameplay camera
-if (!only.length || only.includes('walking')) {
+if (SCENE === 'room' && (!only.length || only.includes('walking'))) {
   await page.evaluate(() => { window.__dw.freeCam(null); window.__dw.hud(true); window.__dw.setPlayer(-0.3, 1.9, Math.PI); window.__dw.setView(0.35, 0.38, 2.6); });
   await page.keyboard.down('KeyW'); await page.waitForTimeout(700);
   await page.screenshot({ path: out + '/walking.png' });
