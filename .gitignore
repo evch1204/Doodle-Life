@@ -1,4 +1,5 @@
 node_modules
 dist
-review/*.webm
-review/*.mp4
+# recordings stay local (large)
+review/**/*.webm
+review/**/*.mp4
