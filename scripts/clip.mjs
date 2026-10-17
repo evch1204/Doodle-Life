@@ -1,5 +1,5 @@
 // Review clip (Milestone 3): gameplay camera, real input. Room -> door ->
-// travel card -> Taipei; walk down the stairs, turn, stop; talk to the cat;
+// travel card -> Taiwan; walk down the stairs, turn, stop; talk to the cat;
 // down to the lookout and watch the sunset; pick up a star; climb back up and
 // head home. Usage: node scripts/clip.mjs <outDir>
 import { chromium } from 'playwright-core';
@@ -18,14 +18,14 @@ const H = createHarness(page);
 const { sleep, st, press, dragTurn, goTo, loadModel } = H;
 const hold = async (key, ms) => { await page.keyboard.down(key); await sleep(ms); await page.keyboard.up(key); };
 
-// room: start near the door so the clip gets to Taipei quickly
+// room: start near the door so the clip gets to Taiwan quickly
 await page.evaluate(() => { window.__dw.setPlayer(-1.2, 2.3, Math.PI * 0.75); window.__dw.setView(-0.9, 0.38); });
 await sleep(1200);
 await loadModel();
 await goTo(-2.4, 3.45);
 await sleep(400);
 await press('KeyE');
-await page.waitForFunction(() => window.__dw.state().scene === 'taipei' && !window.__dw.state().traveling, null, { timeout: 15000 });
+await page.waitForFunction(() => window.__dw.state().scene === 'taiwan' && !window.__dw.state().traveling, null, { timeout: 15000 });
 await loadModel();
 await sleep(800);
 

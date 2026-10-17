@@ -28,7 +28,7 @@ export function createHarness(page) {
   async function loadModel() {
     const colliders = await page.evaluate(() => window.__dw.colliders);
     const sceneId = (await st()).scene;
-    const B = sceneId === 'taipei' ? { x0: -7.6, x1: 9.0, z0: -29.4, z1: 4.8 } : { x0: -4.7, x1: 4.7, z0: -5.0, z1: 4.2 };
+    const B = sceneId === 'taiwan' ? { x0: -7.6, x1: 9.0, z0: -29.4, z1: 4.8 } : { x0: -4.7, x1: 4.7, z0: -5.0, z1: 4.2 };
     const G = 0.12;
     const NX = Math.ceil((B.x1 - B.x0) / G) + 1, NZ = Math.ceil((B.z1 - B.z0) / G) + 1;
     const hs = await page.evaluate(({ B, G, NX, NZ }) => {
@@ -125,13 +125,13 @@ export function createHarness(page) {
     const s = await st();
     mon.samples++;
     if (penetrating(s.player)) mon.pen++;
-    if (s.scene === 'taipei') {
+    if (s.scene === 'taiwan') {
       if (s.ground < -50) mon.fell++;
       if (!s.occupied && !s.traveling) {
         if (s.hero.y > s.ground + 0.04) mon.float++;
         mon.maxFloat = Math.max(mon.maxFloat ?? 0, s.hero.y - s.ground);
         if (s.hero.y < s.ground - 0.2) mon.sink++;
-        if (mon.last && mon.last.scene === 'taipei' && !mon.last.occupied) {
+        if (mon.last && mon.last.scene === 'taiwan' && !mon.last.occupied) {
           const dy = Math.abs(s.hero.y - mon.last.hero.y);
           if (dy > mon.maxDy) { mon.maxDy = dy; mon.worst = { from: mon.last.hero, to: s.hero }; }
         }

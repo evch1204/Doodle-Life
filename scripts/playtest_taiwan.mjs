@@ -1,8 +1,8 @@
-// End-to-end playtest (Milestone 3): starts in the room, travels to Taipei
+// End-to-end playtest (Milestone 3): starts in the room, travels to Taiwan
 // through the door, then drives the real game with keyboard + mouse input:
 // stairs, building fronts, railings, camera orbits, every interaction and
 // objective, and the trip back home. Records a video.
-// Usage: node scripts/playtest_taipei.mjs <outDir>
+// Usage: node scripts/playtest_taiwan.mjs <outDir>
 import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 import { createHarness } from './harness.mjs';
@@ -45,7 +45,7 @@ async function orbitCheck(label) {
 }
 
 // =====================================================================================
-// 1. Room -> Taipei through the front door
+// 1. Room -> Taiwan through the front door
 // =====================================================================================
 await loadModel();
 check('starts in the room', (await st()).scene === 'room');
@@ -55,12 +55,12 @@ check('door prompt in the room', s.interact === 'door', `interact=${s.interact}`
 await press('KeyE');
 await sleep(900);
 const card = await page.evaluate(() => ({ on: !document.getElementById('travel').classList.contains('off'), text: document.getElementById('travel-text').textContent }));
-check('travel card shows', card.on && card.text.includes('Taipei'), JSON.stringify(card));
+check('travel card shows', card.on && card.text.includes('Taiwan'), JSON.stringify(card));
 await shot('01_travel_card');
 await page.waitForFunction(() => !window.__dw.state().traveling, null, { timeout: 15000 });
 await sleep(300);
 s = await st();
-check('arrives in Taipei at the start point', s.scene === 'taipei' && Math.hypot(s.player.x - 0, s.player.z - 1.4) < 0.05, `scene=${s.scene} at ${s.player.x},${s.player.z}`);
+check('arrives in Taiwan at the start point', s.scene === 'taiwan' && Math.hypot(s.player.x - 0, s.player.z - 1.4) < 0.05, `scene=${s.scene} at ${s.player.x},${s.player.z}`);
 await loadModel();
 await shot('02_arrival');
 
@@ -206,7 +206,7 @@ await sleep(400);
 const yawA = (await st()).cam.yaw;
 await sleep(2600);
 s = await st();
-const target = 7 * Math.PI / 180;
+const target = 3 * Math.PI / 180;
 check('lookout: camera pans slowly toward Taipei 101', Math.abs(wrap(s.cam.yaw - target)) < 0.2 && Math.abs(wrap(yawA - target)) > Math.abs(wrap(s.cam.yaw - target)), `yaw ${yawA.toFixed(2)} -> ${s.cam.yaw.toFixed(2)} (target ${target.toFixed(2)})`);
 check('objective: Watch the sunset', s.done.includes('sunset'), s.caption);
 await shot('09_sunset');
@@ -253,24 +253,24 @@ s = await st();
 check('room still works after the trip (desk chair + monitors)', s.occupied?.id === 'deskchair' && s.monitorsOn === true, JSON.stringify(s.occupied));
 await press('Escape'); await sleep(1800);
 // and a second trip there and back is clean
-await page.evaluate(() => window.__dw.travel('taipei', true));
-await page.waitForFunction(() => window.__dw.state().scene === 'taipei' && !window.__dw.state().traveling, null, { timeout: 15000 });
+await page.evaluate(() => window.__dw.travel('taiwan', true));
+await page.waitForFunction(() => window.__dw.state().scene === 'taiwan' && !window.__dw.state().traveling, null, { timeout: 15000 });
 await page.evaluate(() => window.__dw.travel('room', true));
 await page.waitForFunction(() => window.__dw.state().scene === 'room' && !window.__dw.state().traveling, null, { timeout: 15000 });
 await sleep(1500);
 const fpsRoom = (await st()).fps;
 check('repeat trips are clean (fps after 3 loads)', fpsRoom > 50, `fps=${fpsRoom}`);
 
-// fps in Taipei while walking
-await page.evaluate(() => window.__dw.travel('taipei', true));
-await page.waitForFunction(() => window.__dw.state().scene === 'taipei' && !window.__dw.state().traveling, null, { timeout: 15000 });
+// fps in Taiwan while walking
+await page.evaluate(() => window.__dw.travel('taiwan', true));
+await page.waitForFunction(() => window.__dw.state().scene === 'taiwan' && !window.__dw.state().traveling, null, { timeout: 15000 });
 await loadModel();
 const fpsS = [];
 await page.keyboard.down('KeyW');
 for (let i = 0; i < 20; i++) { await sleep(150); fpsS.push((await st()).fps); }
 await page.keyboard.up('KeyW');
 const fpsMin = Math.min(...fpsS.slice(3)), fpsAvg = fpsS.slice(3).reduce((a, b) => a + b, 0) / (fpsS.length - 3);
-check('Taipei frame rate (headless Chrome, 1280x853)', fpsMin > 45, `min ${fpsMin}, avg ${fpsAvg.toFixed(0)}`);
+check('Taiwan frame rate (headless Chrome, 1280x853)', fpsMin > 45, `min ${fpsMin}, avg ${fpsAvg.toFixed(0)}`);
 check('no page errors', pageErrors.length === 0, pageErrors.join(' | '));
 check('never inside a collider during the whole run', mon.pen === 0, `${mon.pen}/${mon.samples} samples`);
 

@@ -1,13 +1,13 @@
-// Outline stability in Taipei: the same screen crops over consecutive small
+// Outline stability in Taiwan: the same screen crops over consecutive small
 // camera turns (and small steps forward), stacked side by side, so shimmer on
 // the skyline, the lantern strings and the signs is easy to spot.
-// Usage: node scripts/stability_taipei.mjs <out.png>
+// Usage: node scripts/stability_taiwan.mjs <out.png>
 import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 const out = process.argv[2];
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1536, height: 1024 } });
-await page.goto('http://localhost:5173/?scene=taipei');
+await page.goto('http://localhost:5173/?scene=taiwan');
 await page.waitForFunction(() => window.__dw && window.__dw.ready);
 await page.waitForTimeout(1200);
 const rows = [];
@@ -15,7 +15,9 @@ for (const [px, pz, yaw, pitch, crops] of [
   // mid-street: lantern strings + signs, and Taipei 101 down the street
   [0.2, -5.6, 0.1, 0.34, [[560, 0, 420, 300], [300, 60, 420, 300]]],
   // lookout: skyline + railing
-  [4.5, -27.4, 0.12, 0.08, [[560, 160, 420, 300]]],
+  [4.5, -27.4, 0.05, 0.08, [[560, 160, 420, 300]]],
+  // spawn: the waving flag + Taipei 101 between the lanterns
+  [0, 1.4, 0, 0.36, [[400, 60, 420, 300]]],
 ]) {
   const strip = await page.evaluate(async ({ px, pz, yaw, pitch, crops }) => {
     window.__dw.hud(false);
