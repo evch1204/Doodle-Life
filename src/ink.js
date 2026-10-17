@@ -189,18 +189,24 @@ export function backdropMaterial(map) {
 const normalMaterial = new THREE.ShaderMaterial({
   uniforms: { uId: { value: 0 } },
   vertexShader: /* glsl */`
+    // optional per-vertex id (merged geometry keeps a line between its parts);
+    // meshes without the attribute read 0 and use the per-mesh uniform
+    attribute float inkIdAttr;
     varying vec3 vN;
+    varying float vId;
     void main() {
       vN = normalize(normalMatrix * normal);
+      vId = inkIdAttr;
       gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     }`,
   fragmentShader: /* glsl */`
     uniform float uId;
     varying vec3 vN;
+    varying float vId;
     void main() {
       vec3 n = normalize(vN);
       if (!gl_FrontFacing) n = -n;
-      gl_FragColor = vec4(n * 0.5 + 0.5, uId);
+      gl_FragColor = vec4(n * 0.5 + 0.5, vId > 0.0 ? vId : uId);
     }`,
   side: THREE.DoubleSide,
 });
@@ -368,14 +374,17 @@ export class InkRenderer {
           // Hand-drawn jitter, anchored to world space so the wobble sticks to
           // the geometry instead of swimming when the camera moves.
           vec3 w = worldAt(vUv);
+          // far away the world-anchored noise would change every pixel and make
+          // distant lines shimmer: fade the wobble and pressure out with depth
+          float far = smoothstep(40.0, 140.0, lin(vUv));
           vec2 wob = vec2(vnoise(w * 4.0) - 0.5, vnoise(w * 4.0 + 17.3) - 0.5) * 2.0
                    + vec2(vnoise(w * 13.0 + 5.1) - 0.5, vnoise(w * 13.0 + 9.7) - 0.5);
-          vec2 uv = vUv + wob * uWobble * px;
+          vec2 uv = vUv + wob * uWobble * px * (1.0 - far);
           // two sub-pixel taps -> anti-aliased line edges
           float e = 0.5 * (edgeAt(uv + vec2(0.35, 0.3) * px, px) + edgeAt(uv - vec2(0.3, 0.35) * px, px));
 
           vec3 col = texture2D(tColor, vUv).rgb;
-          float pressure = mix(0.74, 1.0, vnoise(w * 6.0 + 3.3));
+          float pressure = mix(mix(0.74, 1.0, vnoise(w * 6.0 + 3.3)), 0.9, far);
           col = mix(col, uInk, clamp(e, 0.0, 1.0) * pressure);
 
           float grain = texture2D(tPaper, gl_FragCoord.xy / 512.0).r;

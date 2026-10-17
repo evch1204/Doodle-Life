@@ -168,8 +168,8 @@ function bunHair() {
 }
 
 /**
- * opts.style: 'player' (default) or 'auntie' (tea house NPC: bun, apron,
- * no glasses or backpack).
+ * opts.style: 'player' (default) or 'auntie' (NPC: bun, apron, no glasses or
+ * backpack). NPC options: bun (default true), topTone (shirt shade).
  */
 export function createCharacter(opts = {}) {
   const style = opts.style ?? 'player';
@@ -177,7 +177,7 @@ export function createCharacter(opts = {}) {
   const rng = makeRng(isPlayer ? 77 : 91);
   const M = {
     skin: ink({ tone: 1, facing: 0.3, hatch: 0.5, local: true, hatchFreq: 34 }),
-    top: ink({ tone: isPlayer ? 1 : 0.7, facing: 0.6, local: true, hatchFreq: 34 }),
+    top: ink({ tone: isPlayer ? 1 : (opts.topTone ?? 0.7), facing: 0.6, local: true, hatchFreq: 34 }),
     apron: ink({ tone: 1, facing: 0.5, local: true, hatchFreq: 34 }),
     pack: ink({ tone: 1, facing: 0.6, local: true, hatchFreq: 34 }),
     hair: ink({ tone: 1, hatch: 0, facing: 0, map: hairTexture(isPlayer ? 404 : 405) }),
@@ -329,7 +329,7 @@ export function createCharacter(opts = {}) {
   const hairData = isPlayer ? mopHair(rng) : bunHair();
   const hair = mesh(hairData.geo, M.hair, head);
   hair.position.set(0, isPlayer ? 0.032 : 0.02, -0.018);
-  if (!isPlayer) {
+  if (!isPlayer && opts.bun !== false) {
     const bun = mesh(new THREE.SphereGeometry(0.085, 20, 14), M.hair, head);
     bun.position.set(0, 0.17, -0.17);
     bun.userData.outlineGroup = ids[M.hair.uuid];
@@ -505,6 +505,7 @@ export function createCharacter(opts = {}) {
     if (o.snap) { hairOff.copy(hairTarget); hairVel.set(0, 0, 0); }
     hairVel.addScaledVector(hairTarget.clone().sub(hairOff), 260 * dt).multiplyScalar(Math.exp(-11 * dt));
     hairOff.addScaledVector(hairVel, dt);
+    if (!isPlayer) return; // NPCs stand at their counters: no hair follow-through needed
     const arr = hairPos.array, base = hairData.base, w = hairData.weight;
     const wob = Math.sin(t * 9) * 0.0015 * walk;
     for (let i = 0, n = w.length; i < n; i++) {

@@ -3,7 +3,7 @@ import { buildRoom, ROOM, OUTLINE } from '../room.js';
 
 // Chapter 0: the doodle loft (Milestones 1-2). The room itself is built by
 // room.js unchanged; this module only adds what the shared game needs:
-// HUD text, start point, the explore objective and the door to Taipei.
+// HUD text, start point, the explore objective and the door to Taiwan.
 export default {
   id: 'room',
   name: 'the loft',
@@ -26,9 +26,9 @@ export default {
     const room = buildRoom(scene);
     // the front door leads to the first chapter
     room.interactables.push({
-      id: 'door', label: 'Travel to Taipei', kind: 'action', x: -2.4, z: 3.55, radius: 0.85,
+      id: 'door', label: 'Travel to Taiwan', kind: 'action', x: -2.4, z: 3.55, radius: 0.85,
       pos: new THREE.Vector3(-2.4, 1.5, 4.1), noReach: false,
-      act: (ctx) => ctx.travel('taipei'),
+      act: (ctx) => ctx.travel('taiwan'),
     });
     // explore objective: visit the main areas of the room
     const zones = [[-3.2, -1.5], [-0.7, -3.6], [2.4, -2.6], [3.6, -0.6], [2.5, 3.2], [-3.4, 2.6]];
