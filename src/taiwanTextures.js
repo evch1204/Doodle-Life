@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Sketch, makeRng } from './sketch.js';
 
-// Line-art textures for Jiufen: white paper, black ink, same pen as the room.
+// Line-art textures for the Taiwan chapter (Jiufen): white paper, black ink, same pen as the room.
 
 export const HANZI = '"DFKai-SB","KaiTi","BiauKai","STKaiti","Microsoft JhengHei","PingFang TC",serif';
 
@@ -208,11 +208,11 @@ export function plaqueTexture(text) {
 }
 
 // ---------------------------------------------------------------------------
-// The view: a drawn panorama on a cylinder around the camera. Taipei 101 and
-// the city sit beyond doodle hills, faint mountains behind, the sea and a low
-// sun on the right. Canvas x spans azimuth -110..110 deg (0 = straight down
+// The sky: a drawn panorama on a cylinder around the camera with clouds, a low
+// sun, birds, faint doodle mountains and the sea. Everything nearer (the
+// hills, the city, Taipei 101) is 3D geometry in front of it. Canvas x spans azimuth -110..110 deg (0 = straight down
 // the street, -z); rows are linear in tan(elevation).
-export const PANO = { W: 6144, H: 1536, AZ: 110, ELB: -26, ELT: 40, T101: -7 };
+export const PANO = { W: 6144, H: 1536, AZ: 110, ELB: -26, ELT: 40, T101: -3 };
 
 export function panoramaTexture() {
   const { W, H, AZ, ELB, ELT } = PANO;
@@ -285,144 +285,7 @@ export function panoramaTexture() {
   }
   s.line(X(38), Y(1.6), W + 10, Y(1.4), { w: 2.2, j: 1, alpha: 0.6 });
 
-  // city: rows of blocky buildings with window grids, lighter further back
-  const building = (x, base, w, h, alpha, windows = true) => {
-    s.stroke([[x, base], [x, base - h], [x + w, base - h], [x + w, base]], { w: 2.2, j: 0.5, alpha, fill: '#fff' });
-    if (windows && w > 14 && h > 20) {
-      const cols = Math.max(1, Math.floor(w / 9)), rows = Math.max(1, Math.floor(h / 11));
-      for (let rI = 0; rI < rows; rI++) for (let c = 0; c < cols; c++) {
-        if (r() < 0.45) continue;
-        const wx = x + 4 + (c * (w - 8)) / cols, wy = base - h + 6 + (rI * (h - 10)) / rows;
-        ctx.globalAlpha = alpha * 0.8;
-        ctx.fillStyle = '#000';
-        ctx.fillRect(wx, wy, 3, 4);
-        ctx.globalAlpha = 1;
-      }
-    }
-  };
-  const cityBase = (az) => Y(-3.6 + 0.6 * Math.sin(az * 0.05));
-  for (const [layer, alpha, hMin, hMax, wMin, wMax] of [[0, 0.45, 12, 40, 14, 30], [1, 0.75, 16, 60, 16, 36]]) {
-    let az = -AZ;
-    while (az < 70) {
-      const w = rand(wMin, wMax), h = rand(hMin, hMax) * (1 - Math.abs(az + 10) / 160);
-      const base = cityBase(az) - (layer === 0 ? 14 : 0);
-      if (Math.abs(az - PANO.T101) > 3.2 || layer === 0) building(X(az), base, w, h, alpha, layer === 1);
-      az += (w + rand(-4, 3)) / pxPerDeg;
-    }
-  }
-  // a few taller towers around the center
-  for (const [az, h, w] of [[-24, 120, 30], [-17, 95, 26], [8, 140, 34], [15, 92, 24], [-36, 80, 26], [26, 78, 28]]) building(X(az), cityBase(az), w, h, 0.85);
-
-  // Taipei 101: podium, eight flared sections, crown, spire
-  {
-    const cx = X(PANO.T101), base = cityBase(PANO.T101) + 4;
-    const top = Y(17.5);
-    const total = base - top;
-    const pod = total * 0.09;
-    const spire = total * 0.12;
-    const crown = total * 0.06;
-    const secH = (total - pod - spire - crown - total * 0.13) / 8;
-    const lw = 3.2;
-    // podium
-    const pw = total * 0.13;
-    s.stroke([[cx - pw, base], [cx - pw, base - pod], [cx + pw, base - pod], [cx + pw, base]], { w: lw, j: 0.4, fill: '#fff' });
-    // shaft between podium and first section
-    let y = base - pod;
-    const shaftW = total * 0.055, shaftH = total * 0.13;
-    s.stroke([[cx - shaftW, y], [cx - shaftW * 0.9, y - shaftH], [cx + shaftW * 0.9, y - shaftH], [cx + shaftW, y]], { w: lw, j: 0.4, fill: '#fff' });
-    // ruyi coin ornament on the shaft
-    s.ellipse(cx, y - shaftH * 0.55, shaftW * 0.55, shaftW * 0.55, { w: 2.4, j: 0.3 });
-    s.ellipse(cx, y - shaftH * 0.55, shaftW * 0.2, shaftW * 0.2, { w: 2, j: 0.3 });
-    y -= shaftH;
-    for (let i = 0; i < 8; i++) {
-      const b = total * 0.048, t = total * 0.068;
-      const pts = [[cx - b, y], [cx - t, y - secH], [cx + t, y - secH], [cx + b, y]];
-      s.stroke(pts, { w: lw, j: 0.3, fill: '#fff' });
-      // window bands + center line on each section
-      for (let k = 1; k < 4; k++) {
-        const yy = y - (secH * k) / 4, ww = b + (t - b) * (k / 4);
-        s.line(cx - ww + 3, yy, cx + ww - 3, yy, { w: 1.3, j: 0.2, alpha: 0.7 });
-      }
-      s.line(cx - b * 0.35, y - 2, cx - t * 0.35, y - secH + 2, { w: 1.3, j: 0.2, alpha: 0.7 });
-      s.line(cx + b * 0.35, y - 2, cx + t * 0.35, y - secH + 2, { w: 1.3, j: 0.2, alpha: 0.7 });
-      // little dragon-curl ornaments at the corners
-      s.arc(cx - t - 3, y - secH + 6, 5, 5, 0, Math.PI * 1.4, { w: 1.8, j: 0 });
-      s.arc(cx + t + 3, y - secH + 6, 5, 5, Math.PI * 1.6, Math.PI * 3, { w: 1.8, j: 0 });
-      y -= secH;
-    }
-    // crown + spire
-    const cw = total * 0.045;
-    s.stroke([[cx - cw, y], [cx - cw * 0.7, y - crown], [cx + cw * 0.7, y - crown], [cx + cw, y]], { w: lw, j: 0.3, fill: '#fff' });
-    y -= crown;
-    s.stroke([[cx - 5, y], [cx - 3, y - spire * 0.55], [cx + 3, y - spire * 0.55], [cx + 5, y]], { w: 2.4, j: 0.2, fill: '#fff' });
-    s.line(cx, y - spire * 0.55, cx, y - spire, { w: 2.2, j: 0 });
-  }
-
-  // near hills: a valley ridge hiding the city's feet, then a dense town of
-  // rooftops stepping down toward the viewer (bigger = closer), with trees.
-  const near = ridge(-4.2, 1.6, 91, 1, 30);
-  near.pts = near.pts.map(([x, y]) => {
-    const az = (x / W) * 2 * AZ - AZ;
-    const dip = Math.exp(-((az - PANO.T101) ** 2) / (2 * 22 ** 2)) * 2.0; // valley toward 101
-    return [x, Math.max(y, Y(-4.2 - dip + (Math.abs(az) > 60 ? (Math.abs(az) - 60) * 0.06 : 0)))];
-  });
-  s.stroke([...near.pts, [W + 40, H + 10], [-40, H + 10]], { w: 0, j: 0, fill: '#fff' });
-  s.stroke(near.pts, { w: 3.2, j: 1.2 });
-  const ridgeY = (x) => { const i = Math.max(0, Math.min(near.pts.length - 1, Math.round((x + 40) / 30))); return near.pts[i][1]; };
-  const roof = (x, base, w, h, alpha) => {
-    const body = h * 0.55;
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x, base - body, w, body + 2);
-    ctx.globalAlpha = alpha;
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = Math.max(1.2, w / 22);
-    ctx.strokeRect(x, base - body, w, body);
-    if (w > 18) { ctx.fillStyle = '#000'; ctx.fillRect(x + w * 0.3, base - body * 0.7, w * 0.14, body * 0.35); }
-    // roof: light gray with tile lines
-    ctx.beginPath();
-    ctx.moveTo(x - w * 0.1, base - body);
-    ctx.lineTo(x + w * 0.12, base - h);
-    ctx.lineTo(x + w * 0.88, base - h);
-    ctx.lineTo(x + w * 1.1, base - body);
-    ctx.closePath();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = '#cfcfcf';
-    ctx.fill();
-    ctx.globalAlpha = alpha;
-    ctx.stroke();
-    ctx.lineWidth = Math.max(0.8, w / 40);
-    for (let k = 1; k < 5; k++) {
-      const u = k / 5;
-      ctx.beginPath();
-      ctx.moveTo(x - w * 0.1 + u * w * 1.2, base - body);
-      ctx.lineTo(x + w * 0.12 + u * w * 0.76, base - h);
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-  };
-  const tree = (x, base, r) => {
-    ctx.beginPath();
-    ctx.ellipse(x, base - r * 0.8, r, r * 0.8, 0, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff'; ctx.fill();
-    ctx.lineWidth = Math.max(1.2, r / 10); ctx.strokeStyle = '#000'; ctx.globalAlpha = 0.8; ctx.stroke();
-    ctx.globalAlpha = 0.45;
-    for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(x + (k - 1) * r * 0.4, base - r * 0.6, r * 0.35, 0.2, Math.PI - 0.2); ctx.stroke(); }
-    ctx.globalAlpha = 1;
-  };
-  // rows from the far valley (small) down to the near slope (big)
-  for (let el = -4.8; el > ELB - 1; el -= 0.55 + (-el - 4) * 0.06) {
-    const size = 9 + (-el - 4) * 2.6;
-    let x = -20 + r() * size;
-    while (x < W + 20) {
-      const base = Y(el) + r() * size * 0.25;
-      if (base > ridgeY(x) + size * 0.2) {
-        if (r() < 0.14) tree(x + size * 0.4, base, size * 0.55);
-        else roof(x, base, size * (0.9 + r() * 0.6), size * (0.75 + r() * 0.3), Math.min(1, 0.45 + (-el - 4) * 0.05));
-      }
-      x += size * (1.0 + r() * 0.5);
-    }
-  }
+  // (the city, Taipei 101 and the hills in front of them are real 3D geometry now)
   const t = s.texture();
   t.anisotropy = 4;
   return t;
@@ -441,4 +304,97 @@ export function scrubTexture() {
     s.hatch(x - r, y - r * 0.5, r * 2, r * 0.5, { gap: 5, lw: 1, alpha: 0.4, clip: (c) => c.ellipse(x, y, r, r * 0.6, 0, Math.PI, Math.PI * 2) });
   }
   return s.texture({ repeat: true });
+}
+
+// City facades: a loose grid of windows (tiled in world space, mipmapped so it
+// fades to a light tone at distance instead of shimmering).
+export function cityWindowTexture() {
+  const S = 256, s = new Sketch(S, S, { seed: 73 });
+  const r = makeRng(74);
+  const ctx = s.ctx;
+  ctx.fillStyle = '#000';
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 6; col++) {
+      if (r() < 0.25) continue;
+      ctx.globalAlpha = 0.55 + r() * 0.35;
+      ctx.fillRect(10 + col * 41, 8 + row * 31, 22, 15);
+    }
+  }
+  ctx.globalAlpha = 1;
+  for (let row = 0; row <= 8; row++) s.line(0, row * 31 + 2, S, row * 31 + 2, { w: 1.2, j: 0.3, alpha: 0.35 });
+  return s.texture({ repeat: true });
+}
+
+// Hill bands between the street and the city. kind 'town': rooftops and trees
+// stepping down the slope; 'trees': scattered tree clumps; 'ridge': light hatching.
+export function hillTexture(kind, seed = 81) {
+  const W = 1024, H = 512, s = new Sketch(W, H, { seed });
+  const ctx = s.ctx;
+  const r = makeRng(seed + 1);
+  const roof = (x, base, w, h) => {
+    const body = h * 0.55;
+    ctx.fillStyle = '#fff'; ctx.fillRect(x, base - body, w, body + 2);
+    ctx.strokeStyle = '#000'; ctx.lineWidth = Math.max(1.5, w / 20); ctx.strokeRect(x, base - body, w, body);
+    ctx.fillStyle = '#000'; ctx.fillRect(x + w * 0.3, base - body * 0.7, w * 0.14, body * 0.35);
+    ctx.beginPath();
+    ctx.moveTo(x - w * 0.1, base - body); ctx.lineTo(x + w * 0.12, base - h); ctx.lineTo(x + w * 0.88, base - h); ctx.lineTo(x + w * 1.1, base - body); ctx.closePath();
+    ctx.fillStyle = '#c8c8c8'; ctx.fill(); ctx.stroke();
+    ctx.lineWidth = Math.max(1, w / 36);
+    for (let k = 1; k < 5; k++) { const u = k / 5; ctx.beginPath(); ctx.moveTo(x - w * 0.1 + u * w * 1.2, base - body); ctx.lineTo(x + w * 0.12 + u * w * 0.76, base - h); ctx.stroke(); }
+  };
+  const tree = (x, base, rad) => {
+    ctx.beginPath(); ctx.ellipse(x, base - rad * 0.8, rad, rad * 0.8, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = Math.max(1.5, rad / 9); ctx.strokeStyle = '#000'; ctx.stroke();
+    ctx.globalAlpha = 0.5;
+    for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.arc(x + (k - 1) * rad * 0.4, base - rad * 0.6, rad * 0.35, 0.2, Math.PI - 0.2); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+  };
+  if (kind === 'town') {
+    // a loose scatter of houses among trees (calm, so it does not compete with the street)
+    for (let y = 40; y < H + 40; y += 70) {
+      let x = -30 + r() * 60;
+      while (x < W + 30) {
+        if (r() < 0.3) tree(x + 20, y, 18 + r() * 8); else if (r() < 0.75) roof(x, y + r() * 12, 34 + r() * 20, 28 + r() * 8);
+        x += 80 + r() * 60;
+      }
+    }
+  } else if (kind === 'trees') {
+    for (let i = 0; i < 70; i++) tree(r() * W, 30 + r() * (H - 30), 16 + r() * 16);
+    for (let i = 0; i < 10; i++) roof(r() * W, 60 + r() * (H - 60), 30, 26);
+  } else {
+    s.hatch(0, 0, W, H, { gap: 22, lw: 1.6, alpha: 0.35, angle: 0.9 });
+    for (let i = 0; i < 40; i++) tree(r() * W, 40 + r() * (H - 40), 10 + r() * 10);
+  }
+  return s.texture({ repeat: true });
+}
+
+// 青天白日滿地紅 in ink: a 3:2 field with a canton (upper-left quarter of the
+// area) holding a white sun with twelve rays and a ring. Monochrome: the field
+// is a light hatched gray, the canton dark cross-hatched, the sun paper white.
+export function flagTexture() {
+  const W = 768, H = 512, s = new Sketch(W, H, { seed: 91, bg: '#b4b4b4' });
+  const ctx = s.ctx;
+  s.hatch(0, 0, W, H, { gap: 14, lw: 1.6, alpha: 0.3, angle: 0.8, j: 0.4 });
+  const cw = W / 2, ch = H / 2;
+  ctx.fillStyle = '#4a4a4a';
+  ctx.fillRect(0, 0, cw, ch);
+  s.hatch(0, 0, cw, ch, { gap: 10, lw: 1.6, alpha: 0.55, angle: 0.8, j: 0.3 });
+  s.hatch(0, 0, cw, ch, { gap: 10, lw: 1.6, alpha: 0.55, angle: -0.8, j: 0.3 });
+  s.line(cw, 0, cw, ch, { w: 3, j: 0.4 });
+  s.line(0, ch, cw, ch, { w: 3, j: 0.4 });
+  // the sun: twelve rays (one triangle each), a ring, a disc
+  const cx = cw / 2, cy = ch / 2, R = ch * 0.38, rIn = R * 0.53;
+  const rays = [];
+  for (let i = 0; i < 12; i++) {
+    const a = -Math.PI / 2 + (i / 12) * Math.PI * 2, da = Math.PI / 12;
+    rays.push([[cx + Math.cos(a) * R, cy + Math.sin(a) * R], [cx + Math.cos(a + da) * rIn, cy + Math.sin(a + da) * rIn], [cx + Math.cos(a - da) * rIn, cy + Math.sin(a - da) * rIn]]);
+  }
+  for (const tri of rays) s.stroke(tri, { w: 2.6, j: 0.2, closed: true, fill: '#fff' });
+  s.ellipse(cx, cy, rIn * 1.02, rIn * 1.02, { w: 0, j: 0, fill: '#fff' });
+  s.ellipse(cx, cy, rIn * 0.97, rIn * 0.97, { w: 2.6, j: 0.2, fill: '#4a4a4a' }); // the blue ring
+  s.ellipse(cx, cy, rIn * 0.8, rIn * 0.8, { w: 2.6, j: 0.2, fill: '#fff' });       // the white disc
+  s.rect(3, 3, W - 6, H - 6, { w: 5, j: 0.5 });
+  const t = s.texture();
+  t.anisotropy = 8;
+  return t;
 }
