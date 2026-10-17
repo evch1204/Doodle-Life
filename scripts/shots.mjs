@@ -39,9 +39,15 @@ const TAIPEI_VIEWS = {
   t_close_tea: { free: [[0.2, -0.3, -10.4], [1.6, -0.9, -11.6]] },
   t_close_boba: { free: [[-0.55, 0.55, -5.4], [-1.45, 0.05, -5.95]] },
   t_cat: { free: [[2.4, -0.55, -14.6], [2.55, -0.85, -13.2]] },
+  t_tofu: { free: [[0.6, -0.2, -10.9], [-1.5, -0.8, -11.7]] },
+  t_noodle: { free: [[3.2, -0.5, -14.2], [5.4, -0.9, -14.9]] },
+  t_fruit: { free: [[3.3, -1.5, -20.2], [5.4, -2.0, -20.9]] },
+  t_cake: { free: [[0.2, 0.2, -5.4], [1.6, -0.3, -6.3]] },
+  t_taro: { free: [[0.1, 1.1, -2.4], [1.6, 0.6, -3.1]] },
+  t_flag: { player: [0, 1.4, Math.PI], view: [0, 0.36] },
   t_wide_plaza: { free: [[-1.0, 3.0, -21.5], [1.5, -1.5, -12]] },
 };
-const VIEWS = SCENE === 'taipei' ? TAIPEI_VIEWS : ROOM_VIEWS;
+const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : ROOM_VIEWS;
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1536, height: 1024 } });
