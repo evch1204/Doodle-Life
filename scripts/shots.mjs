@@ -61,6 +61,17 @@ const SHANGHAI_VIEWS = {
   sh_iso: { player: [0, 3.4, Math.PI], free: [[-17, 15, 19], [1.5, 0, 0.5]] },
   sh_iso2: { player: [0, 3.4, Math.PI], free: [[22, 11, 14], [6, 0, 1.5]] },
   sh_sky: { player: [0.3, -2.25, Math.PI], free: [[0.3, 1.6, -1.6], [30, 40, -420]] },
+  // close-ups for the visual pass (the landmarks, the old Bund fronts, the river, the city)
+  sh_pearl: { player: [0, 3.4, Math.PI], free: [[-40, 55, -215], [-65.8, 62, -338.7]] },
+  sh_jinmao: { player: [0, 3.4, Math.PI], free: [[50, 95, -315], [66.5, 95, -445]] },
+  sh_tower: { player: [0, 3.4, Math.PI], free: [[95, 115, -320], [121.6, 110, -454]] },
+  sh_swfc: { player: [0, 3.4, Math.PI], free: [[140, 115, -290], [155.8, 112, -417]] },
+  sh_city: { player: [0, 3.4, Math.PI], free: [[-20, 26, -95], [60, 30, -430]] },
+  sh_river: { player: [0, 3.4, Math.PI], free: [[-3, 2.2, -2.6], [6, -1.7, -40]] },
+  sh_bund: { player: [0, 5.6, 0], free: [[-6, 3.2, 5.8], [14, 9, 47]] },
+  sh_bund_close: { player: [0, 5.6, 0], free: [[-4, 1.5, 28], [6, 5, 47]] },
+  sh_peace: { player: [0, 5.6, 0], free: [[-82, 4, 10], [-118, 24, 47]] },
+  sh_bund_wide: { player: [0, 5.6, 0], free: [[0, 9, 0], [0, 16, 47]] },
 };
 const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : SCENE === 'shanghai' ? SHANGHAI_VIEWS : ROOM_VIEWS;
 

@@ -920,6 +920,12 @@ export async function startGame(SCENES, firstId) {
     setView(yaw, pitch, dist) { view.yaw = yaw; if (pitch !== undefined) view.pitch = pitch; if (dist !== undefined) view.baseDist = view.dist = dist; updateCamera(0, true); },
     look,
     resetMaxDy() { maxFrameDy = 0; },
+    // scene load for the perf script: meshes (x2 passes = draw calls) and triangles
+    renderInfo() {
+      let meshes = 0, tris = 0;
+      scene.traverse((o) => { if (o.isMesh && o.visible) { meshes++; const g = o.geometry; tris += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
+      return { meshes, tris: Math.round(tris) };
+    },
     freeCam(p, tg) { freeCam = p ? { pos: new THREE.Vector3(...p), target: new THREE.Vector3(...tg) } : null; if (!p) updateCamera(0, true); },
     hud(on) { document.getElementById('hud').style.display = on ? '' : 'none'; },
     interactables: () => world.interactables.map((i) => ({ id: i.id, label: i.label, x: i.x, z: i.z, r: i.radius, kind: i.kind, y: heightAt(i.x, i.z), stand: i.star ? i.star.stand : null, collected: i.star ? i.star.collected : undefined })),
