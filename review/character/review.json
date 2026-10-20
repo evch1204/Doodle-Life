@@ -1,0 +1,242 @@
+[
+ {
+  "scene": "room",
+  "traveling": false,
+  "player": {
+   "x": -0.3,
+   "z": -0.749,
+   "y": 0,
+   "facing": 3.142,
+   "speed": 2.3
+  },
+  "hero": {
+   "x": -0.3,
+   "y": 0,
+   "z": -0.749,
+   "pose": "stand"
+  },
+  "cam": {
+   "x": 0.06,
+   "y": 2.012,
+   "z": 1.8,
+   "yaw": 0,
+   "pitch": 0.4,
+   "dist": 2.599
+  },
+  "interact": null,
+  "occupied": null,
+  "stars": 0,
+  "starTotal": 5,
+  "journalOpen": false,
+  "caption": null,
+  "monitorsOn": false,
+  "fps": 165,
+  "bob": 0.0107,
+  "hair": 0.0065,
+  "explore": 0,
+  "done": [],
+  "used": [],
+  "ground": 0,
+  "maxVy": 0
+ },
+ {
+  "scene": "room",
+  "traveling": false,
+  "player": {
+   "x": -0.654,
+   "z": -2.198,
+   "y": 0,
+   "facing": 3.958,
+   "speed": 0.088
+  },
+  "hero": {
+   "x": -0.654,
+   "y": 0,
+   "z": -2.198,
+   "pose": "stand"
+  },
+  "cam": {
+   "x": 1.447,
+   "y": 2.012,
+   "z": -0.986,
+   "yaw": 0.902,
+   "pitch": 0.4,
+   "dist": 2.6
+  },
+  "interact": "star",
+  "occupied": null,
+  "stars": 0,
+  "starTotal": 5,
+  "journalOpen": false,
+  "caption": null,
+  "monitorsOn": false,
+  "fps": 157,
+  "bob": -0.0008,
+  "hair": 0.0046,
+  "explore": 0,
+  "done": [],
+  "used": [],
+  "ground": 0,
+  "maxVy": 0
+ },
+ {
+  "scene": "room",
+  "traveling": false,
+  "player": {
+   "x": -0.326,
+   "z": -2.937,
+   "y": 0,
+   "facing": 2.587,
+   "speed": 2.236
+  },
+  "hero": {
+   "x": -0.326,
+   "y": 0,
+   "z": -2.937,
+   "pose": "stand"
+  },
+  "cam": {
+   "x": -1.656,
+   "y": 2.012,
+   "z": -0.742,
+   "yaw": -0.697,
+   "pitch": 0.4,
+   "dist": 2.6
+  },
+  "interact": "bed",
+  "occupied": null,
+  "stars": 0,
+  "starTotal": 5,
+  "journalOpen": false,
+  "caption": null,
+  "monitorsOn": false,
+  "fps": 161,
+  "bob": -0.0012,
+  "hair": 0.0053,
+  "explore": 1,
+  "done": [],
+  "used": [],
+  "ground": 0,
+  "maxVy": 0
+ },
+ {
+  "scene": "room",
+  "traveling": false,
+  "player": {
+   "x": -0.243,
+   "z": -3.062,
+   "y": 0,
+   "facing": 2.587,
+   "speed": 0
+  },
+  "hero": {
+   "x": -0.243,
+   "y": 0,
+   "z": -3.062,
+   "pose": "stand"
+  },
+  "cam": {
+   "x": -1.504,
+   "y": 2.012,
+   "z": -0.995,
+   "yaw": -0.697,
+   "pitch": 0.4,
+   "dist": 2.6
+  },
+  "interact": "bed",
+  "occupied": null,
+  "stars": 0,
+  "starTotal": 5,
+  "journalOpen": false,
+  "caption": null,
+  "monitorsOn": false,
+  "fps": 149,
+  "bob": 0,
+  "hair": 0,
+  "explore": 1,
+  "done": [],
+  "used": [],
+  "ground": 0,
+  "maxVy": 0
+ },
+ {
+  "scene": "room",
+  "traveling": false,
+  "player": {
+   "x": -0.165,
+   "z": -0.497,
+   "y": 0,
+   "facing": 7.157,
+   "speed": 0
+  },
+  "hero": {
+   "x": -0.165,
+   "y": 0,
+   "z": -0.497,
+   "pose": "stand"
+  },
+  "cam": {
+   "x": -1.426,
+   "y": 2.012,
+   "z": 1.571,
+   "yaw": -0.697,
+   "pitch": 0.4,
+   "dist": 2.6
+  },
+  "interact": null,
+  "occupied": null,
+  "stars": 0,
+  "starTotal": 5,
+  "journalOpen": false,
+  "caption": null,
+  "monitorsOn": false,
+  "fps": 139,
+  "bob": 0,
+  "hair": 0.0002,
+  "explore": 2,
+  "done": [],
+  "used": [],
+  "ground": 0,
+  "maxVy": 0
+ },
+ {
+  "scene": "taiwan",
+  "traveling": false,
+  "player": {
+   "x": 0,
+   "z": -4.594,
+   "y": -0.909,
+   "facing": 3.142,
+   "speed": 0
+  },
+  "hero": {
+   "x": 0,
+   "y": -0.909,
+   "z": -4.594,
+   "pose": "stand"
+  },
+  "cam": {
+   "x": 0.36,
+   "y": 0.955,
+   "z": -2.301,
+   "yaw": 0,
+   "pitch": 0.36,
+   "dist": 2.45
+  },
+  "interact": null,
+  "occupied": null,
+  "stars": 0,
+  "starTotal": 5,
+  "journalOpen": false,
+  "caption": null,
+  "monitorsOn": null,
+  "fps": 74,
+  "bob": 0,
+  "hair": 0,
+  "explore": 1,
+  "done": [],
+  "used": [],
+  "ground": -0.909,
+  "maxVy": 2.225
+ }
+]

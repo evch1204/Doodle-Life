@@ -22,9 +22,11 @@ The room's front door travels to Taiwan; the 回家 signpost at the top of the J
   - `taiwan.js` builds Jiufen old street: stepped street with a bend, shrine alley, lower street, lookout,
     shops, lanterns, the tea house auntie, the cat, food stalls, collectibles and objectives.
   A new chapter (Shanghai, Santa Clara) is one new module there plus one line in `index.js`.
-- `src/character.js` — chibi rig (hips/spine/neck/head, shoulders/elbows, hips/knees/ankles with
-  two-bone leg IK), sculpted single-mesh hair with spring follow-through, walk/idle/turn/stop,
-  sit/lie/reach/pickup. `createCharacter({ style: 'auntie' })` makes the tea house NPC.
+- `src/character.js` — the player from the character sheet (messy black mop with fringe + cowlick,
+  oversized hoodie with hood, drawstrings and kangaroo pocket, cream backpack, wide black trousers,
+  two-tone sneakers) on a chibi rig (hips/spine/neck/head, shoulders/elbows, hips/knees/ankles with
+  two-bone leg IK), sculpted single-mesh hair with spring follow-through, backpack sway, walk/idle/
+  turn/stop, sit/lie/reach/pickup. `createCharacter({ style: 'auntie' })` makes the tea house NPC.
 - `src/i18n.js` — the single string table (English / 中文) for every player-facing string; the choice
   is saved in localStorage. In-world signs (茶, 臭豆腐, ...) are art and stay in Chinese.
 - `src/ink.js` — ink surface material + outline/paper post pass.
@@ -39,5 +41,8 @@ The room's front door travels to Taiwan; the 回家 signpost at the top of the J
 - `node scripts/i18n_check.mjs [dir]` — settings menu, language switching + persistence, a Chinese entry
   for every reachable string, and no text overflow in either language.
 - `node scripts/clip.mjs <dir>` — scripted review clip from the gameplay camera.
+- `node scripts/charreview.mjs <dir>` — character review: front / side / back / 3/4 stills, gameplay-camera
+  stills (room + Taiwan) and a walk-and-turn recording. `node scripts/views.mjs <png> [dist lookY camY]` —
+  close six-angle turnaround strip.
 - `node scripts/shots.mjs <dir>` (`SCENE=taiwan` for Taiwan views), `node scripts/charsheet.mjs <png> [scene] [x z facing]`,
   `node scripts/stability.mjs <png>`, `node scripts/stability_taiwan.mjs <png>` — stills and outline-stability strips.
