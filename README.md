@@ -23,7 +23,13 @@ the 回家 signposts in Jiufen and on the Bund travel home.
 - `src/scenes/` — one module per place, registered in `scenes/index.js`:
   - `room.js` wraps the unchanged `src/room.js` (the loft) and adds the door to Taiwan.
   - `taiwan.js` builds Jiufen old street: stepped street with a bend, shrine alley, lower street, lookout,
-    shops, lanterns, the tea house auntie, the cat, food stalls, collectibles and objectives.
+    shops, lanterns, the tea house auntie, the cat, food stalls, collectibles and objectives. The view is
+    built in `scenes/taiwan/`: `hillside.js` (the terraced town below the street from a house kit:
+    tile-roofed and black tar-paper houses, concrete walk-ups with parapets and tanks, stone plinths;
+    villages and tree clumps on the hill crests) and `taipei.js` (Taipei 101 from its structure: the
+    notched plan, the tapering base with coins and ruyi, eight flaring segments on ledges with corner
+    ornaments, the stepped crown and spire; Nan Shan Plaza; the basin city of caged-window walk-ups and
+    office towers in three levels of detail).
   - `shanghai.js` builds the Bund: the paved promenade with its iron railing (the river is a hard
     boundary), benches, cast-iron lamps, life ring, bin, seagull, the 外灘 pylon, Bund Coffee (enterable,
     barista at the counter), ferries and birds. The far scenery is built in `scenes/shanghai/`:
@@ -32,7 +38,7 @@ the 回家 signposts in Jiufen and on the Bund travel home.
     dome, Peace Hotel pyramid and Bank of China roof), `pudong.js` (the four landmarks modelled from their
     structure, and the city from a small library of tower types, facades and crowns in three levels of
     detail), `river.js` (the water shader: ripple rows spaced by viewing angle, drifting with the current,
-    and stroke-drawn reflections looked up from the skyline's silhouette) and
+    and stroke-drawn reflections looked up from the skyline's silhouette). Both chapters share
     `scenes/kit.js` (merged batches, one draw call per material, each piece keeping its outline id). The
     ink pass fades distant lines and tones (aerial perspective) except for the landmarks. Interactions: the viewpoint, the photo spot (saves the frame as a postcard into an album that
     lasts the session), the barista's dialogue panel, benches, the seagull and the life ring.
@@ -47,7 +53,7 @@ the 回家 signposts in Jiufen and on the Bund travel home.
 - `src/ink.js` — ink surface material + outline/paper post pass.
 - `src/textures.js`, `src/taiwanTextures.js`, `src/shanghaiTextures.js` — every texture is drawn at load
   with a wobbly-pen canvas helper (`src/sketch.js`), including the sky panoramas. Taipei 101, the city and
-  the hills in front of it are 3D geometry in `taiwan.js`; the Pudong skyline is 3D geometry in `scenes/shanghai/`.
+  the hills in front of it are 3D geometry (`scenes/taiwan/`); the Pudong skyline too (`scenes/shanghai/`).
 
 ## Test scripts (need the dev server running)
 Every script takes the server address from `URL` (default `http://localhost:5173/`).

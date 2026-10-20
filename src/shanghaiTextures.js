@@ -515,6 +515,18 @@ export function cityTexture(kind = 'punched', seed = 421) {
         for (let k = 0; k < 7; k++) fill(bx * c + c * 0.15 + k * c * 0.11, fy * c + c * 0.56, 1.5, c * 0.14, 80);
       }
     }
+  } else if (kind === 'cage') {
+    // Taipei walk-ups: windows behind iron cages, an air conditioner here and there, tiled walls
+    for (let fy = 0; fy < 4; fy++) {
+      s.line(-2, fy * c + 2, S + 2, fy * c + 2, { w: 1, j: 0, alpha: 0.3 });
+      for (let bx = 0; bx < 4; bx++) {
+        const x = bx * c + c * 0.16, y = fy * c + c * 0.2, w = c * 0.68, h = c * 0.5;
+        fill(x, y, w, h, r() < 0.3 ? 140 : 96);
+        for (let g = 0; g <= 6; g++) fill(x + (g * w) / 6 - 1, y - 3, 2, h + 6, 40);
+        fill(x - 3, y - 4, w + 6, 3, 40);
+        if (r() < 0.25) fill(x + w * 0.62, y + h + 3, c * 0.2, c * 0.14, 70);
+      }
+    }
   } else if (kind === 'side') {
     // plain side walls of the old Bund: framed windows, light glass, a sill each
     for (let fy = 0; fy < 4; fy++) for (let bx = 0; bx < 4; bx++) {
