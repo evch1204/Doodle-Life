@@ -6,7 +6,7 @@ import fs from 'node:fs';
 const out = process.argv[2];
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1536, height: 1024 } });
-await page.goto('http://localhost:5173/');
+await page.goto(process.env.URL || 'http://localhost:5173/');
 await page.waitForFunction(() => window.__dw && window.__dw.ready);
 await page.evaluate(() => { window.__dw.hud(false); window.__dw.setPlayer(-0.3, 1.4, Math.PI); window.__dw.setView(0.0, 0.4, 2.6); });
 await page.waitForTimeout(600);

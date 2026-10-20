@@ -7,7 +7,7 @@ import fs from 'node:fs';
 const out = process.argv[2];
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1536, height: 1024 } });
-await page.goto('http://localhost:5173/?scene=taiwan');
+await page.goto((process.env.URL || 'http://localhost:5173/') + '?scene=taiwan');
 await page.waitForFunction(() => window.__dw && window.__dw.ready);
 await page.waitForTimeout(1200);
 const rows = [];

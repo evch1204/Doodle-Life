@@ -47,7 +47,22 @@ const TAIPEI_VIEWS = {
   t_flag: { player: [0, 1.4, Math.PI], view: [0, 0.36] },
   t_wide_plaza: { free: [[-1.0, 3.0, -21.5], [1.5, -1.5, -12]] },
 };
-const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : ROOM_VIEWS;
+const SHANGHAI_VIEWS = {
+  sh_start: { player: [0, 3.4, Math.PI], view: [0, 0.05] },
+  sh_rail: { player: [0.3, -2.25, Math.PI], view: [0.05, 0.08, 3.4] },
+  sh_side: { player: [-9.5, 1.2, Math.PI / 2], view: [-Math.PI / 2 + 0.45, 0.22] },
+  sh_side_back: { player: [6.0, 0.4, -Math.PI / 2], view: [Math.PI / 2 - 0.5, 0.2] },
+  sh_cafe: { player: [11.6, -0.7, 0.3], view: [Math.PI + 0.35, 0.16, 3.4] },
+  sh_cafe_in: { player: [13.2, 4.3, 0], view: [Math.PI + 0.25, 0.22] },
+  sh_cafe_win: { player: [14.0, 3.6, Math.PI], view: [0.2, 0.12] },
+  sh_land: { player: [0, 5.6, 0], view: [Math.PI, 0.18] },
+  sh_close: { free: [[-2.75, 1.25, -0.55], [-1.6, 0.55, -2.4]] },
+  sh_close_ring: { free: [[1.6, 1.1, -1.4], [2.4, 0.75, -2.9]] },
+  sh_iso: { player: [0, 3.4, Math.PI], free: [[-17, 15, 19], [1.5, 0, 0.5]] },
+  sh_iso2: { player: [0, 3.4, Math.PI], free: [[22, 11, 14], [6, 0, 1.5]] },
+  sh_sky: { player: [0.3, -2.25, Math.PI], free: [[0.3, 1.6, -1.6], [30, 40, -420]] },
+};
+const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : SCENE === 'shanghai' ? SHANGHAI_VIEWS : ROOM_VIEWS;
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1536, height: 1024 } });

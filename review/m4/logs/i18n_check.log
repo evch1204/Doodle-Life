@@ -1,0 +1,17 @@
+PASS  language defaults to English  
+PASS  Esc opens settings  
+PASS  Esc again closes settings  
+PASS  Resume closes settings  
+PASS  game is paused while settings are open  
+PASS  switching to 中文 updates the HUD and menu instantly  {"move":"移動","title":"目標：","first":"探索房間","menu":"設定","resume":"繼續","lang":"zh-Hant"}
+PASS  language choice persists across reload  
+PASS  every reachable string has a Chinese entry (101 strings)  
+PASS  travel card in Chinese  前往台灣中……
+PASS  objective card says 台灣 / 九份老街  台灣 / 九份老街
+PASS  travel card in Chinese (Shanghai)  前往上海中……
+PASS  Shanghai objectives in Chinese  探索江邊步道（0/4） / 找到咖啡館 / 拍一張照片
+PASS  no overflow in en (captions, prompts, objective card, controls, menu)  
+PASS  no overflow in zh (captions, prompts, objective card, controls, menu)  
+PASS  no page errors  
+
+15/15 checks passed
