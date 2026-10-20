@@ -1,0 +1,247 @@
+{
+  "results": [
+    {
+      "name": "starts in the room",
+      "ok": true
+    },
+    {
+      "name": "door prompt in the room",
+      "ok": true,
+      "detail": "interact=door"
+    },
+    {
+      "name": "travel card shows",
+      "ok": true,
+      "detail": "{\"on\":true,\"text\":\"Traveling to Taiwan…\"}"
+    },
+    {
+      "name": "arrives in Taiwan at the start point",
+      "ok": true,
+      "detail": "scene=taiwan at 0,1.4"
+    },
+    {
+      "name": "top of the street -> lookout on foot",
+      "ok": true,
+      "detail": "at 4.492,-27.589 y=-3.9"
+    },
+    {
+      "name": "lookout -> back to the top on foot",
+      "ok": true,
+      "detail": "at 0.002,1.151 y=0"
+    },
+    {
+      "name": "stairs: no popping (fastest vertical body speed, frame-rate independent)",
+      "ok": true,
+      "detail": "max vertical speed 2.225 m/s (a 0.15 m pop in one frame would be ~9 m/s)"
+    },
+    {
+      "name": "stairs: feet on the ground (no floating / sinking)",
+      "ok": true,
+      "detail": "float=0 sink=0 of 453, highest above ground 0.020 m"
+    },
+    {
+      "name": "climb the shrine steps",
+      "ok": true,
+      "detail": "y=-1.35"
+    },
+    {
+      "name": "descend the shrine steps",
+      "ok": true,
+      "detail": "y=-1.8"
+    },
+    {
+      "name": "building fronts / railings / stalls: never walk through",
+      "ok": true,
+      "detail": "0 of 18"
+    },
+    {
+      "name": "building fronts / railings / stalls: never stuck",
+      "ok": true,
+      "detail": "0 of 18"
+    },
+    {
+      "name": "never off the walkable ground (no falls)",
+      "ok": true,
+      "detail": "fell=0 monitor=0"
+    },
+    {
+      "name": "camera orbit (narrow street): never inside a building or under the ground",
+      "ok": true,
+      "detail": "0/16 bad samples, closest 1.38m"
+    },
+    {
+      "name": "camera orbit (shrine alley): never inside a building or under the ground",
+      "ok": true,
+      "detail": "0/16 bad samples, closest 0.69m"
+    },
+    {
+      "name": "camera orbit (lower street): never inside a building or under the ground",
+      "ok": true,
+      "detail": "0/16 bad samples, closest 1.36m"
+    },
+    {
+      "name": "camera orbit (lookout): never inside a building or under the ground",
+      "ok": true,
+      "detail": "0/16 bad samples, closest 2.77m"
+    },
+    {
+      "name": "camera pulls in on the narrow street, opens up at the lookout",
+      "ok": true,
+      "detail": "street 2.45 vs lookout 3.399"
+    },
+    {
+      "name": "talk to the tea house auntie",
+      "ok": true,
+      "detail": "Welcome, welcome! The oolong is fresh today."
+    },
+    {
+      "name": "auntie has more than one line",
+      "ok": true,
+      "detail": "You walked all the way down? Rest your feet, have a cup."
+    },
+    {
+      "name": "objective: Find the tea house",
+      "ok": true
+    },
+    {
+      "name": "tea lantern sways when touched",
+      "ok": true,
+      "detail": "The lantern sways. 茶 — tea, this way."
+    },
+    {
+      "name": "talk to the cat",
+      "ok": true,
+      "detail": "Mrrp. The cat blinks slowly at you."
+    },
+    {
+      "name": "steamer puffs steam",
+      "ok": true,
+      "detail": "Fresh xiaolongbao. Careful, they’re hot!"
+    },
+    {
+      "name": "shrine incense",
+      "ok": true,
+      "detail": "A quiet wish for safe travels."
+    },
+    {
+      "name": "bench prompt",
+      "ok": true,
+      "detail": "bench"
+    },
+    {
+      "name": "sit on the bench",
+      "ok": true,
+      "detail": "{\"id\":\"bench\",\"settled\":true,\"dir\":1}"
+    },
+    {
+      "name": "camera orbits while sitting",
+      "ok": true
+    },
+    {
+      "name": "stand up from the bench to a free spot",
+      "ok": true,
+      "detail": "2.3,-26.9"
+    },
+    {
+      "name": "lookout prompt",
+      "ok": true,
+      "detail": "lookout"
+    },
+    {
+      "name": "lookout: camera pans slowly toward Taipei 101",
+      "ok": true,
+      "detail": "yaw 18.19 -> 18.83 (target 0.05)"
+    },
+    {
+      "name": "objective: Watch the sunset",
+      "ok": true,
+      "detail": "The sun sinks behind Taipei. Worth every step."
+    },
+    {
+      "name": "bubble tea: pick up + caption",
+      "ok": true,
+      "detail": "Good food, good mood."
+    },
+    {
+      "name": "all collectibles picked up",
+      "ok": true,
+      "detail": "5/5"
+    },
+    {
+      "name": "objective: Explore the old streets",
+      "ok": true,
+      "detail": "explored 4"
+    },
+    {
+      "name": "all objectives ticked",
+      "ok": true,
+      "detail": "explore,teahouse,sunset,stars"
+    },
+    {
+      "name": "home signpost prompt",
+      "ok": true,
+      "detail": "home"
+    },
+    {
+      "name": "travel card shows (going home)",
+      "ok": true
+    },
+    {
+      "name": "back in the room at its start point",
+      "ok": true,
+      "detail": "room -0.3,1.4"
+    },
+    {
+      "name": "room still works after the trip (desk chair + monitors)",
+      "ok": true,
+      "detail": "{\"id\":\"deskchair\",\"settled\":true,\"dir\":1}"
+    },
+    {
+      "name": "repeat trips are clean (fps after 3 loads)",
+      "ok": true,
+      "detail": "fps=165"
+    },
+    {
+      "name": "Taiwan frame rate (headless Chrome, 1280x853)",
+      "ok": true,
+      "detail": "min 72, avg 78"
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "never inside a collider during the whole run",
+      "ok": true,
+      "detail": "0/3789 samples"
+    }
+  ],
+  "monitor": {
+    "samples": 3789,
+    "pen": 0,
+    "maxDy": 0.327,
+    "float": 0,
+    "sink": 1,
+    "fell": 0,
+    "worst": {
+      "from": {
+        "x": -0.156,
+        "y": -0.294,
+        "z": -2.393,
+        "pose": "stand"
+      },
+      "to": {
+        "x": -0.065,
+        "y": -0.621,
+        "z": -3.222,
+        "pose": "stand"
+      }
+    },
+    "maxFloat": 0.03600000000000003
+  },
+  "fps": {
+    "min": 72,
+    "avg": 77.6470588235294
+  }
+}

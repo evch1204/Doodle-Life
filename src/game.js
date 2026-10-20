@@ -928,6 +928,7 @@ export async function startGame(SCENES, firstId) {
     loadScene,
     scenes: () => Object.keys(SCENES),
     walkable: () => world.walkable ?? null,
+    sceneDebug: () => world.debug?.() ?? null,
     settingsOpen: () => settingsOpen,
     setLang,
     getLang,
@@ -941,6 +942,7 @@ export async function startGame(SCENES, firstId) {
       for (const o of def.hud.objectives) out.add(o.text);
       out.add(def.hud.title); if (def.hud.sub) out.add(def.hud.sub);
       out.add(def.travelText);
+      for (const s of world.strings ?? []) out.add(s);
       for (const it of world.interactables) {
         out.add(it.label);
         if (it.star?.caption) out.add(it.star.caption);
