@@ -14,7 +14,11 @@ import { t as tr, getLang, setLang, onLang } from './i18n.js';
 //       objectives: [{ id, text, count? }] },
 //     start: { x, z, facing, yaw, pitch }, sun: { dir, extent, follow }, camera: { far, dist },
 //     build(ctx) -> { root, colliders, camBlockers, interactables, stars, update(t, dt, ctx),
-//                     heightAt?(x, z), viewAt?(x, z), camBounds?, minimap?, monitors? } }
+//                     heightAt?(x, z), viewAt?(x, z), camBounds?, minimap?, monitors?,
+//                     start?        (overrides the module's start, e.g. by ctx.prevScene),
+//                     busy?()       (true while a scripted sequence runs: no input, no prompts),
+//                     cameraControl?(camera, dt) (true when the scene placed the camera itself),
+//                     onKey?(code, ctx) (true when the scene used the key) } }
 
 const damp = (a, b, k, dt) => a + (b - a) * (1 - Math.exp(-k * dt));
 const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -74,6 +78,9 @@ export async function startGame(SCENES, firstId) {
   let traveling = false;
   // occupy state: null, or { it, path, d, dir: 1 (sitting down) / -1 (getting up), settled, exit }
   let occ = null;
+  // scripted walk (ctx.walk): null, or { path, d, speed, onArrive }
+  let auto = null;
+  let prevSceneId = null;
 
   // ---- input ----------------------------------------------------------------
   const keys = new Set();
@@ -95,6 +102,7 @@ export async function startGame(SCENES, firstId) {
     if (e.repeat && (e.code === 'KeyE' || e.code === 'Escape')) return;
     keys.add(e.code);
     if (traveling) return;
+    if (!settingsOpen && world?.onKey?.(e.code, ictx)) return;
     if (e.code === 'Escape') {
       // Esc that just released the mouse was already handled by pointerlockchange
       if (performance.now() - escHandledAt < 400) return;
@@ -129,7 +137,8 @@ export async function startGame(SCENES, firstId) {
     else if (!releasingMouse && !traveling) {
       // the browser swallows the Esc that releases a captured mouse: treat the release as that Esc
       escHandledAt = performance.now();
-      if (journalOpen) closeJournal();
+      if (world?.onKey?.('Escape', ictx)) { /* the scene used it (skips a sequence) */ }
+      else if (journalOpen) closeJournal();
       else if (occ && occ.settled) standUp();
       else if (!settingsOpen) openSettings();
     }
@@ -307,7 +316,7 @@ export async function startGame(SCENES, firstId) {
   const wish = new THREE.Vector3();
   function updatePlayer(dt) {
     wish.set(0, 0, 0);
-    if (!paused && !occ && !traveling) {
+    if (!paused && !occ && !auto && !traveling && !world.busy?.()) {
       const f = (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0);
       const s = (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0);
       const fx = -Math.sin(view.yaw), fz = -Math.cos(view.yaw);
@@ -317,6 +326,7 @@ export async function startGame(SCENES, firstId) {
       wish.multiplyScalar(player.maxSpeed);
     }
     if (occ) return updateOccupy(dt);
+    if (auto) return updateAuto(dt);
     if (wish.lengthSq() > 0 && !(view.goal?.lock && view.goal.t < view.goal.lock)) view.goal = null;
     const k = wish.lengthSq() > 0 ? 11 : 14;
     player.vel.x = damp(player.vel.x, wish.x, k, dt);
@@ -434,7 +444,24 @@ export async function startGame(SCENES, firstId) {
     return { speed: moving ? (climbing ? 0.9 : 1.7) : 0, ground: null };
   }
 
+  function updateAuto(dt) {
+    auto.d = Math.min(auto.path.len, auto.d + dt * auto.speed);
+    const { p, i } = pointOnPath(auto.path, auto.d);
+    const a = auto.path.pts[i], b = auto.path.pts[i + 1];
+    if (Math.hypot(b.x - a.x, b.z - a.z) > 0.05) player.facing = dampAngle(player.facing, Math.atan2(b.x - a.x, b.z - a.z), 10, dt);
+    wishFacing = player.facing;
+    player.pos.set(p.x, 0, p.z);
+    player.vel.set(0, 0, 0);
+    player.y = heightAt(p.x, p.z);
+    hero.root.position.set(p.x, player.y, p.z);
+    hero.root.rotation.y = player.facing;
+    const arrived = auto.d >= auto.path.len;
+    if (arrived) { const cb = auto.onArrive; auto = null; cb?.(ictx); }
+    return { speed: arrived ? 0 : auto?.speed ?? 0, ground: heightAt };
+  }
+
   // ---- HUD: objectives + interactions ---------------------------------------------
+  const hudEl = document.getElementById('hud');
   const promptEl = document.getElementById('prompt');
   const promptText = document.getElementById('prompt-text');
   const promptKey = promptEl.querySelector('kbd');
@@ -490,7 +517,14 @@ export async function startGame(SCENES, firstId) {
     hero,
     openJournal,
     complete,
-    travel: (id) => travel(id),
+    travel: (id, opts) => travel(id, opts),
+    // walk the player along [[x, z], ...] (no input meanwhile), then call onArrive
+    walk: (pts, { speed = 1.9, onArrive } = {}) => {
+      const P = [new THREE.Vector3(player.pos.x, heightAt(player.pos.x, player.pos.z), player.pos.z), ...pts.map(([x, z]) => new THREE.Vector3(x, heightAt(x, z), z))];
+      auto = { path: buildPath(P), d: 0, speed, onArrive };
+      player.vel.set(0, 0, 0);
+    },
+    get prevScene() { return prevSceneId; },
     frame: (yaw, pitch) => { view.goal = { yaw, pitch }; },
     // slow cinematic pan (the lookout): movement and mouse are held for `lock` seconds
     pan: ({ yaw, pitch, dist, rate = 1.1, lock = 2.5, lookUp = 0 }) => { view.goal = { yaw, pitch, dist, rate, lock, lookUp, t: 0 }; },
@@ -694,6 +728,7 @@ export async function startGame(SCENES, firstId) {
     view.baseDist = def.camera?.dist ?? 2.6;
     // player at the start point
     occ = null;
+    auto = null;
     paused = false;
     journalOpen = false;
     journalEl.classList.add('hidden');
@@ -702,7 +737,7 @@ export async function startGame(SCENES, firstId) {
     done = new Set();
     hero.setPose('stand');
     hero.setBackpack(true);
-    const st = def.start;
+    const st = world.start ?? def.start;
     player.pos.set(st.x, 0, st.z);
     player.vel.set(0, 0, 0);
     player.facing = wishFacing = st.facing ?? Math.PI;
@@ -725,31 +760,40 @@ export async function startGame(SCENES, firstId) {
   const travelEl = document.getElementById('travel');
   const travelText = document.getElementById('travel-text');
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  async function travel(id, { fast = false } = {}) {
+  // quick: a shorter card (after the jetway); paper: the card on paper instead of black
+  async function travel(id, { fast = false, quick = false, paper = false } = {}) {
     if (traveling || !SCENES[id]) return;
     traveling = true;
     pendingTravel = id;
     if (settingsOpen) closeSettings();
     if (occ) occ = null;
+    auto = null;
     keys.clear();
     travelText.textContent = tr(SCENES[id].travelText);
-    playSound('whoosh');
+    if (!quick) playSound('whoosh');
+    travelEl.classList.toggle('paper', paper);
     travelEl.classList.remove('off');
-    await wait(fast ? 120 : 750);
+    await wait(fast ? 120 : quick ? 260 : 750);
     travelEl.classList.add('card-on');
-    await wait(fast ? 50 : 300);
+    await wait(fast ? 50 : quick ? 120 : 300);
     const t0 = performance.now();
+    prevSceneId = def?.id ?? null;
     loadScene(id);
     // render once while hidden so shaders compile behind the card
     inkR.render(scene, camera);
     const spent = performance.now() - t0;
-    await wait(Math.max(0, (fast ? 100 : 1500) - spent));
+    await wait(Math.max(0, (fast ? 100 : quick ? 700 : 1500) - spent));
     travelEl.classList.remove('card-on');
     await wait(fast ? 50 : 350);
     travelEl.classList.add('off');
+    announce(tr(SCENES[id].arrival ?? 'Arriving in {place}', { place: tr(SCENES[id].name) }));
     await wait(fast ? 100 : 700);
+    travelEl.classList.remove('paper');
     traveling = false;
   }
+  // screen readers hear where they landed (a polite live region)
+  const announceEl = document.getElementById('announce');
+  function announce(text) { if (announceEl) { announceEl.textContent = ''; requestAnimationFrame(() => { announceEl.textContent = text; }); } }
 
   function placeSun(snap) {
     // Shadow frustum follows the player outdoors, snapped to whole texels so
@@ -863,13 +907,13 @@ export async function startGame(SCENES, firstId) {
     if (freeCam) {
       camera.position.copy(freeCam.pos);
       camera.lookAt(freeCam.target);
-    } else {
+    } else if (!world.cameraControl?.(camera, dt)) {
       updateCamera(dt);
     }
     if (def.sun.follow) placeSun(false);
 
     // prompt: nearest interactable, or the "get up" hint while seated
-    current = paused || occ || traveling ? null : findInteractable();
+    current = paused || occ || auto || traveling || world.busy?.() ? null : findInteractable();
     if (occ && occ.settled && !paused) {
       const s = occ.it.seat;
       const p = hero.root.position.clone();
@@ -885,6 +929,7 @@ export async function startGame(SCENES, firstId) {
       if (captionTimer <= 0) captionEl.classList.add('hidden');
     }
 
+    hudEl.classList.toggle('busy', !!world.busy?.()); // a scripted sequence plays without the panels
     if (def.hud.map === 'compass') drawCompass(); else drawMinimap();
     inkR.render(scene, camera);
     requestAnimationFrame(frame);
@@ -944,7 +989,7 @@ export async function startGame(SCENES, firstId) {
       const out = new Set();
       const fake = {
         caption: (x) => out.add(x), sound() {}, hero: { reach() {}, pickup() {} }, openJournal() {}, complete() {}, travel() {},
-        frame() {}, pan() {}, face() {}, player, camera, view,
+        frame() {}, pan() {}, face() {}, walk() {}, prevScene: null, player, camera, view,
       };
       for (const o of def.hud.objectives) out.add(o.text);
       out.add(def.hud.title); if (def.hud.sub) out.add(def.hud.sub);

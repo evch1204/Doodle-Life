@@ -167,3 +167,16 @@ kbd.wide { min-width: 34px; }
 #sh-dialogue .line { font-size: clamp(20px, 2.1vw, 26px); line-height: 1.35; }
 #sh-dialogue .more { text-align: right; font-size: 15px; opacity: .7; }
 #sh-dialogue .more kbd { background: var(--ink); color: var(--paper); }
+
+/* screen-reader only (the arrival announcement) */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* the travel card on paper (after the jetway's light) */
+#travel.paper { background: var(--paper); }
+#travel.paper .card { color: var(--ink); }
+#travel.paper .sparkles { fill: var(--ink); }
+#travel.paper .plane { stroke: var(--ink); }
+
+/* a scripted sequence (the airport's jetway) plays without the HUD panels */
+#hud #objective, #hud #controls, #hud #minimap { transition: opacity .4s; }
+#hud.busy #objective, #hud.busy #controls, #hud.busy #minimap { opacity: 0; }

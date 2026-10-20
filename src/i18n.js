@@ -23,6 +23,9 @@ const ZH = {
   // travel
   'Traveling to Taiwan…': '前往台灣中……',
   'Heading home…': '回家囉……',
+  'Arriving in {place}': '抵達{place}',
+  'the loft': '閣樓',
+  'Shanghai': '上海',
 
   // ---- room ---------------------------------------------------------------------
   'Objective:': '目標：',
