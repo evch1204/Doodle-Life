@@ -1,4 +1,4 @@
-// Usage: node scripts/perf_shanghai.mjs — frame time and renderer load on the Bund
+// Usage: [SCENE=shanghai|taiwan] node scripts/perf.mjs — frame time and renderer load
 // from a few gameplay views (headless numbers: compare runs, not absolute fps).
 import { chromium } from 'playwright-core';
 
@@ -10,7 +10,12 @@ await page.goto((process.env.URL || 'http://localhost:5173/') + '?scene=' + (pro
 await page.waitForFunction(() => window.__dw && window.__dw.ready, null, { timeout: 90000 });
 console.log('load', ((Date.now() - t0) / 1000).toFixed(1) + 's');
 await page.waitForTimeout(1500);
-for (const [name, v] of Object.entries({ river: [0, 3.4, Math.PI, 0, 0.05], land: [0, 5.6, 0, Math.PI, 0.18], along: [-9.5, 1.2, Math.PI / 2, -Math.PI / 2 + 0.45, 0.22] })) {
+// player x, z, facing, view yaw, pitch
+const VIEWS = {
+  shanghai: { river: [0, 3.4, Math.PI, 0, 0.05], land: [0, 5.6, 0, Math.PI, 0.18], along: [-9.5, 1.2, Math.PI / 2, -Math.PI / 2 + 0.45, 0.22] },
+  taiwan: { start: [0, 1.4, Math.PI, 0, 0.36], plaza: [1.4, -14.6, Math.PI * 0.75, -0.8, 0.35], lookout: [4.5, -28.2, Math.PI, 0.12, 0.08] },
+};
+for (const [name, v] of Object.entries(VIEWS[process.env.SCENE || 'shanghai'])) {
   await page.evaluate((v) => { window.__dw.freeCam(null); window.__dw.setPlayer(v[0], v[1], v[2]); window.__dw.setView(v[3], v[4], 3.0); }, v);
   await page.waitForTimeout(600);
   const r = await page.evaluate(() => new Promise((res) => {

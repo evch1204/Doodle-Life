@@ -46,6 +46,12 @@ const TAIPEI_VIEWS = {
   t_taro: { free: [[0.1, 1.1, -2.4], [1.6, 0.6, -3.1]] },
   t_flag: { player: [0, 1.4, Math.PI], view: [0, 0.36] },
   t_wide_plaza: { free: [[-1.0, 3.0, -21.5], [1.5, -1.5, -12]] },
+  // close-ups for the visual pass (Taipei 101, the basin city, the hillside town below the street)
+  t_101: { player: [0, 1.4, Math.PI], free: [[-10, 45, -390], [-22.7, 55, -546.8]] },
+  t_101_top: { player: [0, 1.4, Math.PI], free: [[-14, 110, -470], [-22.7, 115, -546.8]] },
+  t_city: { player: [0, 1.4, Math.PI], free: [[30, 25, -160], [-20, -15, -560]] },
+  t_hill: { player: [0, 1.4, Math.PI], free: [[6, 1, -28], [-6, -20, -75]] },
+  t_view: { player: [4.5, -28.2, Math.PI], free: [[4.5, -2.4, -27.6], [-22.7, 30, -546.8]] },
 };
 const SHANGHAI_VIEWS = {
   sh_start: { player: [0, 3.4, Math.PI], view: [0, 0.05] },
