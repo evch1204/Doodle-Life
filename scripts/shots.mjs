@@ -46,6 +46,12 @@ const TAIPEI_VIEWS = {
   t_taro: { free: [[0.1, 1.1, -2.4], [1.6, 0.6, -3.1]] },
   t_flag: { player: [0, 1.4, Math.PI], view: [0, 0.36] },
   t_wide_plaza: { free: [[-1.0, 3.0, -21.5], [1.5, -1.5, -12]] },
+  // close-ups for the visual pass (Taipei 101, the basin city, the hillside town below the street)
+  t_101: { player: [0, 1.4, Math.PI], free: [[-10, 45, -390], [-22.7, 55, -546.8]] },
+  t_101_top: { player: [0, 1.4, Math.PI], free: [[-14, 110, -470], [-22.7, 115, -546.8]] },
+  t_city: { player: [0, 1.4, Math.PI], free: [[30, 25, -160], [-20, -15, -560]] },
+  t_hill: { player: [0, 1.4, Math.PI], free: [[6, 1, -28], [-6, -20, -75]] },
+  t_view: { player: [4.5, -28.2, Math.PI], free: [[4.5, -2.4, -27.6], [-22.7, 30, -546.8]] },
 };
 const SHANGHAI_VIEWS = {
   sh_start: { player: [0, 3.4, Math.PI], view: [0, 0.05] },
@@ -61,8 +67,30 @@ const SHANGHAI_VIEWS = {
   sh_iso: { player: [0, 3.4, Math.PI], free: [[-17, 15, 19], [1.5, 0, 0.5]] },
   sh_iso2: { player: [0, 3.4, Math.PI], free: [[22, 11, 14], [6, 0, 1.5]] },
   sh_sky: { player: [0.3, -2.25, Math.PI], free: [[0.3, 1.6, -1.6], [30, 40, -420]] },
+  // close-ups for the visual pass (the landmarks, the old Bund fronts, the river, the city)
+  sh_pearl: { player: [0, 3.4, Math.PI], free: [[-40, 55, -215], [-65.8, 62, -338.7]] },
+  sh_jinmao: { player: [0, 3.4, Math.PI], free: [[50, 95, -315], [66.5, 95, -445]] },
+  sh_tower: { player: [0, 3.4, Math.PI], free: [[95, 115, -320], [121.6, 110, -454]] },
+  sh_swfc: { player: [0, 3.4, Math.PI], free: [[140, 115, -290], [155.8, 112, -417]] },
+  sh_city: { player: [0, 3.4, Math.PI], free: [[-20, 26, -95], [60, 30, -430]] },
+  sh_river: { player: [0, 3.4, Math.PI], free: [[-3, 2.2, -2.6], [6, -1.7, -40]] },
+  sh_bund: { player: [0, 5.6, 0], free: [[-6, 3.2, 5.8], [14, 9, 47]] },
+  sh_bund_close: { player: [0, 5.6, 0], free: [[-4, 1.5, 28], [6, 5, 47]] },
+  sh_peace: { player: [0, 5.6, 0], free: [[-82, 4, 10], [-118, 24, 47]] },
+  sh_bund_wide: { player: [0, 5.6, 0], free: [[0, 9, 0], [0, 16, 47]] },
 };
-const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : SCENE === 'shanghai' ? SHANGHAI_VIEWS : ROOM_VIEWS;
+const LOBBY_VIEWS = {
+  lb_start: { player: [0, 4.6, Math.PI], view: [0, 0.22] },
+  lb_ref: { player: [-1.6, 4.4, Math.PI], free: [[0.4, 2.1, 8.0], [0, 2.4, -4]] },
+  lb_gate: { player: [-2.9, -4.7, Math.PI * 0.85], view: [0.36, 0.16] },
+  lb_desk: { player: [0, 1.0, Math.PI], view: [0, 0.2] },
+  lb_seats: { player: [-3.6, 3.4, -Math.PI / 2], view: [Math.PI / 2 - 0.6, 0.25] },
+  lb_back: { player: [0, 1.6, 0], view: [Math.PI, 0.18] },
+  lb_wide: { player: [0, 4.6, Math.PI], free: [[4.6, 4.2, 5.4], [-1.5, 1.0, -3.5]] },
+  lb_sign: { player: [0, 4.6, Math.PI], free: [[-1.6, 2.6, -3.6], [-3.2, 3.4, -7.9]] },
+  lb_tunnel: { player: [0, 4.6, Math.PI], free: [[0, 1.3, 46], [0, 1.25, 60]] },
+};
+const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : SCENE === 'shanghai' ? SHANGHAI_VIEWS : SCENE === 'lobby' ? LOBBY_VIEWS : ROOM_VIEWS;
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1536, height: 1024 } });

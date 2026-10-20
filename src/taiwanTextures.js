@@ -358,6 +358,15 @@ export function hillTexture(kind, seed = 81) {
         x += 80 + r() * 60;
       }
     }
+  } else if (kind === 'forest') {
+    // tree clumps overlapping in rows down the slope, nothing built (the villages are geometry)
+    // loose rows of clumps with open slope between them (a few lines, not a texture of bubbles)
+    for (let y = 60; y < H + 40; y += 70) for (let x = -20 + r() * 60; x < W + 20; x += 90 + r() * 120) {
+      if (r() < 0.35) continue;
+      const n = 1 + Math.floor(r() * 3);
+      for (let k = 0; k < n; k++) tree(x + k * 30, y + r() * 16, 20 + r() * 14);
+    }
+    for (let i = 0; i < 14; i++) { const y = r() * H; s.line(r() * W, y, r() * W, y + r() * 30 - 15, { w: 1.2, j: 1.2, alpha: 0.25 }); }
   } else if (kind === 'trees') {
     for (let i = 0; i < 70; i++) tree(r() * W, 30 + r() * (H - 30), 16 + r() * 16);
     for (let i = 0; i < 10; i++) roof(r() * W, 60 + r() * (H - 60), 30, 26);
@@ -397,4 +406,62 @@ export function flagTexture() {
   const t = s.texture();
   t.anisotropy = 8;
   return t;
+}
+
+// ---------------------------------------------------------------------------
+// Background architecture kit (the hillside town, Taipei, Taipei 101). Tiles
+// count whole bays across and floors up (4 x 4 per tile), so a window never
+// gets cut at a corner.
+
+// Taipei 101's curtain wall: tall glass panes between strong mullions, a
+// spandrel line at each floor, a heavier rail every fourth floor.
+export function t101Texture(seed = 711) {
+  const S = 256, s = new Sketch(S, S, { seed });
+  const ctx = s.ctx, c = S / 4;
+  ctx.fillStyle = '#d6d6d6'; ctx.fillRect(0, 0, S, S);
+  for (let f = 0; f < 4; f++) { ctx.fillStyle = '#b4b4b4'; ctx.fillRect(0, f * c + c * 0.08, S, c * 0.7); }
+  ctx.save(); ctx.globalAlpha = 0.18; ctx.strokeStyle = '#fff'; ctx.lineWidth = 12;
+  for (const x of [-40, 120]) { ctx.beginPath(); ctx.moveTo(x, S); ctx.lineTo(x + 150, 0); ctx.stroke(); }
+  ctx.restore();
+  for (let b = 0; b < 8; b++) s.line(b * (c / 2), -2, b * (c / 2), S + 2, { w: b % 2 ? 1.3 : 2.4, j: 0, alpha: b % 2 ? 0.45 : 0.75 });
+  for (let f = 0; f < 4; f++) s.line(-2, f * c + c * 0.82, S + 2, f * c + c * 0.82, { w: f === 0 ? 2.6 : 1.6, j: 0, alpha: f === 0 ? 0.8 : 0.55 });
+  return s.texture({ repeat: true });
+}
+
+// Hillside house walls: one window per bay (a few blank, a few with an iron
+// grille), on plaster or boards. Tile = 4 bays x 4 floors.
+export function houseWallTexture(kind = 'plaster', seed = 721) {
+  const S = 256, s = new Sketch(S, S, { seed });
+  const ctx = s.ctx, r = makeRng(seed + 1), c = S / 4;
+  if (kind === 'boards') for (let i = 0; i < 16; i++) s.line(i * 16 + 8, -2, i * 16 + 8 + s.rand(-1, 1), S + 2, { w: 1.1, j: 0.3, alpha: 0.35 });
+  else for (let i = 0; i < 40; i++) s.ellipse(s.rand(0, S), s.rand(0, S), 1.2, 1.2, { w: 0, j: 0, fill: 'rgba(0,0,0,0.25)' });
+  for (let f = 0; f < 4; f++) {
+    s.line(-2, f * c + 2, S + 2, f * c + 2, { w: 1.4, j: 0.3, alpha: 0.4 });
+    for (let b = 0; b < 4; b++) {
+      const k = r();
+      if (k < 0.18) continue;
+      const x = b * c + c * 0.24, y = f * c + c * 0.24, w = c * 0.52, h = c * 0.46;
+      ctx.fillStyle = k < 0.4 ? '#5a5a5a' : '#808080'; ctx.fillRect(x, y, w, h);
+      s.rect(x, y, w, h, { w: 2.2, j: 0.2 });
+      s.line(x + w / 2, y, x + w / 2, y + h, { w: 1.6, j: 0.1, color: '#fff', alpha: 0.8 });
+      s.line(x - 3, y + h + 3, x + w + 3, y + h + 3, { w: 2.4, j: 0.2 });
+      if (k > 0.78) for (let g = 1; g < 5; g++) s.line(x + (g * w) / 5, y - 2, x + (g * w) / 5, y + h + 2, { w: 1.2, j: 0.1 });
+    }
+  }
+  return s.texture({ repeat: true });
+}
+
+// Jiufen's black tar-paper roofs: dark felt with lighter battens running down the slope.
+export function tarRoofTexture(seed = 731) {
+  const S = 256, s = new Sketch(S, S, { seed, bg: '#5c5c5c' });
+  s.hatch(0, 0, S, S, { gap: 7, lw: 1, alpha: 0.25, angle: 0.3, j: 0.4 });
+  for (let i = 0; i < 6; i++) { const x = i * (S / 6) + 8; s.line(x, -2, x + s.rand(-2, 2), S + 2, { w: 4, j: 0.4, color: '#bdbdbd' }); }
+  return s.texture({ repeat: true });
+}
+
+// Corrugated sheet (rooftop sheds): close ridges.
+export function corrugatedTexture(seed = 741) {
+  const S = 128, s = new Sketch(S, S, { seed });
+  for (let i = 0; i < 16; i++) s.line(i * 8 + 4, -2, i * 8 + 4, S + 2, { w: 1.6, j: 0.1, alpha: 0.55 });
+  return s.texture({ repeat: true });
 }

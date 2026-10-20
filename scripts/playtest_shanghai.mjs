@@ -29,20 +29,19 @@ const dbg = () => page.evaluate(() => window.__dw.sceneDebug());
 const RAIL_STOP = -2.64; // the player's center can never get closer to the river than this
 
 // =====================================================================================
-// 1. Room -> Shanghai through the postcard by the door
+// 1. Room -> the airport through the front door -> the Shanghai gate -> the Bund
 // =====================================================================================
 await loadModel();
 check('starts in the room', (await st()).scene === 'room');
-let s = await goTo(-3.35, 3.62);
-check('postcard prompt in the room', s.interact === 'postcard', `interact=${s.interact}`);
-const doorStill = await page.evaluate(() => window.__dw.interactables().some((i) => i.id === 'door' && i.label === 'Travel to Taiwan'));
-check('the door still goes to Taiwan', doorStill);
+let s = await goTo(-2.4, 3.45);
+check('door prompt in the room (to the airport)', s.interact === 'door', `interact=${s.interact}`);
+check('the postcard is gone', await page.evaluate(() => !window.__dw.interactables().some((i) => i.id === 'postcard')));
 await press('KeyE');
 await sleep(900);
 const card = await page.evaluate(() => ({ on: !document.getElementById('travel').classList.contains('off'), text: document.getElementById('travel-text').textContent }));
-check('travel card shows', card.on && card.text.includes('Shanghai'), JSON.stringify(card));
+check('travel card shows', card.on && card.text.includes('airport'), JSON.stringify(card));
 await shot('01_travel_card');
-await page.waitForFunction(() => !window.__dw.state().traveling, null, { timeout: 15000 });
+await H.checkInAt('shanghai', 'shanghai');
 await sleep(400);
 s = await st();
 check('arrives on the Bund at the start point, facing the skyline', s.scene === 'shanghai' && Math.hypot(s.player.x, s.player.z - 3.4) < 0.05 && Math.abs(wrap(s.player.facing - Math.PI)) < 0.01 && Math.abs(s.cam.yaw) < 0.01, `scene=${s.scene} at ${s.player.x},${s.player.z} facing ${s.player.facing} yaw ${s.cam.yaw}`);
@@ -275,15 +274,19 @@ const fpsMin = Math.min(...fpsS.slice(3)), fpsAvg = fpsS.slice(3).reduce((a, b) 
 check('Shanghai frame rate while walking + turning (headless Chrome, 1280x853)', fpsMin > 45, `min ${fpsMin}, avg ${fpsAvg.toFixed(0)}`);
 
 // =====================================================================================
-// 8. Home, and the other chapters still work
+// 8. Back to the airport, home, and the other chapters still work
 // =====================================================================================
 await goTo(2.3, 4.6);
 s = await st();
-check('home signpost prompt', s.interact === 'home', s.interact);
+check('signpost prompt (back to the airport)', s.interact === 'home', s.interact);
 await press('KeyE');
 await sleep(900);
-check('travel card shows (going home)', await page.evaluate(() => !document.getElementById('travel').classList.contains('off') && /home/i.test(document.getElementById('travel-text').textContent)));
-await page.waitForFunction(() => !window.__dw.state().traveling, null, { timeout: 15000 });
+check('travel card shows (to the airport)', await page.evaluate(() => !document.getElementById('travel').classList.contains('off') && /airport/i.test(document.getElementById('travel-text').textContent)));
+await page.waitForFunction(() => window.__dw.state().scene === 'lobby' && !window.__dw.state().traveling, null, { timeout: 30000 });
+s = await st();
+const sha = await page.evaluate(() => window.__dw.interactables().find((i) => i.id === 'gate-shanghai'));
+check('back at the airport, in front of the Shanghai gate', Math.hypot(s.player.x - sha.x, s.player.z - sha.z) < 1.2, JSON.stringify(s.player));
+await H.homeFromLobby();
 s = await st();
 check('back in the room at its start point', s.scene === 'room' && Math.hypot(s.player.x + 0.3, s.player.z - 1.4) < 0.05, `${s.scene} ${s.player.x},${s.player.z}`);
 check('Shanghai HUD extras are gone in the room', await page.evaluate(() => !document.getElementById('sh-album') && !document.getElementById('sh-dialogue') && !document.getElementById('sh-postcard')));

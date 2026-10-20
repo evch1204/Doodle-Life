@@ -23,13 +23,19 @@ const ZH = {
   // travel
   'Traveling to Taiwan…': '前往台灣中……',
   'Heading home…': '回家囉……',
+  'Heading to the airport…': '前往機場中……',
+  'Arriving in {place}': '抵達{place}',
+  'Arriving at the airport': '抵達機場',
+  'the loft': '閣樓',
+  'the airport': '機場',
+  'Shanghai': '上海',
 
   // ---- room ---------------------------------------------------------------------
   'Objective:': '目標：',
   'Explore the room': '探索房間',
   'Find the hidden journal ☆': '找到藏起來的日記 ☆',
   'Stars collected': '收集的星星',
-  'Travel to Taiwan': '前往台灣',
+  'Go to the airport': '前往機場',
   'Pull a book': '抽一本書',
   '“The Little Prince” — what is essential is invisible to the eye.': '《小王子》——真正重要的東西，用眼睛是看不見的。',
   '“Drawing on the Right Side of the Brain.” Margins full of doodles.': '《像藝術家一樣思考》。頁邊畫滿了塗鴉。',
@@ -112,7 +118,6 @@ const ZH = {
   'Beef noodles, simmered since dawn. Want a bowl?': '牛肉麵，從天亮就開始燉了。來一碗嗎？',
 
   // ---- Shanghai (the Bund) ------------------------------------------------------------
-  'Travel to Shanghai': '前往上海',
   'Traveling to Shanghai…': '前往上海中……',
   'Explore the waterfront': '探索江邊步道',
   'Explore the waterfront ({n}/{m})': '探索江邊步道（{n}/{m}）',
@@ -136,6 +141,30 @@ const ZH = {
   'Squawk! The seagull eyes your backpack.': '嘎！海鷗盯著你的背包看。',
   'The ferries glide by. Nobody is in a hurry here.': '渡輪緩緩滑過。這裡沒有人在趕時間。',
   'The Bund, Shanghai. Different place. Same you.': '上海，外灘。不同的地方，同樣的你。',
+
+  // ---- airport lobby -------------------------------------------------------------
+  'Departures': '出境大廳',
+  'Choose your next destination': '選擇下一個目的地',
+  'Choose a gate': '選一個登機門',
+  'Visit the info desk': '到服務台看看',
+  'Check in to Shanghai': '前往上海登機門',
+  'Check in to Taipei': '前往台北登機門',
+  'Check in to Santa Clara': '前往聖克拉拉登機門',
+  'See the next stop': '看看下一站',
+  'Ask at the info desk': '詢問服務台',
+  'Sit down': '坐下',
+  'Plenty of time before boarding.': '離登機還有很多時間。',
+  'How this works': '怎麼玩',
+  'Walk up to a gate and press E to check in.': '走到登機門前，按 E 報到。',
+  'Walk through the jetway to fly to that city.': '穿過空橋，就會飛到那座城市。',
+  'Every city has a signpost back to the airport.': '每座城市都有路標帶你回機場。',
+  'The doors behind you lead home.': '身後的門通往家。',
+  'Coming soon': '即將開放',
+  'More gates opening soon.': '更多登機門即將開放。',
+  '{city}: this gate opens soon.': '{city}：這個登機門即將開放。',
+  'Santa Clara': '聖克拉拉',
+  'Back to the airport': '回到機場',
+  'Gates': '登機門',
 };
 
 const TABLES = { en: {}, zh: ZH };

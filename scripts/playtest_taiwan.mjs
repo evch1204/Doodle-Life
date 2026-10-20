@@ -45,7 +45,7 @@ async function orbitCheck(label) {
 }
 
 // =====================================================================================
-// 1. Room -> Taiwan through the front door
+// 1. Room -> the airport through the front door -> the Taipei gate -> Taiwan
 // =====================================================================================
 await loadModel();
 check('starts in the room', (await st()).scene === 'room');
@@ -55,9 +55,9 @@ check('door prompt in the room', s.interact === 'door', `interact=${s.interact}`
 await press('KeyE');
 await sleep(900);
 const card = await page.evaluate(() => ({ on: !document.getElementById('travel').classList.contains('off'), text: document.getElementById('travel-text').textContent }));
-check('travel card shows', card.on && card.text.includes('Taiwan'), JSON.stringify(card));
+check('travel card shows', card.on && card.text.includes('airport'), JSON.stringify(card));
 await shot('01_travel_card');
-await page.waitForFunction(() => !window.__dw.state().traveling, null, { timeout: 15000 });
+await H.checkInAt('taipei', 'taiwan');
 await sleep(300);
 s = await st();
 check('arrives in Taiwan at the start point', s.scene === 'taiwan' && Math.hypot(s.player.x - 0, s.player.z - 1.4) < 0.05, `scene=${s.scene} at ${s.player.x},${s.player.z}`);
@@ -233,15 +233,19 @@ check('all objectives ticked', ['explore', 'teahouse', 'sunset', 'stars'].every(
 await shot('11_objectives');
 
 // =====================================================================================
-// 7. Back home: the signpost at the top of the street
+// 7. Back: the signpost at the top of the street -> the airport -> the doors home
 // =====================================================================================
 await goTo(0.75, 1.25);
 s = await st();
-check('home signpost prompt', s.interact === 'home', s.interact);
+check('signpost prompt (back to the airport)', s.interact === 'home', s.interact);
 await press('KeyE');
 await sleep(900);
-check('travel card shows (going home)', await page.evaluate(() => !document.getElementById('travel').classList.contains('off') && /home/i.test(document.getElementById('travel-text').textContent)));
-await page.waitForFunction(() => !window.__dw.state().traveling, null, { timeout: 15000 });
+check('travel card shows (to the airport)', await page.evaluate(() => !document.getElementById('travel').classList.contains('off') && /airport/i.test(document.getElementById('travel-text').textContent)));
+await page.waitForFunction(() => window.__dw.state().scene === 'lobby' && !window.__dw.state().traveling, null, { timeout: 30000 });
+s = await st();
+const tpe = await page.evaluate(() => window.__dw.interactables().find((i) => i.id === 'gate-taipei'));
+check('back at the airport, in front of the Taipei gate', Math.hypot(s.player.x - tpe.x, s.player.z - tpe.z) < 1.2, JSON.stringify(s.player));
+await H.homeFromLobby();
 s = await st();
 check('back in the room at its start point', s.scene === 'room' && Math.hypot(s.player.x + 0.3, s.player.z - 1.4) < 0.05, `${s.scene} ${s.player.x},${s.player.z}`);
 await shot('12_home');

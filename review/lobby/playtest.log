@@ -1,0 +1,66 @@
+PASS  room door now reads "Go to the airport"  [["door","Go to the airport"]]
+PASS  the old postcard path is removed  
+PASS  door prompt  door
+PASS  door travels to the lobby  
+PASS  arrives at the entrance facing the gates  {"x":0,"z":4.6,"y":0,"facing":3.142,"speed":0}
+PASS  gates come from the config, in order  ["shanghai","taipei","santaclara","next"]
+PASS  shanghai: prompt "Check in to Shanghai"  gate-shanghai / Check in to Shanghai
+PASS  shanghai: standing at the gate brightens it (only it)  [0.93,0,0,0]
+PASS  shanghai: E starts the walk to the arch  {"gate":"shanghai","phase":"walk"}
+PASS  shanghai: the traveler walks toward the arch (no input)  {"x":-6.578,"z":-2.929,"y":0,"facing":-1.99,"speed":0} -> {"x":-6.852,"z":-3.051,"y":0,"facing":-1.99,"speed":0}
+PASS  shanghai: no prompts during the sequence  
+PASS  shanghai: the camera pushes into the arch  
+PASS  shanghai: then the jetway  
+PASS  shanghai: lands in shanghai  9.2s after the jetway frame
+PASS  shanghai: arrival announced for screen readers  Arriving in Shanghai
+PASS  shanghai: last gate remembered  
+PASS  shanghai: the signpost reads "Back to the airport"  Back to the airport
+PASS  shanghai: signpost travels to the lobby  
+PASS  shanghai: back in the lobby in front of the shanghai gate  0.90 m from its check-in spot
+PASS  taipei: prompt "Check in to Taipei"  gate-taipei / Check in to Taipei
+PASS  taipei: standing at the gate brightens it (only it)  [0,0.93,0,0]
+PASS  taipei: E starts the walk to the arch  {"gate":"taipei","phase":"walk"}
+PASS  taipei: the traveler walks toward the arch (no input)  {"x":-2.697,"z":-6.676,"y":0,"facing":-2.758,"speed":0} -> {"x":-2.81,"z":-6.954,"y":0,"facing":-2.758,"speed":0}
+PASS  taipei: no prompts during the sequence  
+PASS  taipei: the camera pushes into the arch  
+PASS  taipei: then the jetway  
+PASS  taipei: lands in taiwan  11.3s after the jetway frame
+PASS  taipei: arrival announced for screen readers  Arriving in Taiwan
+PASS  taipei: last gate remembered  
+PASS  taiwan: the signpost reads "Back to the airport"  Back to the airport
+PASS  taiwan: signpost travels to the lobby  
+PASS  taiwan: back in the lobby in front of the taipei gate  0.90 m from its check-in spot
+PASS  skip with KeyE: lands at once  {"seq":{"gate":"taipei","phase":"done"},"card":null,"hover":[0,0.78,0,0],"gates":["shanghai","taipei","santaclara","next"]}
+PASS  skip with KeyE: arrives in Taiwan  16.1s
+PASS  skip with KeyE: no settings menu opened  
+PASS  skip with Escape: lands at once  {"seq":{"gate":"taipei","phase":"done"},"card":null,"hover":[0,0.78,0,0],"gates":["shanghai","taipei","santaclara","next"]}
+PASS  skip with Escape: arrives in Taiwan  14.2s
+PASS  skip with Escape: no settings menu opened  
+PASS  santaclara: shows the coming-soon card, no jetway  Coming soonSanta Clara: this gate opens soon.press E to close
+PASS  santaclara: E closes the card  
+PASS  santaclara: still in the lobby  
+PASS  next: shows the coming-soon card, no jetway  Coming soonMore gates opening soon.press E to close
+PASS  next: E closes the card  
+PASS  next: still in the lobby  
+PASS  info desk prompt  
+PASS  info desk: "How this works" card  iHow this worksWalk up to a gate and press E to check in.Walk through the jetway to fly to that city.Every city has a signpost back to the airport.The doors behind you lead home.press E to close
+PASS  info desk: objective ticked  ["desk"]
+PASS  Esc closes the help card (not the settings)  
+PASS  walking away closes the card  
+PASS  doors home prompt  
+PASS  doors home go to the room  
+PASS  gate buttons, left to right, labelled "Check in to ..."  ["Check in to Shanghai","Check in to Taipei","Check in to Santa Clara","See the next stop"]
+PASS  the gate list is out of sight until focused  
+PASS  Tab reaches the gates in order  Check in to Taipei
+PASS  the list shows while focused  
+PASS  Enter on a gate starts the check-in from the entrance  {"gate":"taipei","phase":"walk"}
+PASS  the walk goes round the info desk  closest 4.51 m from the desk centre
+PASS  ...and lands in Taiwan  
+PASS  a stored last gate: start in front of it  {"x":-2.21,"z":-5.47,"y":0,"facing":0.384,"speed":0}
+PASS  the hall wall and the gates hold (walk in only by checking in)  farthest 6.91 m from the centre
+PASS  deep link ?scene=shanghai still works  
+PASS  deep link ?scene=taiwan still works  
+PASS  reduced motion: no walk / jetway, a quick fade  
+PASS  reduced motion: lands in Shanghai  
+
+ALL PASS

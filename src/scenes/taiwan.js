@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ink, backdropMaterial } from '../ink.js';
 import { makeRng, Sketch } from '../sketch.js';
 import { createCharacter } from '../character.js';
 import * as TX from '../taiwanTextures.js';
 import { t } from '../i18n.js';
+import { BOLD } from './kit.js';
+import { buildTaipei } from './taiwan/taipei.js';
+import { buildHillside, buildRidges } from './taiwan/hillside.js';
 
 // Chapter 1: Taiwan — the walk is set on Jiufen old street.
 //
@@ -80,7 +82,8 @@ export default {
   start: { x: 0, z: 1.4, facing: Math.PI, yaw: 0, pitch: 0.36 },
   sun: { dir: [0.5, 3.2, 0.8], extent: 14, follow: true, far: 60 },
   camera: { far: 1600, dist: 2.5 },
-  render: { grazeFix: 1 },
+  // distant lines thin and lighten, distant tones fade toward the paper; Taipei 101 stays bold
+  render: { grazeFix: 1, aerial: { near: 110, far: 1000, line: 0.5, tone: 0.3, bold: BOLD } },
   build: buildTaiwan,
 };
 
@@ -206,7 +209,6 @@ function buildTaiwan(scene) {
     return g;
   }
   // per-vertex outline id, so merged geometry still draws a line between its parts
-  const withId = (geo, id) => { geo.setAttribute('inkIdAttr', new THREE.Float32BufferAttribute(new Float32Array(geo.attributes.position.count).fill(id), 1)); return geo; };
   const solid = (x1, x2, z1, z2) => colliders.push({ type: 'box', minX: Math.min(x1, x2), maxX: Math.max(x1, x2), minZ: Math.min(z1, z2), maxZ: Math.max(z1, z2) });
   const solidCircle = (x, z, r) => colliders.push({ type: 'circle', x, z, r });
   // collider from a box in a group's local frame (group rotated about y only)
@@ -940,8 +942,7 @@ function buildTaiwan(scene) {
   // across the plaza diagonal
   lanternString(new THREE.Vector3(-1.6, PY + 3.6, -13.2), new THREE.Vector3(5.6, PY + 3.6, -16.4), 8, 0.6);
 
-  // ---- hillside below: roofs stepping down toward the city --------------------------
-  // Dozens of small houses + trees, merged per material so they cost a few draw calls.
+  // ---- hillside below: houses on terraces stepping down toward the city (./taiwan/hillside.js)
   {
     const HS = 0.32; // hillside drops 0.32 m per meter toward the city
     const hillY = (x, z) => -5.6 + (z + 17) * HS - Math.max(0, -x - 4) * 0.1;
@@ -950,52 +951,8 @@ function buildTaiwan(scene) {
     hill.position.set(0, hillY(0, -112) - 0.35, -112);
     hill.receiveShadow = true;
     root.add(hill);
-    const hr = makeRng(5150);
-    const parts = new Map();
-    let houseId = 0.5;
-    const put = (geo, mat, mtx) => { geo.applyMatrix4(mtx); withId(geo, houseId); if (!parts.has(mat)) parts.set(mat, []); parts.get(mat).push(geo); };
-    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), one = new THREE.Vector3(1, 1, 1);
-    const at = (x, y, z, ry, rx = 0) => m4.clone().compose(new THREE.Vector3(x, y, z), q.clone().setFromEuler(e.set(rx, ry, 0, 'YXZ')), one);
     const blocked = (x, z) => (x > 2.2 && z > -29.6) || (x > 9.2 && z > -34) || (x > -2 && x < 6 && z > -17.6);
-    let count = 0;
-    for (let gz = -18.2; gz > -150; gz -= 3.1) {
-      const spread = 26 + Math.max(0, -gz - 40) * 0.55, step = gz < -70 ? 3.6 : 3.0;
-      for (let gx = -spread; gx < spread * 0.85; gx += step) {
-        const x = gx + (hr() - 0.5) * 1.2, z = gz + (hr() - 0.5) * 1.2;
-        if (blocked(x, z) || hr() < 0.2) continue;
-        houseId = 0.05 + hr() * 0.95;
-        const y = hillY(x, z);
-        if (hr() < 0.16) {
-          // a tree: ball canopy on a trunk
-          put(new THREE.CylinderGeometry(0.08, 0.12, 1.2, 6), M.woodDark, at(x, y + 0.6, z, 0));
-          put(new THREE.SphereGeometry(0.9 + hr() * 0.4, 10, 8), M.paper, at(x, y + 1.7, z, hr() * 6));
-          continue;
-        }
-        const w = 2 + hr() * 1.3, d = 2 + hr() * 1.2, h = 1.5 + hr() * 1.5;
-        const ry = hr() < 0.5 ? 0 : Math.PI / 2;
-        put(new THREE.BoxGeometry(w, h + 3, d), hr() < 0.55 ? M.plaster : M.boards, at(x, y + (h - 3) / 2, z, ry));
-        const rm = Math.abs(Math.sin(ry)) > 0.5 ? M.roofR : M.roof;
-        const rise = 0.65;
-        const L2 = Math.hypot(d / 2 + 0.3, rise);
-        for (const sgn of [-1, 1]) {
-          // roof slope (in the house's frame), then into the world
-          const local = new THREE.Matrix4().compose(new THREE.Vector3(0, h + rise / 2, sgn * (d / 4 + 0.075)), new THREE.Quaternion().setFromEuler(new THREE.Euler(sgn * Math.atan2(rise, d / 2 + 0.3), 0, 0)), one);
-          const g = new THREE.BoxGeometry(w + 0.3, 0.08, L2);
-          g.applyMatrix4(local);
-          put(g, rm, at(x, y, z, ry));
-        }
-        if (hr() < 0.3) put(new THREE.BoxGeometry(0.5, 0.5, 0.5), M.light, at(x + (hr() - 0.5) * w * 0.5, y + h + 0.5, z, ry)); // water tank on the roof
-        count++;
-      }
-    }
-    for (const [mat, geos] of parts) {
-      const m = new THREE.Mesh(mergeGeometries(geos), mat);
-      m.castShadow = false;
-      m.receiveShadow = true;
-      m.userData.farField = true;
-      root.add(m);
-    }
-    void count;
+    buildHillside(root, { hillY, blocked, lookout: { x: 4.5, z: -27 } });
   }
 
   // ---- the skyline: three hill bands, the city in the basin, Taipei 101 -----------------
@@ -1032,87 +989,23 @@ function buildTaiwan(scene) {
       geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
       geo.setIndex(idx);
       geo.computeVertexNormals();
-      return far(add(geo, mat, root));
+      far(add(geo, mat, root));
+      // the crest height at an azimuth (the same ridge formula)
+      return (az) => {
+        const valley = dip * Math.exp(-(((az - TX.PANO.T101) / 16) ** 2));
+        const el = elTop + amp * (0.55 * Math.sin(az * 0.05 + ph[0]) + 0.3 * Math.sin(az * 0.13 + ph[1]) + 0.15 * Math.sin(az * 0.31 + ph[2])) - valley;
+        return L.y + R * Math.tan(THREE.MathUtils.degToRad(el));
+      };
     };
     const hillMat = (kind, seed, tone) => ink({ map: TX.hillTexture(kind, seed), tone, facing: 0.35, hatchFreq: 0.5, side: THREE.DoubleSide, mapAmt: 0.85 });
     band(380, -3.7, 0.9, 11, hillMat('ridge', 83, 0.97), 0.6);
-    band(260, -5.0, 1.4, 12, hillMat('trees', 85, 1), 1.1);
-    band(150, -7.8, 1.6, 13, hillMat('town', 87, 1), 1.0);
+    const crest260 = band(260, -5.0, 1.4, 12, hillMat('trees', 85, 1), 1.1);
+    const crest150 = band(150, -7.8, 1.6, 13, hillMat('forest', 87, 1), 1.0);
+    // villages and tree clumps on the crests (the nearer band's houses are geometry, not drawn)
+    buildRidges(root, { L, dirAt, crests: [{ R: 150, top: crest150, houses: true, tree: 2.6 }, { R: 260, top: crest260, houses: false, tree: 3.4 }] });
 
-    // the city: blocks of varied height and width in the basin, merged with per-block outline ids
-    const cityMats = [ink({ map: TX.cityWindowTexture(), tri: 1 / 16, mapAmt: 0.45, tone: 1, facing: 0.5, hatchFreq: 0.3 }), ink({ map: TX.cityWindowTexture(), tri: 1 / 16, mapAmt: 0.45, tone: 0.86, facing: 0.5, hatchFreq: 0.3 })];
-    const cr = makeRng(4242);
-    const T101 = { az: TX.PANO.T101, dist: 520 };
-    const [tx, tz] = dirAt(T101.az);
-    const towerX = L.x + tx * T101.dist, towerZ = L.z + tz * T101.dist;
-    const baseY = -46;
-    const parts = [[], []];
-    const placed = [];
-    for (let i = 0; i < 900 && placed.length < 170; i++) {
-      const az = -70 + cr() * 140, dist = 470 + cr() * 520;
-      const [dx, dz] = dirAt(az);
-      const x = L.x + dx * dist, z = L.z + dz * dist;
-      const w = 14 + cr() * 22, d = 14 + cr() * 22;
-      if (Math.hypot(x - towerX, z - towerZ) < 45) continue;
-      if (placed.some(([px, pz, pw]) => Math.abs(px - x) < (pw + w) * 0.42 && Math.abs(pz - z) < (pw + d) * 0.42)) continue;
-      const nearTower = Math.exp(-((Math.hypot(x - towerX, z - towerZ) / 220) ** 2));
-      // most blocks low, a few towers near 101 - all clearly below it
-      let h = 22 + cr() * 22 + nearTower * cr() * 30;
-      if (cr() < 0.06) h += 25 + cr() * 20;
-      h = Math.min(h, 92);
-      const g = new THREE.BoxGeometry(w, h, d);
-      g.translate(x, baseY + h / 2, z);
-      g.rotateY(0); // keep aligned with the street grid
-      withId(g, 0.05 + cr() * 0.95);
-      parts[cr() < 0.7 ? 0 : 1].push(g);
-      placed.push([x, z, w]);
-      // a stepped top on some towers
-      if (h > 70 && cr() < 0.6) { const g2 = new THREE.BoxGeometry(w * 0.6, 8, d * 0.6); g2.translate(x, baseY + h + 4, z); withId(g2, 0.05 + cr() * 0.95); parts[0].push(g2); }
-    }
-    parts.forEach((p, k) => far(add(mergeGeometries(p), cityMats[k], root)));
-
-    // Taipei 101 (scaled to about 0.39 of the real 508 m): tapered base, eight
-    // outward-flaring segments with ledges and ruyi ornaments, coin medallions,
-    // a stepped crown and the spire.
-    const t101 = new THREE.Group();
-    t101.position.set(towerX, baseY, towerZ);
-    t101.rotation.y = Math.atan2(L.x - towerX, L.z - towerZ); // a face toward the lookout
-    root.add(t101);
-    const tw = ink({ tone: 0.98, facing: 0.55, hatchFreq: 0.35 });
-    const trim = ink({ tone: 0.55, facing: 0.4, hatchFreq: 0.35 });
-    const sq = (bottom, top, h, y, mat) => {
-      const m = far(add(new THREE.CylinderGeometry(top * Math.SQRT2, bottom * Math.SQRT2, h, 4, 1), mat, t101));
-      m.rotation.y = Math.PI / 4;
-      m.position.y = y + h / 2;
-      return m;
-    };
-    far(add(new THREE.BoxGeometry(70, 14, 50), tw, t101)).position.y = 7;   // podium (mostly hidden by the city)
-    sq(13, 8.6, 42, 0, tw);                                                  // tapered base
-    for (const [ax, az] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {             // coin medallions on the base faces
-      const md = far(add(new THREE.TorusGeometry(3.6, 0.8, 8, 20), trim, t101));
-      md.position.set(ax * 9.9, 33, az * 9.9);
-      md.rotation.y = Math.atan2(ax, az);
-      md.rotation.x = 0.1 * (az || ax);
-      const core = far(add(new THREE.BoxGeometry(2.2, 2.2, 0.6), trim, t101));
-      core.position.copy(md.position); core.rotation.y = md.rotation.y;
-    }
-    let y = 42;
-    for (let k = 0; k < 8; k++) {
-      sq(8.6, 10.8, 13, y, tw);                                              // flares outward: wider at the top
-      far(add(new THREE.BoxGeometry(22.6, 0.9, 22.6), trim, t101)).position.y = y + 13;
-      for (const [cx, cz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {         // ruyi curls on the corners
-        const ru = far(add(new THREE.TorusGeometry(1.3, 0.45, 6, 10, Math.PI * 1.5), trim, t101));
-        ru.position.set(cx * 11.6, y + 11.5, cz * 11.6);
-        ru.rotation.y = Math.atan2(cx, cz);
-      }
-      y += 13.9;
-    }
-    sq(7.4, 8.2, 5, y, tw); y += 5;                                          // crown tiers
-    sq(5.8, 6.4, 4, y, trim); y += 4;
-    sq(4.3, 4.8, 3.5, y, tw); y += 3.5;
-    sq(2.4, 2.4, 3, y, trim); y += 3;
-    const sp = far(add(new THREE.CylinderGeometry(0.5, 1.1, 26, 8), tw, t101)); // spire
-    sp.position.y = y + 13;
+    // the basin city, Taipei 101 and Nan Shan Plaza (./taiwan/taipei.js)
+    buildTaipei(root, { L, dirAt, az101: TX.PANO.T101, dist101: 520, baseY: -46 });
   }
 
   // ---- the view: drawn panorama around the camera (not outlined) ---------------------
@@ -1174,15 +1067,15 @@ function buildTaiwan(scene) {
   })();
 
   // ---- interactions ------------------------------------------------------------------------
-  // return home: a wooden signpost at the top of the street
+  // back to the airport: a wooden signpost at the top of the street
   {
     const g = group(root, 1.1, 0, 1.6, -0.4);
     box(g, 0.08, 1.35, 0.08, 0, 0, 0, M.woodDark);
-    const arm = facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.05, 0, M.wood, signMat('回家', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
+    const arm = facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.05, 0, M.wood, signMat('機場', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
     void arm;
     facedBox(g, 0.6, 0.2, 0.04, -0.15, 0.78, 0.02, M.wood, signMat('九份', { vertical: false, seed: 22, w: 300, h: 120, size: 70 }), [4, 5]).rotation.y = 0.5;
     solidCircle(1.1, 1.6, 0.12);
-    actionSpot('home', 'Head home', { x: 0.75, z: 1.25, radius: 0.85, prompt: [1.1, 1.6, 1.6], act: (ctx) => ctx.travel('room') });
+    actionSpot('home', 'Back to the airport', { x: 0.75, z: 1.25, radius: 0.85, prompt: [1.1, 1.6, 1.6], act: (ctx) => ctx.travel('lobby') });
   }
 
   const auntieLines = [

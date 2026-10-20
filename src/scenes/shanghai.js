@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { ink, backdropMaterial, inkShared } from '../ink.js';
+import { ink, backdropMaterial } from '../ink.js';
 import { makeRng } from '../sketch.js';
 import { createCharacter } from '../character.js';
 import * as TW from '../taiwanTextures.js';
 import * as TX from '../shanghaiTextures.js';
+import { BOLD } from './kit.js';
+import { buildPudong } from './shanghai/pudong.js';
+import { buildRiver } from './shanghai/river.js';
+import { buildBund } from './shanghai/bund.js';
 import { t as tr, onLang } from '../i18n.js';
 
 // Chapter 2: Shanghai — the Bund promenade, looking across the Huangpu River
@@ -69,7 +73,8 @@ export default {
   start: { x: 0, z: 3.4, facing: Math.PI, yaw: 0, pitch: 0.05 },
   sun: { dir: [-0.55, 2.3, 1.35], extent: 15, follow: true, far: 60 },
   camera: { far: 2600, dist: 3.0 },
-  render: { grazeFix: 1 },
+  // distant lines thin and lighten, distant tones fade toward the paper; the landmarks stay bold
+  render: { grazeFix: 1, aerial: { near: 100, far: 900, line: 0.55, tone: 0.32, bold: BOLD } },
   build: buildShanghai,
 };
 
@@ -84,7 +89,6 @@ function buildShanghai(scene) {
     if (!signCache.has(key)) signCache.set(key, ink({ map: TW.signTexture(text, o), facing: 0.2, hatch: 0.4 }));
     return signCache.get(key);
   };
-  const far = (o) => ink({ facing: 0.5, hatchFreq: 0.35, tone: 1, ...o });
   const M = {
     paving: ink({ map: TX.tileTexture(), tri: 1 / 2, facing: 0.25, mapAmt: 0.75, hatch: 0.7 }),
     kerb: ink({ map: TX.kerbTexture(), tri: 1 / 2.4, facing: 0.5, mapAmt: 0.8, tone: 0.92 }),
@@ -109,7 +113,6 @@ function buildShanghai(scene) {
     floor: ink({ map: TW.boardsTexture(), tri: 1 / 2, facing: 0.3, mapAmt: 0.6, tone: 0.92, hatch: 0.6 }),
     boardsDark: ink({ map: TW.boardsTexture(44), tri: 1 / 2.0, facing: 0.6, mapAmt: 0.9, tone: 0.62 }),
     road: ink({ tone: 0.8, facing: 0, hatch: 0 }),
-    leafFar: ink({ tone: 0.97, facing: 0.6, hatchFreq: 3 }),
     lifeRing: ink({ map: TX.lifeRingTexture(), repeat: [1, 1], facing: 0.5, hatchFreq: 40 }),
     coffee: ink({ map: TX.coffeeSignTexture(), facing: 0.2, hatch: 0.3 }),
     fascia: ink({ map: TX.fasciaTexture(), facing: 0.2, hatch: 0.3 }),
@@ -126,24 +129,6 @@ function buildShanghai(scene) {
     gull: ink({ tone: 1, facing: 0.5, local: true, hatchFreq: 40 }),
     gullWing: ink({ tone: 0.6, facing: 0.5, local: true, hatchFreq: 40 }),
     bird: ink({ tone: 0.15, hatch: 0, side: THREE.DoubleSide }),
-    // far field (very low hatch frequency so it never turns into moire)
-    fGrid: far({ map: TX.towerTexture('grid', 311), tri: 1 / 14, mapAmt: 0.5 }),
-    fGrid2: far({ map: TX.towerTexture('grid', 313), tri: 1 / 12, mapAmt: 0.5, tone: 0.86 }),
-    fBands: far({ map: TX.towerTexture('bands', 315), tri: 1 / 16, mapAmt: 0.45, tone: 0.94 }),
-    fVert: far({ map: TX.towerTexture('vert', 317), tri: 1 / 14, mapAmt: 0.45 }),
-    fFine: far({ map: TX.towerTexture('fine', 319), tri: 1 / 10, mapAmt: 0.4 }),
-    fPlain: far({ tone: 0.97 }),
-    fDark: far({ tone: 0.5 }),
-    fTree: far({ tone: 0.95, hatchFreq: 0.8 }),
-    fGround: far({ tone: 0.95, facing: 0, hatch: 0 }),
-    fShore: far({ map: TW.stoneBlockTexture(), tri: 1 / 3, mapAmt: 0.6, tone: 0.85 }),
-    spiral: far({ map: TX.spiralTowerTexture(), mapAmt: 0.5, tone: 0.98, facing: 0.55 }),
-    pearl: far({ map: TX.pearlTexture(), mapAmt: 0.7, tone: 0.96, facing: 0.65, hatchFreq: 0.7 }),
-    concrete: far({ tone: 0.93, facing: 0.55, hatchFreq: 0.6 }),
-    trim: far({ tone: 0.55, facing: 0.4, hatchFreq: 0.6 }),
-    facades: [341, 343, 345, 347].map((s, i) => far({ map: TX.facadeTexture(s, { floors: 5 + (i % 2), cols: 6 + i }), facing: 0.4, hatchFreq: 0.8, tone: i % 2 ? 0.92 : 0.98 })),
-    bundStone: far({ tone: 0.9, facing: 0.5, hatchFreq: 0.8 }),
-    bundRoof: far({ tone: 0.5, facing: 0.5, hatchFreq: 0.8 }),
   };
 
   const root = new THREE.Group();
@@ -328,381 +313,12 @@ function buildShanghai(scene) {
   }
 
   // =====================================================================
-  // THE RIVER: a big plane with drawn ripple strokes. Seen this flat, strokes
-  // fixed in world space would vanish, so the rows are spaced by viewing angle
-  // (even on screen, like a drawing) and the strokes drift with the current.
+  // THE RIVER, PUDONG and THE OLD BUND (built in ./shanghai/)
   // =====================================================================
-  const waterMat = new THREE.ShaderMaterial({
-    uniforms: { uCam: { value: new THREE.Vector3() }, uTime: { value: 0 }, uPaper: inkShared.uPaper, uInk: inkShared.uInk },
-    vertexShader: /* glsl */`
-      varying vec3 vW;
-      void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
-    fragmentShader: /* glsl */`
-      uniform vec3 uCam, uPaper, uInk; uniform float uTime;
-      varying vec3 vW;
-      float hash(float n) { return fract(sin(n * 12.9898) * 43758.5453); }
-      void main() {
-        vec2 dv = vW.xz - uCam.xz;
-        float d = max(length(dv), 0.5);
-        float a = max(uCam.y - vW.y, 0.3) / d;          // depression angle
-        float rowf = a / 0.0125;
-        float row = floor(rowf), fy = fract(rowf);
-        float az = atan(dv.x, -dv.y);
-        float rh = hash(row * 1.7 + 3.0);
-        float cw = 0.035 + 0.045 * hash(row + 11.0);     // stroke cell, in radians of azimuth
-        float u = az / cw + uTime * (0.05 + 0.06 * rh) + rh * 37.0;
-        float cell = floor(u), fu = fract(u);
-        float on = step(0.45, hash(cell * 1.31 + row * 7.13));
-        float len = 0.3 + 0.5 * hash(cell * 2.7 + row * 1.9);
-        float fwu = fwidth(u);
-        float inS = smoothstep(0.0, 0.05 + fwu, fu) * (1.0 - smoothstep(len - 0.05 - fwu, len, fu));
-        float wav = 0.1 * sin(fu * 9.4 + row);
-        float fw = fwidth(rowf);
-        float lw = 0.09 + 0.05 * hash(cell + row * 0.37);
-        float ln = 1.0 - smoothstep(lw - fw * 0.7, lw + fw * 0.7, abs(fy - 0.5 - wav));
-        float ink = ln * inS * on * (1.0 - smoothstep(0.35, 0.8, fw));
-        gl_FragColor = vec4(mix(uPaper * 0.985, uInk, ink * 0.72), 1.0);
-      }`,
-  });
-  const water = add(new THREE.PlaneGeometry(3200, -SHORE_Z + 10, 1, 1), waterMat, root, { cast: false, receive: false });
-  water.rotation.x = -Math.PI / 2;
-  water.position.set(0, WATER_Y, SHORE_Z / 2 - 2);
-  water.userData.noBlock = true;
-  updaters.push((t, dt, ctx) => { waterMat.uniforms.uTime.value = t; waterMat.uniforms.uCam.value.copy(ctx.camera.position); });
-
-  // =====================================================================
-  // PUDONG: embankment, riverside park, low buildings, the dense skyline
-  // =====================================================================
-  {
-    const parts = new Map();
-    const put = (geo, mat, id) => {
-      let g = geo.index ? geo.toNonIndexed() : geo;
-      for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
-      withId(g, id);
-      if (!parts.has(mat)) parts.set(mat, []);
-      parts.get(mat).push(g);
-    };
-    const boxAt = (w, h, d, x, y, z, mat, id, ry = 0) => {
-      const g = new THREE.BoxGeometry(w, h, d);
-      if (ry) g.rotateY(ry);
-      g.translate(x, y + h / 2, z);
-      put(g, mat, id);
-    };
-    const cylAt = (rt, rb, h, x, y, z, mat, id, seg = 12) => {
-      const g = new THREE.CylinderGeometry(rt, rb, h, seg);
-      g.translate(x, y + h / 2, z);
-      put(g, mat, id);
-    };
-    // embankment + ground
-    const em = new THREE.BoxGeometry(3200, SHORE_Y - WATER_Y + 1.2, 8);
-    em.translate(0, (SHORE_Y + WATER_Y - 1.2) / 2, SHORE_Z - 4);
-    put(em, M.fShore, 0.9);
-    const gr = new THREE.BoxGeometry(3200, 1, 1200);
-    gr.translate(0, SHORE_Y - 0.5, SHORE_Z - 8 - 600);
-    put(gr, M.fGround, 0.91);
-    // riverside park: a row of round trees, a few low pavilions
-    const cr = makeRng(777);
-    for (let x = -900; x < 900; x += 5 + cr() * 5) {
-      const z = SHORE_Z - 11 - cr() * 8;
-      const r = 2.4 + cr() * 1.6;
-      const g = new THREE.SphereGeometry(r, 8, 6);
-      g.scale(1, 0.85, 1);
-      g.translate(x, SHORE_Y + 2.2 + r * 0.7, z);
-      put(g, M.fTree, 0.05 + cr() * 0.95);
-      cylAt(0.3, 0.4, 2.6, x, SHORE_Y, z, M.fDark, 0.4, 5);
-    }
-    // keep the landmarks' footprints clear of generic blocks
-    const marks = Object.values(SKY).map(({ az, d }) => at(az, d));
-    const conv = at(-30, 215);
-    const ifc = at(1.5, 300);
-    const clear = (x, z, pad) => marks.some(([mx, mz]) => Math.hypot(x - mx, z - mz) < 26 + pad) || Math.hypot(x - conv[0], z - conv[1]) < 40 + pad || Math.hypot(x - ifc[0], z - ifc[1]) < 26 + pad;
-    // low riverside buildings behind the trees
-    for (let x = -900; x < 900; x += 14 + cr() * 14) {
-      const z = SHORE_Z - 30 - cr() * 20;
-      if (clear(x, z, 0)) continue;
-      const w = 10 + cr() * 14, d = 10 + cr() * 10;
-      const az = THREE.MathUtils.radToDeg(Math.atan2(x, -z));
-      const h = Math.abs(az - SKY.pearl.az) < SKY.pearl.hw + 2 ? 5 + cr() * 2 : 6 + cr() * 14;
-      boxAt(w, h, d, x, SHORE_Y, z, cr() < 0.5 ? M.fGrid2 : M.fPlain, 0.05 + cr() * 0.95);
-    }
-    // the city: density and height rise toward Lujiazui (behind the landmarks).
-    // Heights are chosen as viewing angles from the promenade, so the band
-    // stays below the four landmarks wherever a block lands.
-    const placed = [];
-    const mats = [M.fGrid, M.fGrid, M.fBands, M.fVert, M.fFine, M.fGrid2];
-    for (let i = 0; i < 3000 && placed.length < 320; i++) {
-      const x = (cr() - 0.5) * 1800, z = SHORE_Z - 60 - cr() * 620;
-      const az = THREE.MathUtils.radToDeg(Math.atan2(x, -z)), dist = Math.hypot(x, z);
-      const core = Math.exp(-(((az - 4) / 24) ** 2)) * Math.exp(-(((dist - 430) / 190) ** 2));
-      if (cr() > 0.3 + core * 0.9) continue;
-      const w = 13 + cr() * 15, d = 13 + cr() * 15;
-      if (clear(x, z, w * 0.5)) continue;
-      if (placed.some(([px, pz, pw]) => Math.abs(px - x) < (pw + w) * 0.5 && Math.abs(pz - z) < (pw + d) * 0.5)) continue;
-      let deg = 2.5 + cr() * 4 + core * (2 + cr() * 7.5);
-      // nothing tall in front of a landmark: keep their feet and pearls in view
-      const wdeg = THREE.MathUtils.radToDeg(w / dist) * 0.6;
-      for (const L of Object.values(SKY)) {
-        if (Math.abs(az - L.az) < L.hw + wdeg && dist < L.d + 40) deg = Math.min(deg, L === SKY.pearl ? 2.6 : 5.5);
-      }
-      const h = Math.max(12, dist * Math.tan(THREE.MathUtils.degToRad(deg)));
-      const id = 0.05 + cr() * 0.95;
-      const mat = mats[Math.floor(cr() * mats.length)];
-      const kind = cr();
-      if (kind < 0.12 && h > 50) {
-        // round glass tower with a mast
-        cylAt(w * 0.48, w * 0.5, h, x, SHORE_Y, z, M.fBands, id, 14);
-        cylAt(w * 0.3, w * 0.42, 5, x, SHORE_Y + h, z, M.fPlain, id, 14);
-        cylAt(0.3, 0.6, 14, x, SHORE_Y + h + 5, z, M.fDark, id, 5);
-      } else if (kind < 0.3 && h > 45) {
-        // stepped top
-        boxAt(w, h, d, x, SHORE_Y, z, mat, id);
-        boxAt(w * 0.72, 8, d * 0.72, x, SHORE_Y + h, z, mat, id);
-        boxAt(w * 0.4, 6, d * 0.4, x, SHORE_Y + h + 8, z, M.fPlain, id);
-      } else if (kind < 0.42 && h > 40) {
-        // pointed crown
-        boxAt(w, h, d, x, SHORE_Y, z, mat, id);
-        const cone = new THREE.ConeGeometry(w * 0.7, 12, 4);
-        cone.rotateY(Math.PI / 4);
-        cone.translate(x, SHORE_Y + h + 6, z);
-        put(cone, M.fPlain, id);
-      } else {
-        boxAt(w, h, d, x, SHORE_Y, z, mat, id, cr() < 0.2 ? 0.3 : 0);
-        if (cr() < 0.3) boxAt(w * 0.5, 3, d * 0.5, x, SHORE_Y + h, z, M.fDark, id);
-      }
-      placed.push([x, z, w]);
-    }
-    // IFC: twin slabs with crowns by the river, right of the Pearl
-    for (const dx of [-11, 11]) {
-      const [x, z] = [ifc[0] + dx, ifc[1] - Math.abs(dx) * 0.4];
-      const id = 0.3 + dx * 0.01;
-      boxAt(15, 62, 15, x, SHORE_Y, z, M.fFine, id);
-      boxAt(11, 5, 11, x, SHORE_Y + 62, z, M.fPlain, id);
-      boxAt(5, 8, 5, x, SHORE_Y + 67, z, M.fFine, id);
-    }
-    boxAt(46, 12, 22, ifc[0], SHORE_Y, ifc[1] + 6, M.fGrid2, 0.62);
-    // the convention center: a long low hall with two globes, by the river left of the Pearl
-    {
-      const [x, z] = conv;
-      boxAt(46, 15, 22, x, SHORE_Y, z, M.fVert, 0.71);
-      boxAt(50, 1.6, 24, x, SHORE_Y + 15, z, M.fPlain, 0.72);
-      for (const [dx, r] of [[-12, 8.5], [12, 6]]) {
-        const g = new THREE.SphereGeometry(r, 18, 12);
-        g.translate(x + dx, SHORE_Y + 17.6 + r * 0.8, z);
-        put(g, M.pearl, 0.73 + dx * 0.001);
-      }
-    }
-    for (const [mat, geos] of parts) {
-      const m = new THREE.Mesh(mergeGeometries(geos), mat);
-      m.castShadow = false; m.receiveShadow = false;
-      m.userData.farField = true; m.userData.noBlock = true;
-      root.add(m);
-    }
-  }
-
-  const farMesh = (m) => { m.castShadow = false; m.receiveShadow = false; m.userData.farField = true; m.userData.noBlock = true; return m; };
-  const farGroup = (x, z) => { const g = group(root, x, SHORE_Y, z); return g; };
-  const finishFar = (g) => { g.traverse((o) => { if (o.isMesh) farMesh(o); }); };
-
-  // ---- Oriental Pearl Tower (about 0.32 of the real 468 m): tripod legs,
-  // three columns, the big lower pearl, five small pearls, the upper pearl,
-  // the space module and the needle.
-  {
-    const [x, z] = at(SKY.pearl.az, SKY.pearl.d);
-    const g = farGroup(x, z);
-    g.rotation.y = Math.atan2(-x, -z);
-    const C = M.concrete, P = M.pearl, T = M.trim;
-    // (the pearls and columns are drawn a little fatter than life so they read from across the river)
-    for (let k = 0; k < 3; k++) {
-      const a = (k / 3) * Math.PI * 2 + Math.PI / 2;
-      cyl(g, 1.8, 2.0, 96, Math.cos(a) * 3.8, 0, Math.sin(a) * 3.8, C, { seg: 14 });
-      // the inclined legs between the columns
-      const b = a + Math.PI / 3;
-      strut(g, [Math.cos(b) * 16, 0, Math.sin(b) * 16], [Math.cos(b) * 3.6, 25, Math.sin(b) * 3.6], 1.6, 1.3, C, { seg: 12 });
-      cyl(g, 2.6, 3.0, 2.4, Math.cos(b) * 16, 0, Math.sin(b) * 16, C, { seg: 12 });
-    }
-    cyl(g, 7, 9, 4.5, 0, 0, 0, C, { seg: 24 });               // entrance podium
-    sphere(g, 10.2, 0, 32, 0, P, [1, 1, 1], { seg: 32 });       // lower pearl
-    torus(g, 10.3, 0.55, 0, 32, 0, T, { seg: 40 }).rotation.x = Math.PI / 2;
-    for (let i = 0; i < 5; i++) {
-      const a = (i / 3) * Math.PI * 2 + Math.PI / 2;
-      sphere(g, 2.7, Math.cos(a) * 3.8, 49 + i * 6.0, Math.sin(a) * 3.8, P, [1, 1, 1], { seg: 16 });
-    }
-    sphere(g, 7.8, 0, 86, 0, P, [1, 1, 1], { seg: 30 });        // upper pearl
-    torus(g, 7.9, 0.5, 0, 86, 0, T, { seg: 36 }).rotation.x = Math.PI / 2;
-    cyl(g, 2.0, 2.3, 22, 0, 90, 0, C, { seg: 14 });
-    sphere(g, 3.3, 0, 113, 0, P, [1, 1, 1], { seg: 18 });       // space module
-    cyl(g, 1.2, 1.6, 6, 0, 115, 0, C, { seg: 12 });
-    cyl(g, 0.2, 1.15, 32, 0, 120, 0, C, { seg: 10 });          // the needle
-    for (const [y, r] of [[124, 1.25], [130, 0.95], [136, 0.65]]) cyl(g, r, r, 0.8, 0, y, 0, T, { seg: 10 });
-    finishFar(g);
-  }
-
-  // ---- Shanghai Tower: a rounded-triangle plan with a notch, tapering and
-  // twisting about 120 degrees up its height, the crown sloping toward the notch.
-  {
-    const [x, z] = at(SKY.tower.az, SKY.tower.d);
-    const H = 210, R0 = 15, N = 56, Mseg = 48;
-    const notch = 0;
-    const twist = (y) => (y / H) * 2.0;
-    const scaleAt = (y) => 1 - 0.47 * Math.pow(y / H, 1.15);
-    const topAt = (th) => H * (0.92 + 0.08 * (0.5 + 0.5 * Math.cos(th - notch - Math.PI)));
-    const radiusAt = (th) => {
-      let r = 1 + 0.11 * Math.cos(3 * th);
-      const dn = Math.abs(Math.atan2(Math.sin(th - notch), Math.cos(th - notch)));
-      r -= 0.13 * Math.max(0, 1 - dn / 0.2);
-      return r;
-    };
-    const pos = [], uv = [], idx = [];
-    for (let i = 0; i <= N; i++) {
-      for (let j = 0; j <= Mseg; j++) {
-        const th = (j / Mseg) * Math.PI * 2;
-        const y = (i / N) * topAt(th);
-        const r = R0 * scaleAt(y) * radiusAt(th);
-        const a = th + twist(y);
-        pos.push(Math.cos(a) * r, y, Math.sin(a) * r);
-        uv.push((j / Mseg) * 5, y / 50);
-      }
-    }
-    for (let i = 0; i < N; i++) for (let j = 0; j < Mseg; j++) {
-      const a = i * (Mseg + 1) + j, b = a + Mseg + 1;
-      idx.push(a, a + 1, b, a + 1, b + 1, b);
-    }
-    // crown cap
-    const c0 = pos.length / 3;
-    pos.push(0, H * 0.955, 0); uv.push(0, 0);
-    for (let j = 0; j < Mseg; j++) { const a = N * (Mseg + 1) + j; idx.push(a, c0, a + 1); }
-    const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-    geo.setIndex(idx);
-    geo.computeVertexNormals();
-    const g = farGroup(x, z);
-    g.rotation.y = 0.9;
-    add(geo, M.spiral, g);
-    // the notch reads as a dark seam spiralling up the tower
-    const seam = [];
-    for (let i = 0; i <= 40; i++) {
-      const y = (i / 40) * topAt(notch) * 0.995;
-      const r = R0 * scaleAt(y) * radiusAt(notch) + 0.3;
-      seam.push(new THREE.Vector3(Math.cos(notch + twist(y)) * r, y, Math.sin(notch + twist(y)) * r));
-    }
-    add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(seam), 80, 0.9, 6, false), M.trim, g);
-    cyl(g, R0 * 1.25, R0 * 1.3, 9, 0, 0, 0, M.fGrid, { seg: 24 }); // podium
-    finishFar(g);
-  }
-
-  // ---- Shanghai World Financial Center: a tapered slab (square at the foot,
-  // a blade at the top) with the trapezoid "bottle opener" opening.
-  {
-    const [x, z] = at(SKY.swfc.az, SKY.swfc.d);
-    const H = 160, W0 = 21, Wt = 12, D0 = 21;
-    const side = (y) => W0 / 2 + (Wt / 2 - W0 / 2) * Math.pow(y / H, 0.85);
-    const sh = new THREE.Shape();
-    sh.moveTo(-W0 / 2, 0); sh.lineTo(W0 / 2, 0);
-    for (let i = 1; i <= 12; i++) { const y = (i / 12) * H; sh.lineTo(side(y), y); }
-    for (let i = 12; i >= 1; i--) { const y = (i / 12) * H; sh.lineTo(-side(y), y); }
-    sh.lineTo(-W0 / 2, 0);
-    const hole = new THREE.Path();
-    const hy0 = H - 17, hy1 = H - 3.2;
-    hole.moveTo(-3.2, hy0); hole.lineTo(3.2, hy0); hole.lineTo(side(hy1) - 1.4, hy1); hole.lineTo(-side(hy1) + 1.4, hy1); hole.lineTo(-3.2, hy0);
-    sh.holes.push(hole);
-    const geo = new THREE.ExtrudeGeometry(sh, { depth: D0, bevelEnabled: false, curveSegments: 4, steps: 1 });
-    geo.translate(0, 0, -D0 / 2);
-    const p = geo.attributes.position;
-    for (let i = 0; i < p.count; i++) p.setZ(i, p.getZ(i) * (1 - 0.82 * Math.pow(p.getY(i) / H, 1.1)));
-    geo.computeVertexNormals();
-    const g = farGroup(x, z);
-    g.rotation.y = Math.atan2(-x, -z) * 0.6;
-    add(geo, M.fFine, g);
-    finishFar(g);
-  }
-
-  // ---- Jin Mao Tower: a pagoda of receding tiers with ledges, a crown and a spire.
-  {
-    const [x, z] = at(SKY.jinmao.az, SKY.jinmao.d);
-    const g = farGroup(x, z);
-    g.rotation.y = Math.PI / 8;
-    let y = 0, r = 10.5, h = 21;
-    for (let k = 0; k < 13; k++) {
-      const top = r * 0.95;
-      cyl(g, top, r, h, 0, y, 0, M.fVert, { seg: 8 });
-      cyl(g, top + 0.7, top + 0.7, 0.8, 0, y + h, 0, M.trim, { seg: 8 });
-      y += h + 0.8;
-      r = top * (k < 4 ? 0.96 : 0.9);
-      h = Math.max(2.4, h * 0.82);
-    }
-    cyl(g, r * 0.8, r, 4, 0, y, 0, M.concrete, { seg: 8 }); y += 4;
-    cyl(g, r * 0.5, r * 0.75, 3, 0, y, 0, M.trim, { seg: 8 }); y += 3;
-    cyl(g, 0.2, r * 0.5, 20, 0, y, 0, M.concrete, { seg: 8 });
-    cyl(g, 14, 15, 8, 0, 0, 0, M.fGrid2, { seg: 8 }); // podium
-    finishFar(g);
-  }
-
-  // =====================================================================
-  // THE OLD BUND: neoclassical fronts across the road (clock tower, dome, pyramid roof)
-  // =====================================================================
-  {
-    const zF = LAND_Z + 40;
-    const parts = new Map();
-    const fr = makeRng(91);
-    const put = (geo, mat, id) => { let gg = geo.index ? geo.toNonIndexed() : geo; withId(gg, id); if (!parts.has(mat)) parts.set(mat, []); parts.get(mat).push(gg); };
-    let x = -260;
-    let k = 0;
-    while (x < 260) {
-      const w = 22 + fr() * 16, h = 26 + fr() * 16, d = 26;
-      const id = 0.05 + fr() * 0.95;
-      const fm = M.facades[k % M.facades.length];
-      // front face drawn, the rest plain stone
-      const gb = new THREE.BoxGeometry(w - 0.6, h, d);
-      gb.translate(x + w / 2, ROAD_Y + h / 2, zF + d / 2);
-      // split materials by group: BoxGeometry groups 0..5; use the facade only on -z (group 5)
-      const geoms = [];
-      for (const gr of gb.groups) {
-        const sub = new THREE.BufferGeometry();
-        const ia = gb.index.array.slice(gr.start, gr.start + gr.count);
-        sub.setAttribute('position', gb.attributes.position); sub.setAttribute('normal', gb.attributes.normal); sub.setAttribute('uv', gb.attributes.uv);
-        sub.setIndex(Array.from(ia));
-        geoms.push([sub.toNonIndexed(), gr.materialIndex === 5 ? fm : M.bundStone]);
-      }
-      for (const [sg, m] of geoms) put(sg, m, id);
-      const cornice = new THREE.BoxGeometry(w - 0.2, 1.2, 1.6);
-      cornice.translate(x + w / 2, ROAD_Y + h, zF - 0.3);
-      put(cornice, M.bundStone, id);
-      const cx = x + w / 2;
-      if (Math.abs(cx - 18) < 14 && k % 3 === 0 || k === 7) {
-        // clock tower (the Customs House)
-        const tw = 9;
-        const g1 = new THREE.BoxGeometry(tw, 16, tw); g1.translate(cx, ROAD_Y + h + 8, zF + 6); put(g1, M.bundStone, id);
-        const g2 = new THREE.BoxGeometry(tw - 2, 8, tw - 2); g2.translate(cx, ROAD_Y + h + 20, zF + 6); put(g2, M.bundStone, id);
-        const cl = new THREE.CylinderGeometry(2.4, 2.4, 0.4, 20); cl.rotateX(Math.PI / 2); cl.translate(cx, ROAD_Y + h + 11, zF + 6 - tw / 2 - 0.2); put(cl, M.light, id + 0.01);
-        const sp = new THREE.ConeGeometry(2.5, 6, 4); sp.rotateY(Math.PI / 4); sp.translate(cx, ROAD_Y + h + 27, zF + 6); put(sp, M.bundRoof, id);
-      } else if (k % 4 === 1) {
-        // dome (the old HSBC bank)
-        const dr = Math.min(8, w * 0.28);
-        const drum = new THREE.CylinderGeometry(dr, dr, 4, 20); drum.translate(cx, ROAD_Y + h + 2, zF + 10); put(drum, M.bundStone, id);
-        const dm = new THREE.SphereGeometry(dr, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2); dm.translate(cx, ROAD_Y + h + 4, zF + 10); put(dm, M.bundRoof, id);
-      } else if (k % 4 === 3) {
-        // green pyramid roof (the Peace Hotel)
-        const tb = new THREE.BoxGeometry(10, 10, 10); tb.translate(cx, ROAD_Y + h + 5, zF + 5); put(tb, M.bundStone, id);
-        const py = new THREE.ConeGeometry(7.4, 9, 4); py.rotateY(Math.PI / 4); py.translate(cx, ROAD_Y + h + 14.5, zF + 5); put(py, M.bundRoof, id);
-      }
-      x += w;
-      k++;
-    }
-    // street trees between the road and the buildings: clusters of small crowns
-    for (let tx = -250; tx < 250; tx += 10 + fr() * 6) {
-      const id = 0.05 + fr() * 0.95;
-      for (const [dx, dy, dz, rr] of [[0, 5.6, 0, 1.7], [1.2, 4.9, 0.3, 1.3], [-1.2, 5.0, -0.2, 1.35], [0.3, 6.6, -0.3, 1.1]]) {
-        const gS = new THREE.SphereGeometry(rr, 10, 7); gS.translate(tx + dx, ROAD_Y + dy, zF - 4 + dz); put(gS, M.leafFar, id);
-      }
-      const gT = new THREE.CylinderGeometry(0.15, 0.25, 4.4, 5); gT.translate(tx, ROAD_Y + 2.2, zF - 4); put(gT, M.fDark, 0.4);
-    }
-    for (const [mat, geos] of parts) {
-      const m = new THREE.Mesh(mergeGeometries(geos), mat);
-      m.castShadow = false; m.receiveShadow = false; m.userData.farField = true; m.userData.noBlock = true;
-      root.add(m);
-    }
-  }
+  const pudong = buildPudong(root, { SKY, at, SHORE_Z, SHORE_Y, WATER_Y });
+  const river = buildRiver(root, { WATER_Y, SHORE_Z, SHORE_Y, ...pudong });
+  updaters.push(river.update);
+  buildBund(root, { zF: LAND_Z + 40, groundY: ROAD_Y });
 
   // =====================================================================
   // WATERFRONT PROPS
@@ -851,14 +467,14 @@ function buildShanghai(scene) {
     box(g, 0.5, 0.08, 0.18, 0, 2.25, 0, M.iron);
     solid(1.2, 1.8, 6.4, 6.8);
   }
-  // signpost home (回家) near the start
+  // signpost back to the airport (機場) near the start
   {
     const g = group(root, 2.6, 0, 5.1, 0.35);
     box(g, 0.08, 1.4, 0.08, 0, 0, 0, M.woodDark);
-    facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.08, 0, M.wood, signMat('回家', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
+    facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.08, 0, M.wood, signMat('機場', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
     facedBox(g, 0.6, 0.2, 0.04, -0.15, 0.8, 0.02, M.wood, signMat('外灘', { vertical: false, seed: 23, w: 300, h: 120, size: 70 }), [4, 5]).rotation.y = 0.5;
     solidCircle(2.6, 5.1, 0.12);
-    actionSpot('home', 'Head home', { x: 2.3, z: 4.6, radius: 0.85, prompt: [2.6, 1.6, 5.1], act: (ctx) => ctx.travel('room') });
+    actionSpot('home', 'Back to the airport', { x: 2.3, z: 4.6, radius: 0.85, prompt: [2.6, 1.6, 5.1], act: (ctx) => ctx.travel('lobby') });
   }
 
   // a seagull perched on the railing
@@ -1412,7 +1028,7 @@ function buildShanghai(scene) {
     debug: () => ({
       boats: boats.map((b) => +b.g.position.x.toFixed(2)),
       birds: birds.map((b) => +b.g.position.x.toFixed(2)),
-      waterTime: +waterMat.uniforms.uTime.value.toFixed(2),
+      waterTime: +river.mat.uniforms.uTime.value.toFixed(2),
       album: album.length,
       postcard: !postcard.classList.contains('hidden') && !postcard.classList.contains('away'),
       dialogue: dlg.classList.contains('hidden') ? null : dlgLine.textContent,
