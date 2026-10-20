@@ -26,10 +26,15 @@ the 回家 signposts in Jiufen and on the Bund travel home.
     shops, lanterns, the tea house auntie, the cat, food stalls, collectibles and objectives.
   - `shanghai.js` builds the Bund: the paved promenade with its iron railing (the river is a hard
     boundary), benches, cast-iron lamps, life ring, bin, seagull, the 外灘 pylon, Bund Coffee (enterable,
-    barista at the counter), ferries and birds, the animated river (a shader whose ripple rows are spaced
-    by viewing angle so they read like a drawing), the old Bund fronts behind, and Pudong as 3D geometry:
-    the Oriental Pearl Tower, Shanghai Tower, SWFC, Jin Mao and a dense band of towers sized by viewing
-    angle. Interactions: the viewpoint, the photo spot (saves the frame as a postcard into an album that
+    barista at the counter), ferries and birds. The far scenery is built in `scenes/shanghai/`:
+    `bund.js` (the old Bund fronts from one kit: rusticated arcades, recessed windows with surrounds and
+    hoods, giant columns, quoins, bracketed cornices, balustrades; the Customs House clock tower, HSBC
+    dome, Peace Hotel pyramid and Bank of China roof), `pudong.js` (the four landmarks modelled from their
+    structure, and the city from a small library of tower types, facades and crowns in three levels of
+    detail), `river.js` (the water shader: ripple rows spaced by viewing angle, drifting with the current,
+    and stroke-drawn reflections looked up from the skyline's silhouette) and
+    `scenes/kit.js` (merged batches, one draw call per material, each piece keeping its outline id). The
+    ink pass fades distant lines and tones (aerial perspective) except for the landmarks. Interactions: the viewpoint, the photo spot (saves the frame as a postcard into an album that
     lasts the session), the barista's dialogue panel, benches, the seagull and the life ring.
   A new chapter (Santa Clara) is one new module there plus one line in `index.js`.
 - `src/character.js` — the player from the character sheet (messy black mop with fringe + cowlick,
@@ -42,7 +47,7 @@ the 回家 signposts in Jiufen and on the Bund travel home.
 - `src/ink.js` — ink surface material + outline/paper post pass.
 - `src/textures.js`, `src/taiwanTextures.js`, `src/shanghaiTextures.js` — every texture is drawn at load
   with a wobbly-pen canvas helper (`src/sketch.js`), including the sky panoramas. Taipei 101, the city and
-  the hills in front of it are 3D geometry in `taiwan.js`; the Pudong skyline is 3D geometry in `shanghai.js`.
+  the hills in front of it are 3D geometry in `taiwan.js`; the Pudong skyline is 3D geometry in `scenes/shanghai/`.
 
 ## Test scripts (need the dev server running)
 Every script takes the server address from `URL` (default `http://localhost:5173/`).
