@@ -467,14 +467,14 @@ function buildShanghai(scene) {
     box(g, 0.5, 0.08, 0.18, 0, 2.25, 0, M.iron);
     solid(1.2, 1.8, 6.4, 6.8);
   }
-  // signpost home (回家) near the start
+  // signpost back to the airport (機場) near the start
   {
     const g = group(root, 2.6, 0, 5.1, 0.35);
     box(g, 0.08, 1.4, 0.08, 0, 0, 0, M.woodDark);
-    facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.08, 0, M.wood, signMat('回家', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
+    facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.08, 0, M.wood, signMat('機場', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
     facedBox(g, 0.6, 0.2, 0.04, -0.15, 0.8, 0.02, M.wood, signMat('外灘', { vertical: false, seed: 23, w: 300, h: 120, size: 70 }), [4, 5]).rotation.y = 0.5;
     solidCircle(2.6, 5.1, 0.12);
-    actionSpot('home', 'Head home', { x: 2.3, z: 4.6, radius: 0.85, prompt: [2.6, 1.6, 5.1], act: (ctx) => ctx.travel('room') });
+    actionSpot('home', 'Back to the airport', { x: 2.3, z: 4.6, radius: 0.85, prompt: [2.6, 1.6, 5.1], act: (ctx) => ctx.travel('lobby') });
   }
 
   // a seagull perched on the railing
