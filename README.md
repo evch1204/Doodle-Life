@@ -66,7 +66,7 @@ Every script takes the server address from `URL` (default `http://localhost:5173
 - `node scripts/i18n_check.mjs [dir]` — settings menu, language switching + persistence, a Chinese entry
   for every reachable string (all three scenes), and no text overflow in either language.
 - `node scripts/clip.mjs <dir>` — scripted review clip from the gameplay camera (`node scripts/clip_shanghai.mjs <dir>` for the Bund).
-- `node scripts/perf_shanghai.mjs` — Bund frame times and scene load (meshes, triangles) from three gameplay views.
+- `SCENE=shanghai|taiwan node scripts/perf.mjs` — frame times and scene load (meshes, triangles) from three gameplay views.
 - `node scripts/charreview.mjs <dir>` — character review: front / side / back / 3/4 stills, gameplay-camera
   stills (room + Taiwan) and a walk-and-turn recording. `node scripts/views.mjs <png> [dist lookY camY]` —
   close six-angle turnaround strip.
