@@ -177,6 +177,29 @@ kbd.wide { min-width: 34px; }
 #travel.paper .sparkles { fill: var(--ink); }
 #travel.paper .plane { stroke: var(--ink); }
 
-/* a scripted sequence (the airport's jetway) plays without the HUD panels */
+/* airport lobby: the jetway's light, the info-desk help card, "coming soon" */
 #hud #objective, #hud #controls, #hud #minimap { transition: opacity .4s; }
 #hud.busy #objective, #hud.busy #controls, #hud.busy #minimap { opacity: 0; }
+#lb-flash { position: fixed; inset: 0; background: var(--paper); opacity: 0; pointer-events: none; z-index: 19; transition: opacity .3s ease; }
+#lb-flash.on { opacity: 1; }
+#lb-flash.snap { transition: none; }
+.lb-card {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-.6deg);
+  width: min(440px, 88vw); padding: 20px 26px 16px; background: var(--paper); color: var(--ink);
+  border: 2.5px solid var(--ink); border-radius: 8px 12px 10px 8px; box-shadow: 5px 7px 0 rgba(28,26,24,.9);
+  font-size: 20px; line-height: 1.4; transition: opacity .25s;
+}
+.lb-card .title { font-size: 27px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.lb-card .title .badge { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: var(--paper); display: inline-flex; align-items: center; justify-content: center; font-size: 22px; }
+.lb-card ol { margin: 0; padding-left: 22px; }
+.lb-card ol li { margin: 4px 0; }
+.lb-card p { margin: 0 0 6px; }
+.lb-card .more { margin-top: 10px; font-size: 16px; opacity: .7; text-align: right; }
+/* the gate list: out of sight until a key focuses it (Tab), then a small card at the top */
+.lb-gates { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); display: flex; gap: 8px; align-items: center;
+  padding: 8px 12px; background: var(--paper); border: 2.5px solid var(--ink); border-radius: 8px; box-shadow: 4px 5px 0 rgba(28,26,24,.9);
+  pointer-events: auto; opacity: 0; clip-path: inset(50%); transition: opacity .2s; max-width: 94vw; flex-wrap: wrap; justify-content: center; }
+.lb-gates:focus-within { opacity: 1; clip-path: none; }
+.lb-gates .title { font-size: 18px; margin-right: 4px; }
+.lb-gates button { font: inherit; font-size: 18px; color: var(--panel-text); background: var(--panel); border: 0; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+.lb-gates button:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }

@@ -1067,15 +1067,15 @@ function buildTaiwan(scene) {
   })();
 
   // ---- interactions ------------------------------------------------------------------------
-  // return home: a wooden signpost at the top of the street
+  // back to the airport: a wooden signpost at the top of the street
   {
     const g = group(root, 1.1, 0, 1.6, -0.4);
     box(g, 0.08, 1.35, 0.08, 0, 0, 0, M.woodDark);
-    const arm = facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.05, 0, M.wood, signMat('回家', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
+    const arm = facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.05, 0, M.wood, signMat('機場', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
     void arm;
     facedBox(g, 0.6, 0.2, 0.04, -0.15, 0.78, 0.02, M.wood, signMat('九份', { vertical: false, seed: 22, w: 300, h: 120, size: 70 }), [4, 5]).rotation.y = 0.5;
     solidCircle(1.1, 1.6, 0.12);
-    actionSpot('home', 'Head home', { x: 0.75, z: 1.25, radius: 0.85, prompt: [1.1, 1.6, 1.6], act: (ctx) => ctx.travel('room') });
+    actionSpot('home', 'Back to the airport', { x: 0.75, z: 1.25, radius: 0.85, prompt: [1.1, 1.6, 1.6], act: (ctx) => ctx.travel('lobby') });
   }
 
   const auntieLines = [

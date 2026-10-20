@@ -7,21 +7,30 @@ chapter 2 is Shanghai, on the Bund promenade across the Huangpu River from the P
 ```
 npm install
 npm run dev        # http://localhost:5173        (starts in the room)
+                   # http://localhost:5173/?scene=lobby      (straight to the airport)
                    # http://localhost:5173/?scene=taiwan     (straight to Taiwan)
                    # http://localhost:5173/?scene=shanghai   (straight to the Bund)
 ```
 
 Controls: **WASD** move · **mouse** look (click to capture, or drag) · **E** interact · **Esc** settings
 (language English / 中文, mouse sensitivity; Esc also stands up from a seat or closes the journal).
-The room's front door travels to Taiwan and the Shanghai postcard pinned left of it travels to the Bund;
-the 回家 signposts in Jiufen and on the Bund travel home.
+The room's front door goes to the airport, where every city is a gate: walk up to one and press **E**
+to check in (the traveler walks into the arch, the view pushes in, down the jetway, land in the city;
+**E** / **Esc** skips it, reduced motion makes it a fade). **Tab** reaches the same gates as buttons.
+The 機場 signposts in Jiufen and on the Bund go back to the airport, in front of the gate you left by;
+the doors behind the airport's entrance go home.
 
 ## Structure
 - `src/game.js` — the shared game: renderer + ink post pass, the player character, third-person
   controller + camera, collision, stairs (scene `heightAt`), sit/lie, HUD (objectives, minimap or
   compass, prompts, captions) and the fade → travel card → load → fade-in transition.
 - `src/scenes/` — one module per place, registered in `scenes/index.js`:
-  - `room.js` wraps the unchanged `src/room.js` (the loft) and adds the door to Taiwan.
+  - `room.js` wraps the unchanged `src/room.js` (the loft) and adds the door to the airport.
+  - `lobby.js` builds the airport, the destination picker: a round departure hall drawn from the
+    reference sketch (the banner, the clock pillar with the "Different Cities. Same Sky." board and its
+    drifting cloud, the round info desk with its help card, seats, luggage carts, plants), a gate per
+    city in the back wall (an arch, the sign with its pulsing arrow, the city drawn through it) and the
+    check-in sequence with the jetway. Its textures are in `src/lobbyTextures.js`.
   - `taiwan.js` builds Jiufen old street: stepped street with a bend, shrine alley, lower street, lookout,
     shops, lanterns, the tea house auntie, the cat, food stalls, collectibles and objectives. The view is
     built in `scenes/taiwan/`: `hillside.js` (the terraced town below the street from a house kit:
@@ -42,7 +51,21 @@ the 回家 signposts in Jiufen and on the Bund travel home.
     `scenes/kit.js` (merged batches, one draw call per material, each piece keeping its outline id). The
     ink pass fades distant lines and tones (aerial perspective) except for the landmarks. Interactions: the viewpoint, the photo spot (saves the frame as a postcard into an album that
     lasts the session), the barista's dialogue panel, benches, the seagull and the life ring.
-  A new chapter (Santa Clara) is one new module there plus one line in `index.js`.
+  A new chapter (Santa Clara) is one new module there plus one line in `index.js`, then a gate for it.
+
+### Adding a gate
+Gates are the `GATES` array at the top of `src/scenes/lobby.js`; the hall spaces them evenly round the
+back wall, so adding a city is one entry:
+```js
+{ id: 'santaclara', nameEn: 'Santa Clara', nameZh: '聖克拉拉', icon: 'campus', sceneArt: 'santaclara',
+  route: 'santaclara', enabled: true },
+```
+- `route` is the scene id in `scenes/index.js`; `enabled: false` (or no route) shows "Coming soon".
+- `icon` is a sign glyph (`ICONS` in `lobbyTextures.js`); `sceneArt` the view through the arch (`ART` in
+  `lobby.js`, drawn in `lobbyTextures.js`). Add new ones there.
+- Add the prompt (`'Check in to Santa Clara'`) to `src/i18n.js`, and give the city a signpost back:
+  `act: (ctx) => ctx.travel('lobby')`. Coming back, the traveler stands in front of the gate whose
+  `route` is the scene they left; the last gate chosen is remembered (`localStorage`).
 - `src/character.js` — the player from the character sheet (messy black mop with fringe + cowlick,
   oversized hoodie with hood, drawstrings and kangaroo pocket, cream backpack, wide black trousers,
   two-tone sneakers) on a chibi rig (hips/spine/neck/head, shoulders/elbows, hips/knees/ankles with

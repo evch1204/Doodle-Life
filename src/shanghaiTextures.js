@@ -243,29 +243,6 @@ export function boatWindowTexture(seed = 377) {
   return s.texture({ repeat: true });
 }
 
-// Postcard for the room wall: "Shanghai" + a little skyline + airmail border.
-export function postcardTexture(seed = 381) {
-  const W = 512, H = 340, s = new Sketch(W, H, { seed });
-  const ctx = s.ctx;
-  for (let i = -2; i < 40; i++) {
-    for (const [y0, y1] of [[0, 16], [H - 16, H]]) {
-      ctx.fillStyle = i % 2 ? '#000' : '#999';
-      ctx.beginPath(); ctx.moveTo(i * 30, y0); ctx.lineTo(i * 30 + 15, y0); ctx.lineTo(i * 30 + 30 - 15 + (y1 - y0), y1); ctx.lineTo(i * 30 + (y1 - y0), y1); ctx.closePath(); ctx.fill();
-    }
-  }
-  s.rect(6, 6, W - 12, H - 12, { w: 5, j: 0.6 });
-  const base = 238;
-  for (let i = 0; i < 5; i++) s.line(30 + i * 12, base + 18 + i * 10, W - 40 - i * 20, base + 18 + i * 10, { w: 1.6, j: 1, alpha: 0.6 });
-  s.line(24, base, W - 24, base, { w: 3, j: 0.6 });
-  s.line(150, base, 150, 52, { w: 3.4, j: 0.3 });
-  s.ellipse(150, 168, 24, 24, { w: 3.4, j: 0.3, fill: '#fff' });
-  s.ellipse(150, 110, 14, 14, { w: 3.4, j: 0.3, fill: '#fff' });
-  for (const [x, h, w] of [[60, 50, 30], [100, 80, 26], [210, 110, 24], [256, 150, 22], [300, 120, 24], [350, 90, 30], [410, 60, 34], [460, 40, 30]]) s.rect(x - w / 2, base - h, w, h, { w: 2.6, j: 0.4, fill: '#fff' });
-  s.text('Shanghai', W * 0.7, 66, 64);
-  s.text('上海', W * 0.7, 120, 44, { font: HANZI });
-  return s.texture();
-}
-
 // ---------------------------------------------------------------------------
 // The sky all around: puffy outlined clouds and a few far birds, drawn on a
 // cylinder around the camera. Canvas x spans azimuth -180..180 (0 = across the
