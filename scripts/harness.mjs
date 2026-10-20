@@ -28,7 +28,9 @@ export function createHarness(page) {
   async function loadModel() {
     const colliders = await page.evaluate(() => window.__dw.colliders);
     const sceneId = (await st()).scene;
-    const B = sceneId === 'taiwan' ? { x0: -7.6, x1: 9.0, z0: -29.4, z1: 4.8 } : { x0: -4.7, x1: 4.7, z0: -5.0, z1: 4.2 };
+    const B = sceneId === 'taiwan' ? { x0: -7.6, x1: 9.0, z0: -29.4, z1: 4.8 }
+      : sceneId === 'shanghai' ? { x0: -18.2, x1: 16.4, z0: -3.0, z1: 7.4 }
+      : { x0: -4.7, x1: 4.7, z0: -5.0, z1: 4.2 };
     const G = 0.12;
     const NX = Math.ceil((B.x1 - B.x0) / G) + 1, NZ = Math.ceil((B.z1 - B.z0) / G) + 1;
     const hs = await page.evaluate(({ B, G, NX, NZ }) => {
