@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-// Geometry batching for the Bund fronts and the skyline: every piece is merged
+// Geometry batching for the far scenery (the Bund, Pudong, Taipei): every piece is merged
 // into one mesh per material (one draw call each), and keeps its own outline
 // id so the ink pass still draws the line between touching parts.
 
