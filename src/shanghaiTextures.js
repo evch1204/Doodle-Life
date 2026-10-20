@@ -329,3 +329,268 @@ export function panoramaTexture() {
   t.anisotropy = 4;
   return t;
 }
+
+// ---------------------------------------------------------------------------
+// Architecture kit: the old Bund fronts, the Pudong towers and the city. Drawn
+// with a steadier pen than the props (technical drawing, a little wobble) and
+// sized to real modules, so windows land on bays and floors.
+
+// Granite ashlar, 2.4 m tile (triplanar): 0.6 m courses with staggered joints.
+export function ashlarTexture(seed = 401) {
+  const S = 512, s = new Sketch(S, S, { seed });
+  const ch = S / 4;
+  for (let r = 0; r < 4; r++) {
+    const y = r * ch;
+    s.line(-4, y + 1, S + 4, y + 1 + s.rand(-1, 1), { w: 1.5, j: 0.25, alpha: 0.5 });
+    const off = r % 2 ? S / 4 : 0;
+    for (let x = off; x <= S; x += S / 2) s.line(x, y + 3, x + s.rand(-1, 1), y + ch - 1, { w: 1.2, j: 0.2, alpha: 0.38 });
+  }
+  for (let i = 0; i < 36; i++) s.ellipse(s.rand(0, S), s.rand(0, S), 1.1, 1.1, { w: 0, j: 0, fill: 'rgba(0,0,0,0.22)' });
+  return s.texture({ repeat: true });
+}
+
+// Rusticated base, 2 m tile (triplanar): deep 0.5 m channels, each with a
+// shadow under it, and lighter staggered joints.
+export function rusticTexture(seed = 403) {
+  const S = 512, s = new Sketch(S, S, { seed });
+  const ch = S / 4;
+  for (let r = 0; r < 4; r++) {
+    const y = r * ch;
+    s.ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    s.ctx.fillRect(0, y + 3, S, 13);
+    s.line(-4, y + 2, S + 4, y + 2, { w: 4, j: 0.25, alpha: 0.85 });
+    const off = r % 2 ? S / 4 : 0;
+    for (let x = off; x <= S; x += S / 2) s.line(x, y + 6, x, y + ch - 2, { w: 2, j: 0.2, alpha: 0.5 });
+  }
+  return s.texture({ repeat: true });
+}
+
+// Glazing behind a window opening (UV 0..1 over the pane): gray panes with a
+// sky gradient and a glint, paper-white sash bars.
+export function sashTexture(seed = 405, { cols = 2, rows = 3, kind = 'sash' } = {}) {
+  const W = 128, H = 224, s = new Sketch(W, H, { seed });
+  const ctx = s.ctx;
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#8a8a8a'); g.addColorStop(1, '#505050');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  // a soft glint across the panes
+  ctx.save(); ctx.globalAlpha = 0.35; ctx.strokeStyle = '#d8d8d8'; ctx.lineWidth = 14;
+  ctx.beginPath(); ctx.moveTo(W * 0.05, H * 0.62); ctx.lineTo(W * 0.75, H * 0.12); ctx.stroke();
+  ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(W * 0.3, H * 0.72); ctx.lineTo(W * 0.95, H * 0.28); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = '#fff';
+  const fw = 9;
+  ctx.fillRect(0, 0, W, fw); ctx.fillRect(0, H - fw, W, fw); ctx.fillRect(0, 0, fw, H); ctx.fillRect(W - fw, 0, fw, H);
+  if (kind === 'deco') {
+    // steel casements: one upright, close horizontal bars
+    ctx.fillRect(W / 2 - 3, 0, 6, H);
+    for (let r = 1; r < 6; r++) ctx.fillRect(0, (r * H) / 6 - 2, W, 4);
+  } else {
+    for (let c = 1; c < cols; c++) ctx.fillRect((c * W) / cols - 3, 0, 6, H);
+    for (let r = 1; r < rows; r++) ctx.fillRect(0, (r * H) / rows - 3, W, 6);
+    ctx.fillRect(0, H * 0.5 - 5, W, 10); // the meeting rail
+  }
+  s.rect(fw - 1, fw - 1, W - 2 * fw + 2, H - 2 * fw + 2, { w: 2, j: 0.15, alpha: 0.8 });
+  return s.texture();
+}
+
+// A pair of panelled doors under a fanlight (behind the arched openings).
+export function doorTexture(seed = 409) {
+  const W = 192, H = 256, s = new Sketch(W, H, { seed, bg: '#5a5a5a' });
+  const ctx = s.ctx;
+  const split = H * 0.42;
+  // fanlight: radiating glazing bars
+  ctx.fillStyle = '#7e7e7e'; ctx.fillRect(0, 0, W, split);
+  for (let i = 0; i <= 6; i++) { const a = Math.PI + (i / 6) * Math.PI; s.line(W / 2, split, W / 2 + Math.cos(a) * W, split + Math.sin(a) * W, { w: 4, j: 0.1, color: '#fff' }); }
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, split - 6, W, 12);
+  // doors: two leaves with sunk panels
+  ctx.fillStyle = '#3e3e3e'; ctx.fillRect(10, split + 6, W - 20, H - split - 6);
+  for (const x0 of [16, W / 2 + 4]) for (const [y0, h] of [[split + 16, 50], [split + 76, 60]]) s.rect(x0, y0, W / 2 - 20, h, { w: 2, j: 0.1, color: '#9a9a9a' });
+  s.line(W / 2, split + 6, W / 2, H, { w: 3, j: 0, color: '#222' });
+  return s.texture();
+}
+
+// Balustrade, one tile = 1.6 m bay: rail, plinth and five vase balusters
+// against the shadow behind them.
+export function balusterTexture(seed = 407) {
+  const W = 256, H = 176, s = new Sketch(W, H, { seed });
+  const ctx = s.ctx;
+  const top = 34, bot = H - 30;
+  ctx.fillStyle = '#7a7a7a'; ctx.fillRect(0, top, W, bot - top);
+  const n = 5;
+  for (let i = 0; i < n; i++) {
+    const cx = ((i + 0.5) * W) / n, h = bot - top;
+    const prof = [[0, 0.16], [0.08, 0.16], [0.12, 0.08], [0.3, 0.12], [0.55, 0.2], [0.75, 0.17], [0.86, 0.09], [0.92, 0.17], [1, 0.17]];
+    const L = prof.map(([v, r]) => [cx - r * (W / n) * 1.1, top + v * h]);
+    const R = prof.slice().reverse().map(([v, r]) => [cx + r * (W / n) * 1.1, top + v * h]);
+    s.stroke([...L, ...R], { w: 2, j: 0.12, closed: true, fill: '#fff' });
+  }
+  s.line(-4, top, W + 4, top, { w: 2.6, j: 0.15 });
+  s.line(-4, bot, W + 4, bot, { w: 2.6, j: 0.15 });
+  s.line(-4, 6, W + 4, 6, { w: 2, j: 0.15, alpha: 0.7 });
+  s.line(-4, H - 6, W + 4, H - 6, { w: 1.6, j: 0.15, alpha: 0.6 });
+  return s.texture({ repeat: true });
+}
+
+// Standing-seam metal roof (the copper pyramids): close vertical seams, a
+// light weathering hatch.
+export function seamTexture(seed = 411) {
+  const S = 512, s = new Sketch(S, S, { seed });
+  for (let i = 0; i < 16; i++) s.line(i * 32 + 16, -4, i * 32 + 16, S + 4, { w: 2, j: 0.15, alpha: 0.6 });
+  s.hatch(0, 0, S, S, { gap: 14, lw: 1, alpha: 0.14, angle: 1.1, j: 0.3 });
+  return s.texture({ repeat: true });
+}
+
+// A ribbed dome (hemisphere UV: v 0 at the drum, 1 at the top): 16 ribs, a
+// ring of small round windows just above the drum.
+export function domeTexture(seed = 413) {
+  const W = 1024, H = 512, s = new Sketch(W, H, { seed });
+  for (let i = 0; i < 16; i++) s.line((i / 16) * W + 32, 0, (i / 16) * W + 32, H, { w: 4.5, j: 0.15, alpha: 0.75 });
+  for (let i = 0; i < 16; i++) s.ellipse(((i + 0.5) / 16) * W + 32, H * 0.86, 10, 13, { w: 2.4, j: 0.1, fill: '#555' });
+  s.line(-4, H * 0.78, W + 4, H * 0.78, { w: 2.4, j: 0.1, alpha: 0.6 });
+  s.line(-4, H * 0.95, W + 4, H * 0.95, { w: 2.4, j: 0.1, alpha: 0.6 });
+  return s.texture({ repeat: true });
+}
+
+// Clock face (cylinder cap UV): ring, minute ticks, hour marks, hands at ten past ten.
+export function clockTexture(seed = 415) {
+  const S = 256, s = new Sketch(S, S, { seed });
+  const c = S / 2;
+  s.ellipse(c, c, c - 8, c - 8, { w: 8, j: 0.1 });
+  s.ellipse(c, c, c - 30, c - 30, { w: 2, j: 0.1, alpha: 0.7 });
+  for (let i = 0; i < 60; i++) {
+    const a = (i / 60) * Math.PI * 2, big = i % 5 === 0;
+    const r0 = c - 30, r1 = c - (big ? 52 : 38);
+    s.line(c + Math.cos(a) * r0, c + Math.sin(a) * r0, c + Math.cos(a) * r1, c + Math.sin(a) * r1, { w: big ? 5 : 1.6, j: 0 });
+  }
+  const hand = (a, len, w) => s.line(c, c, c + Math.sin(a) * len, c - Math.cos(a) * len, { w, j: 0 });
+  hand((10.17 / 12) * Math.PI * 2, c * 0.45, 7);
+  hand((2 / 12) * Math.PI * 2, c * 0.68, 4.5);
+  s.ellipse(c, c, 7, 7, { w: 0, j: 0, fill: '#000' });
+  return s.texture();
+}
+
+// City facades, one tile = 4 bays x 4 floors (UVs count bays and floors, so a
+// tile edge always falls on a bay / floor line).
+export function cityTexture(kind = 'punched', seed = 421) {
+  const S = 256, s = new Sketch(S, S, { seed });
+  const ctx = s.ctx, r = makeRng(seed + 1);
+  const c = S / 4;
+  const gray = (v) => `rgb(${v},${v},${v})`;
+  const fill = (x, y, w, h, v) => { ctx.fillStyle = gray(v); ctx.fillRect(x, y, w, h); };
+  if (kind === 'punched') {
+    for (let fy = 0; fy < 4; fy++) for (let bx = 0; bx < 4; bx++) {
+      const v = r() < 0.18 ? 150 : r() < 0.25 ? 70 : 104;
+      fill(bx * c + c * 0.25, fy * c + c * 0.22, c * 0.5, c * 0.52, v);
+      fill(bx * c + c * 0.2, fy * c + c * 0.74, c * 0.6, 3, 70);
+    }
+  } else if (kind === 'curtain') {
+    for (let fy = 0; fy < 4; fy++) {
+      fill(0, fy * c + c * 0.08, S, c * 0.62, 226);
+      s.line(-2, fy * c + c * 0.82, S + 2, fy * c + c * 0.82, { w: 2.4, j: 0, alpha: 0.75 });
+    }
+    for (let bx = 0; bx < 8; bx++) s.line(bx * (c / 2), -2, bx * (c / 2), S + 2, { w: 1.2, j: 0, alpha: bx % 2 ? 0.25 : 0.45 });
+    ctx.save(); ctx.globalAlpha = 0.18; ctx.strokeStyle = '#000'; ctx.lineWidth = 10;
+    for (const x of [-60, 110]) { ctx.beginPath(); ctx.moveTo(x, S); ctx.lineTo(x + 140, 0); ctx.stroke(); }
+    ctx.restore();
+  } else if (kind === 'ribbon') {
+    for (let fy = 0; fy < 4; fy++) {
+      fill(0, fy * c + c * 0.2, S, c * 0.46, 118);
+      for (let bx = 0; bx < 8; bx++) fill(bx * (c / 2) - 1, fy * c + c * 0.2, 2, c * 0.46, 230);
+      s.line(-2, fy * c + c * 0.2, S + 2, fy * c + c * 0.2, { w: 1.6, j: 0, alpha: 0.7 });
+    }
+  } else if (kind === 'fins') {
+    for (let bx = 0; bx < 4; bx++) {
+      fill(bx * c + c * 0.55, 0, c * 0.3, S, 196);
+      s.line(bx * c + c * 0.55, -2, bx * c + c * 0.55, S + 2, { w: 2.2, j: 0, alpha: 0.8 });
+      s.line(bx * c + c * 0.85, -2, bx * c + c * 0.85, S + 2, { w: 1.2, j: 0, alpha: 0.5 });
+    }
+    for (let fy = 0; fy < 4; fy++) s.line(-2, fy * c + 2, S + 2, fy * c + 2, { w: 1.2, j: 0, alpha: 0.4 });
+  } else if (kind === 'resi') {
+    for (let fy = 0; fy < 4; fy++) {
+      for (let bx = 0; bx < 4; bx++) fill(bx * c + c * 0.3, fy * c + c * 0.25, c * 0.4, c * 0.45, r() < 0.2 ? 150 : 96);
+      // balcony slabs on alternate bays, with a railing hatch
+      for (let bx = fy % 2; bx < 4; bx += 2) {
+        fill(bx * c + c * 0.12, fy * c + c * 0.7, c * 0.76, 4, 50);
+        for (let k = 0; k < 7; k++) fill(bx * c + c * 0.15 + k * c * 0.11, fy * c + c * 0.56, 1.5, c * 0.14, 80);
+      }
+    }
+  } else if (kind === 'side') {
+    // plain side walls of the old Bund: framed windows, light glass, a sill each
+    for (let fy = 0; fy < 4; fy++) for (let bx = 0; bx < 4; bx++) {
+      const x = bx * c + c * 0.3, y = fy * c + c * 0.2;
+      fill(x, y, c * 0.4, c * 0.52, 170);
+      s.rect(x, y, c * 0.4, c * 0.52, { w: 2, j: 0.1, alpha: 0.8 });
+      s.line(x - 4, y + c * 0.55, x + c * 0.4 + 4, y + c * 0.55, { w: 2.4, j: 0.1, alpha: 0.7 });
+    }
+  } else if (kind === 'grid') {
+    for (let i = 0; i < 8; i++) {
+      s.line(i * (c / 2), -2, i * (c / 2), S + 2, { w: 1.4, j: 0, alpha: 0.5 });
+      s.line(-2, i * (c / 2), S + 2, i * (c / 2), { w: i % 2 ? 1.1 : 1.8, j: 0, alpha: i % 2 ? 0.35 : 0.6 });
+    }
+  } else {
+    // 'far': floors and a scatter of windows, kept light
+    for (let fy = 0; fy < 4; fy++) {
+      s.line(-2, fy * c + c * 0.8, S + 2, fy * c + c * 0.8, { w: 2, j: 0, alpha: 0.45 });
+      for (let bx = 0; bx < 4; bx++) if (r() < 0.6) fill(bx * c + c * 0.3, fy * c + c * 0.3, c * 0.4, c * 0.35, 150);
+    }
+  }
+  return s.texture({ repeat: true });
+}
+
+// The Pearl's spheres (UV sphere): meridians and parallels with triangulated
+// panels, an observation band at the equator.
+export function pearlSphereTexture(seed = 431) {
+  const W = 1024, H = 512, s = new Sketch(W, H, { seed });
+  const nu = 24, nv = 12;
+  for (let i = 0; i < nu; i++) s.line((i / nu) * W, -2, (i / nu) * W, H + 2, { w: 1.8, j: 0.1, alpha: 0.5 });
+  for (let k = 1; k < nv; k++) s.line(-2, (k / nv) * H, W + 2, (k / nv) * H, { w: 1.6, j: 0.1, alpha: 0.45 });
+  for (let i = 0; i < nu; i++) for (let k = 1; k < nv - 1; k++) {
+    const x = (i / nu) * W, y = (k / nv) * H;
+    s.line(x, y, x + W / nu, y + H / nv, { w: 1, j: 0.05, alpha: 0.2 });
+  }
+  // the band of observation windows round the equator
+  s.ctx.fillStyle = '#6a6a6a'; s.ctx.fillRect(0, H * 0.47, W, H * 0.06);
+  for (let i = 0; i < 96; i++) s.line((i / 96) * W, H * 0.47, (i / 96) * W, H * 0.53, { w: 2, j: 0, color: '#fff', alpha: 0.85 });
+  s.line(-2, H * 0.47, W + 2, H * 0.47, { w: 3, j: 0.1 });
+  s.line(-2, H * 0.53, W + 2, H * 0.53, { w: 3, j: 0.1 });
+  s.hatch(0, H * 0.78, W, H * 0.22, { gap: 16, lw: 1.2, alpha: 0.18, angle: 1.2 });
+  return s.texture({ repeat: true });
+}
+
+// Shanghai Tower skin, the whole height in one tile (v = y / H): floor
+// lines, nine zones split by refuge floors, mullions, a finned crown.
+export function shTowerTexture(seed = 433) {
+  const W = 512, H = 2048, s = new Sketch(W, H, { seed });
+  const zones = 9, crown = H * 0.07;
+  for (let i = 0; i < 64; i++) {
+    const y = crown + (i / 64) * (H - crown);
+    s.line(-2, y, W + 2, y, { w: 1.3, j: 0, alpha: 0.38 });
+  }
+  for (let z = 1; z < zones; z++) {
+    const y = crown + (z / zones) * (H - crown);
+    s.ctx.fillStyle = 'rgba(0,0,0,0.16)'; s.ctx.fillRect(0, y - 10, W, 20);
+    for (let k = 0; k < 64; k++) s.line((k / 64) * W, y - 10, (k / 64) * W, y + 10, { w: 1.2, j: 0, alpha: 0.35 });
+    s.line(-2, y - 10, W + 2, y - 10, { w: 2.6, j: 0, alpha: 0.75 });
+    s.line(-2, y + 10, W + 2, y + 10, { w: 2.6, j: 0, alpha: 0.75 });
+  }
+  for (let k = 0; k < 16; k++) s.line((k / 16) * W, crown, (k / 16) * W, H, { w: 1, j: 0, alpha: 0.22 });
+  // the crown: open fins
+  for (let k = 0; k < 64; k++) s.line((k / 64) * W, 0, (k / 64) * W, crown, { w: 1.6, j: 0, alpha: 0.55 });
+  s.line(-2, crown, W + 2, crown, { w: 3, j: 0, alpha: 0.8 });
+  return s.texture({ repeat: true });
+}
+
+// Jin Mao: a steel lattice, strongly vertical; one tile = 12 m x 16 m.
+export function jinmaoTexture(seed = 435) {
+  const S = 256, s = new Sketch(S, S, { seed });
+  const c = S / 4;
+  for (let bx = 0; bx < 4; bx++) {
+    s.ctx.fillStyle = 'rgba(0,0,0,0.1)'; s.ctx.fillRect(bx * c + c * 0.42, 0, c * 0.16, S);
+    s.line(bx * c + c * 0.42, -2, bx * c + c * 0.42, S + 2, { w: 2.2, j: 0, alpha: 0.75 });
+    s.line(bx * c + c * 0.58, -2, bx * c + c * 0.58, S + 2, { w: 1.4, j: 0, alpha: 0.55 });
+    s.line(bx * c + c * 0.08, -2, bx * c + c * 0.08, S + 2, { w: 1, j: 0, alpha: 0.3 });
+  }
+  for (let fy = 0; fy < 4; fy++) s.line(-2, fy * c + 2, S + 2, fy * c + 2, { w: fy === 0 ? 2.2 : 1, j: 0, alpha: fy === 0 ? 0.6 : 0.28 });
+  return s.texture({ repeat: true });
+}
