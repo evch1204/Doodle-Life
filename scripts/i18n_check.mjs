@@ -65,13 +65,13 @@ check('language choice persists across reload', await page.evaluate(() => window
 
 // ---- every reachable string has a translation ---------------------------------------
 const STR = {};
-for (const scene of ['room', 'taiwan']) {
+for (const scene of ['room', 'taiwan', 'shanghai']) {
   await page.evaluate((s) => window.__dw.loadScene(s), scene);
   await page.waitForTimeout(300);
   STR[scene] = await page.evaluate(() => window.__dw.collectStrings());
   await page.evaluate((s) => window.__dw.loadScene(s), scene); // reset state the probing changed
 }
-const all = [...new Set([...STR.room, ...STR.taiwan])];
+const all = [...new Set([...STR.room, ...STR.taiwan, ...STR.shanghai])];
 const table = await page.evaluate(async () => (await import('/src/i18n.js')).STRINGS);
 const missing = all.filter((s) => !table.includes(s));
 check(`every reachable string has a Chinese entry (${all.length} strings)`, missing.length === 0, missing.join(' | '));
@@ -85,6 +85,14 @@ check('travel card in Chinese', card === '前往台灣中……', card);
 await page.waitForFunction(() => !window.__dw.state().traveling, null, { timeout: 15000 });
 const head = await page.evaluate(() => [document.getElementById('obj-title').textContent, document.getElementById('obj-sub').textContent]);
 check('objective card says 台灣 / 九份老街', head[0] === '台灣' && head[1] === '九份老街', head.join(' / '));
+await page.evaluate(() => window.__dw.travel('shanghai'));
+await page.waitForTimeout(900);
+const card2 = await page.evaluate(() => document.getElementById('travel-text').textContent);
+check('travel card in Chinese (Shanghai)', card2 === '前往上海中……', card2);
+await page.waitForFunction(() => !window.__dw.state().traveling, null, { timeout: 15000 });
+const objs = await page.evaluate(() => [...document.querySelectorAll('#obj-list .obj')].map((e) => e.textContent));
+check('Shanghai objectives in Chinese', objs.length === 3 && objs[0].startsWith('探索江邊步道') && objs[1] === '找到咖啡館' && objs[2] === '拍一張照片', objs.join(' / '));
+await page.evaluate(() => window.__dw.loadScene('room'));
 
 // ---- overflow: render every string in every slot, both languages -------------------------
 const longest = (arr) => [...arr].sort((a, b) => b.length - a.length)[0];
