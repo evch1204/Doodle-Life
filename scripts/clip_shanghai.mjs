@@ -19,14 +19,14 @@ const H = createHarness(page);
 const { sleep, st, press, dragTurn, goTo, loadModel } = H;
 const hold = async (key, ms) => { await page.keyboard.down(key); await sleep(ms); await page.keyboard.up(key); };
 
-// room: start near the postcard so the clip gets to Shanghai quickly
+// room: start near the door, through the airport to the Shanghai gate
 await page.evaluate(() => { window.__dw.setPlayer(-2.6, 2.2, Math.PI * 0.85); window.__dw.setView(-0.6, 0.38); });
 await sleep(1000);
 await loadModel();
-await goTo(-3.35, 3.62);
+await goTo(-2.4, 3.45);
 await sleep(500);
 await press('KeyE');
-await page.waitForFunction(() => window.__dw.state().scene === 'shanghai' && !window.__dw.state().traveling, null, { timeout: 15000 });
+await H.checkInAt('shanghai', 'shanghai');
 await loadModel();
 await sleep(1500);
 
