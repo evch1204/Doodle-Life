@@ -307,6 +307,10 @@ export class InkRenderer {
         uFar: { value: 100 },
         uThick: { value: 1 },
         uWobble: { value: 1.1 },
+        // aerial perspective (per scene, off by default): near, far, line fade, tone fade
+        uAerial: { value: new THREE.Vector4(0, 1, 0, 0) },
+        // outline ids in this band keep their full weight at any distance
+        uBold: { value: new THREE.Vector2(2, 2) },
         uProjInv: { value: new THREE.Matrix4() },
         uCamWorld: { value: new THREE.Matrix4() },
         uInk: shared.uInk,
@@ -319,6 +323,8 @@ export class InkRenderer {
         uniform sampler2D tColor, tNI, tDepth, tNoise, tPaper;
         uniform vec2 uRes;
         uniform float uNear, uFar, uThick, uWobble;
+        uniform vec4 uAerial;
+        uniform vec2 uBold;
         uniform mat4 uProjInv, uCamWorld;
         uniform vec3 uInk, uPaper;
         varying vec2 vUv;
@@ -341,7 +347,7 @@ export class InkRenderer {
         }
 
         // Edge strength at uv: depth steps (near side only), creases, object ids.
-        float edgeAt(vec2 uv, vec2 px) {
+        float edgeAt(vec2 uv, vec2 px, float thick) {
           vec4 c0 = texture2D(tNI, uv);
           float d0 = lin(uv);
           vec3 n0 = c0.rgb * 2.0 - 1.0;
@@ -352,7 +358,7 @@ export class InkRenderer {
           offs[4] = vec2(0.7, 0.7); offs[5] = vec2(-0.7, 0.7); offs[6] = vec2(0.7, -0.7); offs[7] = vec2(-0.7, -0.7);
           float e = 0.0;
           for (int i = 0; i < 8; i++) {
-            vec2 o = offs[i] * uThick * px;
+            vec2 o = offs[i] * thick * px;
             float rel = (lin(uv + o) - d0) / max(d0, 1e-3);
             float eDepth = smoothstep(dThr, dThr * 1.8, rel);
             // creases / id changes draw on both sides, so sample half as far
@@ -380,11 +386,21 @@ export class InkRenderer {
           vec2 wob = vec2(vnoise(w * 4.0) - 0.5, vnoise(w * 4.0 + 17.3) - 0.5) * 2.0
                    + vec2(vnoise(w * 13.0 + 5.1) - 0.5, vnoise(w * 13.0 + 9.7) - 0.5);
           vec2 uv = vUv + wob * uWobble * px * (1.0 - far);
+          // aerial perspective: distant lines thin out and lighten, distant tones
+          // drift toward the paper (the sky, never written to depth, is left alone);
+          // ids in the bold band (the landmarks) keep their weight
+          float zRaw = texture2D(tDepth, vUv).x;
+          float idc = texture2D(tNI, vUv).a;
+          float bold = step(uBold.x, idc) * step(idc, uBold.y);
+          float aer = zRaw < 0.999999 ? smoothstep(uAerial.x, uAerial.y, lin(vUv)) : 0.0;
+          float thick = uThick * (1.0 - 0.4 * aer * step(0.001, uAerial.z) * (1.0 - bold));
           // two sub-pixel taps -> anti-aliased line edges
-          float e = 0.5 * (edgeAt(uv + vec2(0.35, 0.3) * px, px) + edgeAt(uv - vec2(0.3, 0.35) * px, px));
+          float e = 0.5 * (edgeAt(uv + vec2(0.35, 0.3) * px, px, thick) + edgeAt(uv - vec2(0.3, 0.35) * px, px, thick));
 
           vec3 col = texture2D(tColor, vUv).rgb;
+          col = mix(col, uPaper, aer * uAerial.w * (1.0 - 0.7 * bold));
           float pressure = mix(mix(0.74, 1.0, vnoise(w * 6.0 + 3.3)), 0.9, far);
+          pressure *= 1.0 - aer * uAerial.z * (1.0 - 0.9 * bold);
           col = mix(col, uInk, clamp(e, 0.0, 1.0) * pressure);
 
           float grain = texture2D(tPaper, gl_FragCoord.xy / 512.0).r;
@@ -401,6 +417,12 @@ export class InkRenderer {
     this.postScene = new THREE.Scene();
     this.postScene.add(this.quad);
     this.postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  }
+
+  // a: { near, far, line, tone, bold: [lo, hi] } or nothing (off)
+  setAerial(a) {
+    this.post.uniforms.uAerial.value.set(a?.near ?? 0, a?.far ?? 1, a?.line ?? 0, a?.tone ?? 0);
+    this.post.uniforms.uBold.value.set(...(a?.bold ?? [2, 2]));
   }
 
   setSize(w, h) {
