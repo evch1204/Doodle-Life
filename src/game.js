@@ -688,6 +688,7 @@ export async function startGame(SCENES, firstId) {
     sun.shadow.camera.updateProjectionMatrix();
     placeSun(true);
     inkShared.uGrazeFix.value = def.render?.grazeFix ?? 0;
+    inkR.setAerial(def.render?.aerial);
     camera.far = def.camera?.far ?? 100;
     camera.updateProjectionMatrix();
     view.baseDist = def.camera?.dist ?? 2.6;
