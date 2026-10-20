@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { buildRoom, ROOM, OUTLINE } from '../room.js';
+import { ink } from '../ink.js';
+import { postcardTexture } from '../shanghaiTextures.js';
 
 // Chapter 0: the doodle loft (Milestones 1-2). The room itself is built by
 // room.js unchanged; this module only adds what the shared game needs:
@@ -30,6 +32,21 @@ export default {
       pos: new THREE.Vector3(-2.4, 1.5, 4.1), noReach: false,
       act: (ctx) => ctx.travel('taiwan'),
     });
+    // a Shanghai postcard pinned on the wall left of the door leads to the second chapter
+    {
+      const card = new THREE.Mesh(new THREE.PlaneGeometry(0.38, 0.25), ink({ map: postcardTexture(), facing: 0, hatch: 0.3 }));
+      card.position.set(-3.38, 1.42, 4.165);
+      card.rotation.set(0, Math.PI, 0.05);
+      card.receiveShadow = true;
+      const pin = new THREE.Mesh(new THREE.SphereGeometry(0.014, 8, 6), ink({ tone: 0.05, hatch: 0 }));
+      pin.position.set(-3.38, 1.53, 4.155);
+      room.root.add(card, pin);
+      room.interactables.push({
+        id: 'postcard', label: 'Travel to Shanghai', kind: 'action', x: -3.35, z: 3.62, radius: 0.6,
+        pos: new THREE.Vector3(-3.38, 1.62, 4.12), noReach: false,
+        act: (ctx) => ctx.travel('shanghai'),
+      });
+    }
     // explore objective: visit the main areas of the room
     const zones = [[-3.2, -1.5], [-0.7, -3.6], [2.4, -2.6], [3.6, -0.6], [2.5, 3.2], [-3.4, 2.6]];
     const visited = new Set();
