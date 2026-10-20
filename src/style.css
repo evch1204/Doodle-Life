@@ -143,3 +143,27 @@ kbd.wide { min-width: 34px; }
 #settings input[type='range'] { width: 150px; accent-color: var(--ink); }
 #settings .resume { display: block; width: 100%; margin-top: 18px; font-size: 22px; }
 #settings .hint { margin-top: 10px; text-align: center; font-size: 16px; opacity: .65; }
+
+/* Shanghai: camera flash, the photo postcard + album, the café dialogue panel */
+#sh-flash { position: fixed; inset: 0; background: #fffdf6; opacity: 0; pointer-events: none; transition: opacity .6s ease-out; z-index: 6; }
+#sh-flash.on { opacity: .9; transition: none; }
+#sh-postcard {
+  position: absolute; left: 50%; top: 45%; width: min(440px, 64vw); padding: 12px 12px 8px;
+  background: var(--paper); border: 2.5px solid var(--ink); border-radius: 5px; box-shadow: 6px 8px 0 rgba(28,26,24,.85);
+  transform: translate(-50%, -50%) rotate(-2.5deg); transition: left .8s cubic-bezier(.5,0,.3,1), top .8s cubic-bezier(.5,0,.3,1), transform .8s cubic-bezier(.5,0,.3,1), opacity .4s;
+}
+#sh-postcard img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border: 2px solid var(--ink); filter: grayscale(1); }
+#sh-postcard .cap { display: flex; justify-content: space-between; gap: 12px; margin-top: 6px; font-size: 22px; line-height: 1.2; color: var(--ink); }
+#sh-postcard.away { left: calc(100% - 92px); top: calc(100% - 52px); transform: translate(-50%, -50%) rotate(6deg) scale(.16); opacity: 0; }
+#sh-album { right: 22px; bottom: 22px; display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-size: 18px; }
+#sh-album img { width: 54px; height: 36px; object-fit: cover; border: 1.5px solid var(--panel-text); border-radius: 2px; filter: grayscale(1); }
+#sh-album svg { width: 26px; height: 20px; fill: none; stroke: var(--panel-text); stroke-width: 2; stroke-linejoin: round; }
+#sh-dialogue {
+  position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%); width: min(640px, 86vw); padding: 16px 22px 8px;
+  background: rgba(239,233,220,.97); color: var(--ink); border: 2.5px solid var(--ink); border-radius: 8px 12px 10px 8px;
+  box-shadow: 4px 5px 0 rgba(28,26,24,.85); transition: opacity .3s;
+}
+#sh-dialogue .who { position: absolute; top: -15px; left: 16px; background: var(--ink); color: var(--paper); padding: 1px 12px; border-radius: 6px; font-size: 18px; }
+#sh-dialogue .line { font-size: clamp(20px, 2.1vw, 26px); line-height: 1.35; }
+#sh-dialogue .more { text-align: right; font-size: 15px; opacity: .7; }
+#sh-dialogue .more kbd { background: var(--ink); color: var(--paper); }

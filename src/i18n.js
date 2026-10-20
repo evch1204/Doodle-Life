@@ -110,6 +110,32 @@ const ZH = {
   'Guava and mango, picked this morning. Sweet as can be!': '芭樂跟芒果，今天早上剛摘的，甜得不得了！',
   'Talk to the noodle cook': '和麵攤老闆聊天',
   'Beef noodles, simmered since dawn. Want a bowl?': '牛肉麵，從天亮就開始燉了。來一碗嗎？',
+
+  // ---- Shanghai (the Bund) ------------------------------------------------------------
+  'Travel to Shanghai': '前往上海',
+  'Traveling to Shanghai…': '前往上海中……',
+  'Explore the waterfront': '探索江邊步道',
+  'Explore the waterfront ({n}/{m})': '探索江邊步道（{n}/{m}）',
+  'Find the café': '找到咖啡館',
+  'Take a photo': '拍一張照片',
+  'Look at the skyline': '眺望天際線',
+  'The Bund, Shanghai. A familiar skyline, seen from a different perspective.': '上海，外灘。熟悉的天際線，換個角度來看。',
+  'Click! Saved to your photo album.': '喀嚓！照片存進相簿了。',
+  'Another one for the album.': '相簿又多了一張。',
+  'The Bund, Shanghai': '上海・外灘',
+  'Photos': '照片',
+  'Talk to the barista': '和咖啡師聊天',
+  'Barista': '咖啡師',
+  'Take a moment. Watch the boats pass, and let the city move around you.': '休息一下吧。看看船來船往，讓城市在你身邊流動。',
+  'First time on the Bund? The skyline looks different from every bench.': '第一次來外灘嗎？從每張長椅看出去，天際線都不一樣。',
+  'One latte, coming up. The window seat has the best view.': '一杯拿鐵馬上好。窗邊的位子風景最好。',
+  'Bund Coffee. It smells like fresh espresso.': '外灘咖啡。滿屋子都是現煮咖啡的香氣。',
+  'Check the life ring': '看看救生圈',
+  'A life ring, just in case. The river is wide here.': '一個救生圈，以防萬一。這裡的江面很寬。',
+  'Say hi to the seagull': '跟海鷗打招呼',
+  'Squawk! The seagull eyes your backpack.': '嘎！海鷗盯著你的背包看。',
+  'The ferries glide by. Nobody is in a hurry here.': '渡輪緩緩滑過。這裡沒有人在趕時間。',
+  'The Bund, Shanghai. Different place. Same you.': '上海，外灘。不同的地方，同樣的你。',
 };
 
 const TABLES = { en: {}, zh: ZH };
