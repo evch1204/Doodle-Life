@@ -81,13 +81,16 @@ back wall, so adding a city is one entry:
 ## Test scripts (need the dev server running)
 Every script takes the server address from `URL` (default `http://localhost:5173/`).
 - `node scripts/playtest.mjs <dir>` — room playtest (movement, collision, camera, every interaction).
-- `node scripts/playtest_taiwan.mjs <dir>` — room → Taiwan → room: stairs, building fronts, railings,
+- `node scripts/playtest_lobby.mjs <dir>` — the airport: the room's door, every gate (prompt, hover,
+  walk, push, jetway, landing, back to the right gate), skipping, coming-soon cards, the info desk,
+  the gate list by keyboard, the remembered gate, deep links, reduced motion, the walls.
+- `node scripts/playtest_taiwan.mjs <dir>` — room → airport → Taiwan → airport → room: stairs, building fronts, railings,
   camera orbits, every interaction / objective / collectible, both transitions, fps.
-- `node scripts/playtest_shanghai.mjs <dir>` — room → postcard → the Bund → room: spawn to the railing,
+- `node scripts/playtest_shanghai.mjs <dir>` — room → airport → the Bund → airport → room: spawn to the railing,
   the river boundary pushed every 1.5 m along the whole railing, props / ends / café walls, camera orbits
   (incl. inside the café), every interaction and objective, boats / birds / river animating, fps, the trip home.
 - `node scripts/i18n_check.mjs [dir]` — settings menu, language switching + persistence, a Chinese entry
-  for every reachable string (all three scenes), and no text overflow in either language.
+  for every reachable string (all four scenes), and no text overflow in either language.
 - `node scripts/clip.mjs <dir>` — scripted review clip from the gameplay camera (`node scripts/clip_shanghai.mjs <dir>` for the Bund).
 - `SCENE=shanghai|taiwan node scripts/perf.mjs` — frame times and scene load (meshes, triangles) from three gameplay views.
 - `node scripts/charreview.mjs <dir>` — character review: front / side / back / 3/4 stills, gameplay-camera

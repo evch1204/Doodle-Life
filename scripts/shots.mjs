@@ -79,7 +79,18 @@ const SHANGHAI_VIEWS = {
   sh_peace: { player: [0, 5.6, 0], free: [[-82, 4, 10], [-118, 24, 47]] },
   sh_bund_wide: { player: [0, 5.6, 0], free: [[0, 9, 0], [0, 16, 47]] },
 };
-const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : SCENE === 'shanghai' ? SHANGHAI_VIEWS : ROOM_VIEWS;
+const LOBBY_VIEWS = {
+  lb_start: { player: [0, 4.6, Math.PI], view: [0, 0.22] },
+  lb_ref: { player: [-1.6, 4.4, Math.PI], free: [[0.4, 2.1, 8.0], [0, 2.4, -4]] },
+  lb_gate: { player: [-2.9, -4.7, Math.PI * 0.85], view: [0.36, 0.16] },
+  lb_desk: { player: [0, 1.0, Math.PI], view: [0, 0.2] },
+  lb_seats: { player: [-3.6, 3.4, -Math.PI / 2], view: [Math.PI / 2 - 0.6, 0.25] },
+  lb_back: { player: [0, 1.6, 0], view: [Math.PI, 0.18] },
+  lb_wide: { player: [0, 4.6, Math.PI], free: [[4.6, 4.2, 5.4], [-1.5, 1.0, -3.5]] },
+  lb_sign: { player: [0, 4.6, Math.PI], free: [[-1.6, 2.6, -3.6], [-3.2, 3.4, -7.9]] },
+  lb_tunnel: { player: [0, 4.6, Math.PI], free: [[0, 1.3, 46], [0, 1.25, 60]] },
+};
+const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : SCENE === 'shanghai' ? SHANGHAI_VIEWS : SCENE === 'lobby' ? LOBBY_VIEWS : ROOM_VIEWS;
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1536, height: 1024 } });

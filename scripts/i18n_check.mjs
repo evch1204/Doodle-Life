@@ -65,13 +65,13 @@ check('language choice persists across reload', await page.evaluate(() => window
 
 // ---- every reachable string has a translation ---------------------------------------
 const STR = {};
-for (const scene of ['room', 'taiwan', 'shanghai']) {
+for (const scene of ['room', 'lobby', 'taiwan', 'shanghai']) {
   await page.evaluate((s) => window.__dw.loadScene(s), scene);
   await page.waitForTimeout(300);
   STR[scene] = await page.evaluate(() => window.__dw.collectStrings());
   await page.evaluate((s) => window.__dw.loadScene(s), scene); // reset state the probing changed
 }
-const all = [...new Set([...STR.room, ...STR.taiwan, ...STR.shanghai])];
+const all = [...new Set(Object.values(STR).flat())];
 const table = await page.evaluate(async () => (await import('/src/i18n.js')).STRINGS);
 const missing = all.filter((s) => !table.includes(s));
 check(`every reachable string has a Chinese entry (${all.length} strings)`, missing.length === 0, missing.join(' | '));
