@@ -1,0 +1,272 @@
+{
+  "results": [
+    {
+      "name": "starts in the room",
+      "ok": true
+    },
+    {
+      "name": "postcard prompt in the room",
+      "ok": true,
+      "detail": "interact=postcard"
+    },
+    {
+      "name": "the door still goes to Taiwan",
+      "ok": true
+    },
+    {
+      "name": "travel card shows",
+      "ok": true,
+      "detail": "{\"on\":true,\"text\":\"Traveling to Shanghai…\"}"
+    },
+    {
+      "name": "arrives on the Bund at the start point, facing the skyline",
+      "ok": true,
+      "detail": "scene=shanghai at 0,3.4 facing 3.142 yaw 0"
+    },
+    {
+      "name": "HUD objectives: explore / café / photo",
+      "ok": true,
+      "detail": "Explore the waterfront (0/4) | Find the café | Take a photo"
+    },
+    {
+      "name": "walk from the spawn to the railing",
+      "ok": true,
+      "detail": "0,-2.155"
+    },
+    {
+      "name": "viewpoint prompt at the railing",
+      "ok": true,
+      "detail": "viewpoint"
+    },
+    {
+      "name": "viewpoint caption",
+      "ok": true,
+      "detail": "The Bund, Shanghai. A familiar skyline, seen from a different perspective."
+    },
+    {
+      "name": "viewpoint frames the skyline (slow pan)",
+      "ok": true,
+      "detail": "yaw -0.016 -> -0.034"
+    },
+    {
+      "name": "player keeps control after the viewpoint",
+      "ok": true,
+      "detail": "0,-2.158 -> 0.513,-2.048"
+    },
+    {
+      "name": "railing reached along its whole length",
+      "ok": true,
+      "detail": "22/22 spots (the rest are lamps / bin / binoculars in front of it)"
+    },
+    {
+      "name": "river boundary holds at every push (never past the railing)",
+      "ok": true,
+      "detail": "closest z -2.620 (limit -2.64)"
+    },
+    {
+      "name": "never off the promenade, never inside the railing",
+      "ok": true,
+      "detail": "off=0 pen=0"
+    },
+    {
+      "name": "sliding along the railing (pressed into it at an angle)",
+      "ok": true,
+      "detail": "x -8.715 -> -5.05, min z -2.620"
+    },
+    {
+      "name": "props / ends / café walls: never walk through",
+      "ok": true,
+      "detail": "0 of 16"
+    },
+    {
+      "name": "props / ends / café walls: never stuck",
+      "ok": true,
+      "detail": "0 of 16"
+    },
+    {
+      "name": "the café door lets you in and out",
+      "ok": true
+    },
+    {
+      "name": "camera orbit (open promenade): never inside walls / props, never under the ground",
+      "ok": true,
+      "detail": "0/16 bad samples, closest 3.00m"
+    },
+    {
+      "name": "camera orbit (at the railing): never inside walls / props, never under the ground",
+      "ok": true,
+      "detail": "0/16 bad samples, closest 3.00m"
+    },
+    {
+      "name": "camera orbit (beside the café): never inside walls / props, never under the ground",
+      "ok": true,
+      "detail": "0/16 bad samples, closest 0.35m"
+    },
+    {
+      "name": "camera orbit (at the café door): never inside walls / props, never under the ground",
+      "ok": true,
+      "detail": "0/16 bad samples, closest 0.50m"
+    },
+    {
+      "name": "camera orbit (inside the café): never inside walls / props, never under the ground",
+      "ok": true,
+      "detail": "0/16 bad samples, closest 1.22m"
+    },
+    {
+      "name": "objective: Find the café (step inside)",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "talk to the barista: dialogue panel",
+      "ok": true,
+      "detail": "Take a moment. Watch the boats pass, and let the city move around you."
+    },
+    {
+      "name": "barista has more than one line",
+      "ok": true,
+      "detail": "First time on the Bund? The skyline looks different from every bench."
+    },
+    {
+      "name": "dialogue closes when you walk away",
+      "ok": true
+    },
+    {
+      "name": "photo spot prompt",
+      "ok": true,
+      "detail": "photo"
+    },
+    {
+      "name": "take a photo: postcard + album",
+      "ok": true,
+      "detail": "{\"boats\":[320.05,133.56],\"birds\":[-83.88,176.15,48.85,55.13,-138.07,148.76,69.92],\"waterTime\":628.02,\"album\":1,\"postcard\":true,\"dialogue\":null,\"ended\":true}"
+    },
+    {
+      "name": "objective: Take a photo",
+      "ok": true
+    },
+    {
+      "name": "the postcard files into the album (bottom right)",
+      "ok": true,
+      "detail": "Photos 1"
+    },
+    {
+      "name": "bench prompt",
+      "ok": true,
+      "detail": "bench1"
+    },
+    {
+      "name": "sit on the bench (facing the river)",
+      "ok": true,
+      "detail": "{\"id\":\"bench1\",\"settled\":true,\"dir\":1}"
+    },
+    {
+      "name": "camera orbits while sitting",
+      "ok": true
+    },
+    {
+      "name": "stand up to a free spot",
+      "ok": true,
+      "detail": "-6.6,-2.27"
+    },
+    {
+      "name": "say hi to the seagull",
+      "ok": true,
+      "detail": "Squawk! The seagull eyes your backpack."
+    },
+    {
+      "name": "life ring",
+      "ok": true,
+      "detail": "A life ring, just in case. The river is wide here."
+    },
+    {
+      "name": "objective: Explore the waterfront",
+      "ok": true,
+      "detail": "explored 4"
+    },
+    {
+      "name": "all objectives ticked",
+      "ok": true,
+      "detail": "explore,cafe,photo"
+    },
+    {
+      "name": "closing line (\"Different place. Same you.\") once everything is done",
+      "ok": true
+    },
+    {
+      "name": "boats move along the river",
+      "ok": true,
+      "detail": "-224.38,-31.71 -> -219.85,-35.18"
+    },
+    {
+      "name": "birds cross the sky",
+      "ok": true,
+      "detail": "-129.12,28.14,-33.06 -> -121.67,33.44,-26.38"
+    },
+    {
+      "name": "river surface animates",
+      "ok": true,
+      "detail": "mean pixel change 6.72"
+    },
+    {
+      "name": "Shanghai frame rate while walking + turning (headless Chrome, 1280x853)",
+      "ok": true,
+      "detail": "min 94, avg 113"
+    },
+    {
+      "name": "home signpost prompt",
+      "ok": true,
+      "detail": "home"
+    },
+    {
+      "name": "travel card shows (going home)",
+      "ok": true
+    },
+    {
+      "name": "back in the room at its start point",
+      "ok": true,
+      "detail": "room -0.3,1.4"
+    },
+    {
+      "name": "Shanghai HUD extras are gone in the room",
+      "ok": true
+    },
+    {
+      "name": "Taiwan still loads",
+      "ok": true
+    },
+    {
+      "name": "photo album survives the trip home and back",
+      "ok": true,
+      "detail": "{\"boats\":[-147.44,-90.7],\"birds\":[-2.51,118.08,80.47,169.97,-197.19,-119.53,181.16],\"waterTime\":725.52,\"album\":1,\"postcard\":false,\"dialogue\":null,\"ended\":false}"
+    },
+    {
+      "name": "repeat trips are clean (room fps after several loads)",
+      "ok": true,
+      "detail": "fps=80"
+    },
+    {
+      "name": "no page errors",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "never inside a collider during the whole run",
+      "ok": true,
+      "detail": "0/4669 samples"
+    }
+  ],
+  "monitor": {
+    "samples": 4669,
+    "pen": 0,
+    "maxDy": 0,
+    "float": 0,
+    "sink": 0,
+    "fell": 0,
+    "worst": null
+  },
+  "fps": {
+    "min": 94,
+    "avg": 112.57142857142857
+  }
+}
