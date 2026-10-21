@@ -165,6 +165,24 @@ const ZH = {
   'Santa Clara': '聖克拉拉',
   'Back to the airport': '回到機場',
   'Gates': '登機門',
+
+  // ---- Bay Area ------------------------------------------------------------------
+  'the Bay Area': '舊金山灣區',
+  'Traveling to the Bay Area…': '前往舊金山灣區中……',
+  'Bay Area': '舊金山灣區',
+  'San Francisco · Santa Clara': '舊金山 · 聖克拉拉',
+  'Visit the Mission Church': '參觀教會教堂',
+  'Read the Bay Area map': '看看灣區地圖',
+  'Look out from the pier': '在碼頭眺望',
+  'Read the sign': '看看招牌',
+  'Look at the Golden Gate': '眺望金門大橋',
+  "Santa Clara University, founded in 1851 beside Mission Santa Clara de Asís, the eighth of California's 21 missions.": '聖克拉拉大學創立於 1851 年，就在聖克拉拉亞西西教會旁；這座教會是加州 21 座教會中的第八座。',
+  'The Golden Gate Bridge, opened in 1937, spans the strait where the bay meets the Pacific.': '金門大橋於 1937 年通車，橫跨海灣與太平洋交會的海峽。',
+  'The fog rolls in over the bridge. Nobody is in a hurry here.': '霧從大橋那頭慢慢飄來。這裡沒有人在趕時間。',
+  'Mission Santa Clara de Asís, the heart of the campus.': '聖克拉拉亞西西教會，校園的中心。',
+  'The San Francisco Bay Area': '舊金山灣區',
+  'A map of the bay: San Francisco at the Golden Gate in the north, Santa Clara at the south end of the bay.': '海灣地圖：北邊金門旁是舊金山，海灣的南端是聖克拉拉。',
+  'San Francisco and Santa Clara: two ends of one bay, about 45 miles (70 km) apart.': '舊金山與聖克拉拉：同一片海灣的兩端，相距約 45 英里（70 公里）。',
 };
 
 const TABLES = { en: {}, zh: ZH };
