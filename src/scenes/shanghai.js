@@ -447,8 +447,7 @@ function buildShanghai(scene) {
     box(g, 0.32, 0.2, 0.22, 0, 1.06, 0, M.ironMid, { r: 0.05 });
     for (const sx of [-1, 1]) { const tb = cyl(g, 0.05, 0.06, 0.18, sx * 0.08, 1.1, -0.15, M.iron, { seg: 12 }); tb.rotation.x = Math.PI / 2; tb.position.y = 1.16; }
     solidCircle(0.6, -2.5, 0.2);
-    const pl = facedBox(root, 0.46, 0.23, 0.02, -0.45, 0.64, RAIL_Z + 0.06, M.ironMid, M.plaque, [4], { cast: false });
-    void pl;
+    facedBox(root, 0.46, 0.23, 0.02, -0.45, 0.64, RAIL_Z + 0.06, M.ironMid, M.plaque, [4], { cast: false });
   }
   // photo spot sign hung on the railing
   {
@@ -483,8 +482,7 @@ function buildShanghai(scene) {
     const body = group(g, 0, 0, 0);
     sphere(body, 0.09, 0, 0.09, 0, M.gull, [0.8, 0.68, 1.6], { seg: 16 }).rotation.x = -0.12;
     for (const sx of [-1, 1]) { const w = sphere(body, 0.075, sx * 0.06, 0.12, -0.05, M.gullWing, [0.3, 0.45, 1.75], { seg: 12 }); w.rotation.x = -0.12; }
-    const tail = box(body, 0.07, 0.018, 0.12, 0, 0.115, -0.19, M.dark, { rx: 0.15 });
-    void tail;
+    box(body, 0.07, 0.018, 0.12, 0, 0.115, -0.19, M.dark, { rx: 0.15 });
     const head = group(body, 0, 0.18, 0.12);
     sphere(head, 0.055, 0, 0, 0, M.gull, [1, 1, 1.1], { seg: 14 });
     const beak = add(new THREE.ConeGeometry(0.017, 0.08, 6), M.gray, head);
@@ -903,7 +901,7 @@ function buildShanghai(scene) {
       dlgLine.textContent = tr(dlgKey);
       dlgWho.textContent = tr('Barista');
       dlg.classList.remove('hidden');
-      document.getElementById('caption')?.classList.add('hidden'); // one voice at a time
+      ctx.hideCaption(); // one voice at a time
       dlgTimer = 7;
       baristaTalk = 4;
       barista.reach();
@@ -960,8 +958,7 @@ function buildShanghai(scene) {
     const p = ctx.player.pos;
     for (let i = 0; i < ZONES.length; i++) if (Math.hypot(p.x - ZONES[i][0], p.z - ZONES[i][1]) < 1.8) visited.add(i);
     if (visited.size >= ZONES.length) ctx.complete('explore');
-    const objEl = document.getElementById('obj-explore');
-    if (objEl && !objEl.classList.contains('done')) { const txt = exploreText(); if (objEl.textContent !== txt) objEl.textContent = txt; }
+    ctx.refreshObjective('explore');
     // finding the café: step inside
     const inside = inCafe(p.x, p.z);
     if (inside && !wasInCafe) { if (!finished.has('cafe')) ctx.caption(cafeEnterCaption, 3.2); ctx.complete('cafe'); }

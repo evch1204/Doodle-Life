@@ -354,6 +354,7 @@ export function buildRoom(scene) {
   // BACK-LEFT: dual-monitor desk + office chair
   // ===========================================================================
   const monitors = { on: false, page: 0 };
+  const timers = []; // pending screen wake / sleep timeouts (cleared on dispose)
   {
     const g = group(root, -3.15, 0, -3.04);
     box(g, 2.1, 0.05, 0.72, 0, 0.71, 0, M.wood, { r: 0.012 });
@@ -462,9 +463,9 @@ export function buildRoom(scene) {
       seat: [-3.25, 0.32, -2.2], exit: [-3.25, -1.5], facing: Math.PI,
       cam: { yaw: 0.35, pitch: 0.42, dist: 1.9 },
       caption: 'Back to work… or at least, back to doodling.',
-      onSit(ctx) { monitors.seated = true; setTimeout(() => wake(true), 350); ctx.sound('click'); },
+      onSit(ctx) { monitors.seated = true; timers.push(setTimeout(() => wake(true), 350)); ctx.sound('click'); },
       onStand() {
-        monitors.seated = false; setTimeout(() => { if (!monitors.seated) wake(false); }, 1200);
+        monitors.seated = false; timers.push(setTimeout(() => { if (!monitors.seated) wake(false); }, 1200));
       },
       useLabel: 'Next screen',
       onUse(ctx) {
@@ -1001,8 +1002,7 @@ export function buildRoom(scene) {
     box(root, 0.22, 0.34, 0.08, -0.88, 1.25, 4.1, M.paper, { r: 0.04 });
     // slippers by the door
     for (const s of [-1, 1]) {
-      const sl = box(root, 0.1, 0.05, 0.24, -1.55 + s * 0.07, 0, 3.86, M.paper, { r: 0.025, ry: s * 0.15 });
-      void sl;
+      box(root, 0.1, 0.05, 0.24, -1.55 + s * 0.07, 0, 3.86, M.paper, { r: 0.025, ry: s * 0.15 });
     }
     // laundry basket
     const lb = group(root, -0.1, 0, 3.82);
@@ -1144,5 +1144,7 @@ export function buildRoom(scene) {
     for (const u of updaters) u(t, dt);
   }
 
-  return { root, colliders, camBlockers, interactables, stars, update, monitors };
+  // the screens' wake timers must not fire into textures disposed with the room
+  const dispose = () => { for (const id of timers) clearTimeout(id); };
+  return { root, colliders, camBlockers, interactables, stars, update, monitors, dispose };
 }

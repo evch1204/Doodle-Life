@@ -76,6 +76,5 @@ const FX = {
   chime: () => [1046, 1318, 1568].forEach((f, i) => tone('sine', f, f, 0.6, 0.05, i * 0.07)),
   steam: () => noise(0.9, 0.06, 1800, 0.5),
   whoosh: () => noise(1.1, 0.09, 700, 0.4),
-  swish: () => noise(0.3, 0.05, 1400, 0.7),
 };
 export function playSound(name) { try { FX[name]?.(); } catch { /* audio unavailable */ } }

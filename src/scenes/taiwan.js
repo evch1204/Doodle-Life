@@ -7,7 +7,7 @@ import * as TX from '../taiwanTextures.js';
 import { t } from '../i18n.js';
 import { BOLD } from './kit.js';
 import { buildTaipei } from './taiwan/taipei.js';
-import { buildHillside, buildRidges } from './taiwan/hillside.js';
+import { makeHouseKit, buildHillside, buildRidges } from './taiwan/hillside.js';
 
 // Chapter 1: Taiwan — the walk is set on Jiufen old street.
 //
@@ -467,7 +467,6 @@ function buildTaiwan(scene) {
   function railing(x1, z1, x2, z2, yAt, { h = 0.95, posts = 1.1, solidW = 0.12 } = {}) {
     const L = Math.hypot(x2 - x1, z2 - z1);
     const n = Math.max(1, Math.round(L / posts));
-    const ang = Math.atan2(x2 - x1, z2 - z1);
     for (let i = 0; i <= n; i++) {
       const t = i / n, x = x1 + (x2 - x1) * t, z = z1 + (z2 - z1) * t, y = yAt(x, z);
       box(root, 0.09, h + 0.05, 0.09, x, y, z, M.woodDark);
@@ -489,7 +488,6 @@ function buildTaiwan(scene) {
         box(root, 0.03, h * 0.5, 0.03, x, y + h * 0.02, z, M.woodDark, { cast: false });
       }
     }
-    void ang;
     const minX = Math.min(x1, x2) - solidW / 2, maxX = Math.max(x1, x2) + solidW / 2;
     const minZ = Math.min(z1, z2) - solidW / 2, maxZ = Math.max(z1, z2) + solidW / 2;
     solid(minX, maxX, minZ, maxZ);
@@ -533,8 +531,7 @@ function buildTaiwan(scene) {
     for (const sx of [-1, 1]) box(g, 0.2, 3.95, 0.2, sx * 1.42, 0, 0, M.woodDark);
     box(g, 3.3, 0.18, 0.24, 0, 3.7, 0, M.woodDark);
     facedBox(g, 1.9, 0.5, 0.08, 0, 3.15, 0, M.woodDark, signMat('九份老街', { vertical: false, seed: 9 }), [4, 5]);
-    const rr = box(g, 3.7, 0.08, 0.7, 0, 3.9, 0, M.roof, { r: 0.02 });
-    void rr;
+    box(g, 3.7, 0.08, 0.7, 0, 3.9, 0, M.roof, { r: 0.02 });
     for (const sx of [-1, 1]) lantern(g, sx * 1.1, 3.65, 0.2, 0.13, M.lanternFu, 0.15);
     solidCircle(-1.42, -1.75, 0.14);
     solidCircle(1.42, -1.75, 0.14);
@@ -627,14 +624,12 @@ function buildTaiwan(scene) {
     box(g, 1.1, 0.95, 0.1, 0, 0.55, 0.24, M.interior);
     sphere(g, 0.16, 0, 0.75, 0.15, M.paper, [1, 1.2, 0.8]);
     box(g, 2.1, 0.1, 1.2, 0, 1.85, -0.1, M.roof, { rx: 0.0 });
-    const r2 = box(g, 1.4, 0.4, 0.9, 0, 1.95, -0.15, M.roof, { r: 0.08 });
-    void r2;
+    box(g, 1.4, 0.4, 0.9, 0, 1.95, -0.15, M.roof, { r: 0.08 });
     for (const sx of [-1, 1]) { const t = cyl(g, 0.02, 0.07, 0.3, sx * 1.08, 1.85, 0.5, M.mid, { seg: 8 }); t.rotation.z = -sx * 1.0; }
     for (const sx of [-1, 1]) lantern(g, sx * 0.7, 1.8, 0.45, 0.11, M.lanternFu, 0.12);
     // offering table + incense burner with smoking sticks
     box(g, 1.2, 0.75, 0.45, 0, 0, 0.8, M.woodDark);
-    const burner = cyl(g, 0.17, 0.13, 0.2, 0, 0.75, 0.8, M.dark, { seg: 18 });
-    void burner;
+    cyl(g, 0.17, 0.13, 0.2, 0, 0.75, 0.8, M.dark, { seg: 18 });
     for (const sx of [-1, 1]) { const ear = add(new THREE.TorusGeometry(0.05, 0.012, 6, 12), M.dark, g); ear.position.set(sx * 0.17, 0.98, 0.8); ear.rotation.y = Math.PI / 2; }
     for (let i = 0; i < 3; i++) cyl(g, 0.005, 0.005, 0.32, -0.05 + i * 0.05, 0.9, 0.8, M.black, { seg: 4 });
     for (const sx of [-1, 1]) { cyl(g, 0.05, 0.06, 0.12, sx * 0.42, 0.75, 0.8, M.paper); sphere(g, 0.045, sx * 0.42, 0.9, 0.8, M.light); }
@@ -693,12 +688,12 @@ function buildTaiwan(scene) {
         const x = -0.5 + i * 0.105, z = -0.1 + row * 0.2;
         const sk = cyl(g, 0.005, 0.005, 0.34, x, 0.985, z, M.wood, { seg: 5 });
         sk.rotation.x = Math.PI / 2;
-        for (let k = 0; k < 3; k++) { const m = box(g, 0.04, 0.035, 0.045, x, 0.97, z - 0.07 + k * 0.06, k % 2 ? M.mid : M.dark); void m; }
+        for (let k = 0; k < 3; k++) box(g, 0.04, 0.035, 0.045, x, 0.97, z - 0.07 + k * 0.06, k % 2 ? M.mid : M.dark);
       }
     }
     // sauce basket: woven basket with three bottles + a brush
     const bk = group(g, 0.42, 0.85, 0.02);
-    add(new THREE.CylinderGeometry(0.13, 0.11, 0.12, 18, 1, true), M.basket ?? M.bamboo, bk).position.y = 0.06;
+    add(new THREE.CylinderGeometry(0.13, 0.11, 0.12, 18, 1, true), M.bamboo, bk).position.y = 0.06;
     cyl(bk, 0.11, 0.11, 0.01, 0, 0, 0, M.wood);
     for (const [x, z, h, m] of [[-0.05, -0.03, 0.2, M.dark], [0.05, -0.02, 0.17, M.paper], [0.0, 0.05, 0.22, M.mid]]) { cyl(bk, 0.03, 0.03, h, x, 0.01, z, m, { seg: 10 }); cyl(bk, 0.012, 0.016, 0.04, x, 0.01 + h, z, M.black, { seg: 8 }); }
     const brush = cyl(bk, 0.008, 0.008, 0.3, 0.09, 0.1, 0.05, M.wood, { seg: 5 }); brush.rotation.z = -0.35;
@@ -782,7 +777,7 @@ function buildTaiwan(scene) {
 
   // ---- the Taiwan flag on a pole by the start landing ----------------------------------
   // 青天白日滿地紅: a 3:2 cloth waving with a sine wave in the vertices (pinned at the pole)
-  const flag = (() => {
+  {
     const g = group(root, -1.28, 0, -0.9);
     cyl(g, 0.16, 0.18, 0.14, 0, 0, 0, M.steps);
     cyl(g, 0.028, 0.036, 2.55, 0, 0.14, 0, M.metal, { seg: 12 });
@@ -806,13 +801,11 @@ function buildTaiwan(scene) {
       pos.needsUpdate = true;
       geo.computeVertexNormals();
     });
-    return g;
-  })();
+  }
   actionSpot('flag', 'Look at the flag', {
     x: -0.75, z: -0.6, radius: 0.75, prompt: [-0.85, 1.75, -0.9],
     act(ctx) { ctx.frame(0.9, 0.18); ctx.caption('The flag of Taiwan, waving over the old street.', 3.6); },
   });
-  void flag;
 
   // ---- food stalls: every counter gets its food, a sign, and some a vendor ----------------
   // (shophouse frames: origin at the front-center floor, +z out to the street,
@@ -823,12 +816,12 @@ function buildTaiwan(scene) {
     b.position.set(x, y + r, z);
     const rim = add(new THREE.TorusGeometry(r, 0.006, 5, 18), M.paper, g);
     rim.rotation.x = Math.PI / 2; rim.position.set(x, y + r, z);
-    if (fill) { const d = cyl(g, r * 0.9, r * 0.9, 0.005, x, y + r * 0.75, z, fill, { seg: 16, cast: false }); void d; }
+    if (fill) cyl(g, r * 0.9, r * 0.9, 0.005, x, y + r * 0.75, z, fill, { seg: 16, cast: false });
     return b;
   };
   const pot = (g, x, z, r, h, y = CT) => {
     add(new THREE.CylinderGeometry(r, r * 0.95, h, 22, 1, true), M.metal, g).position.set(x, y + h / 2, z);
-    add(new THREE.CylinderGeometry(r * 0.97, r * 0.92, h * 0.98, 22, 1, true), M.paperBack ?? M.paper2, g).position.set(x, y + h / 2, z);
+    add(new THREE.CylinderGeometry(r * 0.97, r * 0.92, h * 0.98, 22, 1, true), M.paper2, g).position.set(x, y + h / 2, z);
     cyl(g, r * 0.95, r * 0.95, 0.01, x, y + h * 0.75, z, M.soup, { seg: 20, cast: false });
     cyl(g, r * 0.95, r * 0.95, 0.01, x, y, z, M.metal, { seg: 20 });
     for (const sx of [-1, 1]) { const hd = add(new THREE.TorusGeometry(0.035, 0.01, 6, 10, Math.PI), M.metal, g); hd.position.set(x + sx * (r + 0.02), y + h * 0.8, z); hd.rotation.y = Math.PI / 2; hd.rotation.x = Math.PI / 2; }
@@ -854,8 +847,7 @@ function buildTaiwan(scene) {
     const g = tofuShop.g;
     box(g, 0.5, 0.22, 0.36, -0.75, CT, 0.12, M.metal);
     box(g, 0.44, 0.01, 0.3, -0.75, CT + 0.215, 0.12, M.soup, { cast: false });
-    const basket = box(g, 0.2, 0.1, 0.16, -0.75, CT + 0.17, 0.12, M.metal);
-    void basket;
+    box(g, 0.2, 0.1, 0.16, -0.75, CT + 0.17, 0.12, M.metal);
     cyl(g, 0.008, 0.008, 0.3, -0.75, CT + 0.25, 0.25, M.black, { seg: 5 }).rotation.x = -1.0;
     box(g, 0.42, 0.04, 0.3, 0.05, CT, 0.14, M.wood);
     for (let i = 0; i < 4; i++) for (let k = 0; k < 3; k++) box(g, 0.075, 0.06, 0.075, -0.1 + i * 0.1, CT + 0.04, 0.04 + k * 0.1, M.tofu, { r: 0.008 });
@@ -912,8 +904,7 @@ function buildTaiwan(scene) {
     basket(-0.35, 0.16, (x, z) => { for (let i = 0; i < 5; i++) { const m = sphere(g, 0.055, x + Math.cos(i * 1.9) * 0.07, CT + 0.13, z + Math.sin(i * 1.9) * 0.06, M.fruitDark, [1.35, 0.95, 0.9], { seg: 12 }); m.rotation.y = i; } }); // mangoes
     basket(0.25, 0.14, (x, z) => { for (let i = 0; i < 6; i++) sphere(g, 0.04, x + Math.cos(i * 2.5) * 0.08, CT + 0.11, z + Math.sin(i * 2.5) * 0.07, M.mid, [1, 1, 1], { seg: 10 }); }); // wax apples
     // a pineapple
-    const pa = sphere(g, 0.08, 0.75, CT + 0.11, 0.15, M.fruitDark, [1, 1.35, 1], { seg: 14 });
-    void pa;
+    sphere(g, 0.08, 0.75, CT + 0.11, 0.15, M.fruitDark, [1, 1.35, 1], { seg: 14 });
     for (let i = 0; i < 6; i++) { const lf = cyl(g, 0.0, 0.025, 0.14, 0.75, CT + 0.2, 0.15, M.dark, { seg: 4 }); lf.rotation.set(Math.cos(i) * 0.5, 0, Math.sin(i) * 0.5); }
     // hanging scale from the awning beam: hook, dial, pan on three cords
     const sc = group(g, 0.6, 1.55, 0.55);
@@ -923,9 +914,8 @@ function buildTaiwan(scene) {
     box(sc, 0.006, 0.06, 0.004, 0, 0.15, 0.025, M.black, { rz: 0.5 });
     for (let i = 0; i < 3; i++) { const a = (i / 3) * Math.PI * 2; const cord = cyl(sc, 0.003, 0.003, 0.24, Math.cos(a) * 0.06, -0.2, Math.sin(a) * 0.06, M.black, { seg: 3 }); cord.rotation.set(Math.sin(a) * 0.25, 0, -Math.cos(a) * 0.25); }
     cyl(sc, 0.13, 0.11, 0.03, 0, -0.24, 0, M.metal, { seg: 18 });
-    const swing = wobbler(sc, 'z', 0.1, 12, 1.2);
+    wobbler(sc, 'z', 0.1, 12, 1.2);
     updaters.push((t) => { sc.rotation.x = Math.sin(t * 0.8) * 0.03; });
-    void swing;
     vendor(g, -0.3, -0.62, { bun: true, topTone: 0.6 }, 'Guava and mango, picked this morning. Sweet as can be!', 'Talk to the fruit seller', [-0.3, 1.05]);
   }
 
@@ -943,6 +933,7 @@ function buildTaiwan(scene) {
   lanternString(new THREE.Vector3(-1.6, PY + 3.6, -13.2), new THREE.Vector3(5.6, PY + 3.6, -16.4), 8, 0.6);
 
   // ---- hillside below: houses on terraces stepping down toward the city (./taiwan/hillside.js)
+  const houseKit = makeHouseKit(); // the hillside and the ridge villages share one set of materials
   {
     const HS = 0.32; // hillside drops 0.32 m per meter toward the city
     const hillY = (x, z) => -5.6 + (z + 17) * HS - Math.max(0, -x - 4) * 0.1;
@@ -952,7 +943,7 @@ function buildTaiwan(scene) {
     hill.receiveShadow = true;
     root.add(hill);
     const blocked = (x, z) => (x > 2.2 && z > -29.6) || (x > 9.2 && z > -34) || (x > -2 && x < 6 && z > -17.6);
-    buildHillside(root, { hillY, blocked, lookout: { x: 4.5, z: -27 } });
+    buildHillside(root, { kit: houseKit, hillY, blocked, lookout: { x: 4.5, z: -27 } });
   }
 
   // ---- the skyline: three hill bands, the city in the basin, Taipei 101 -----------------
@@ -1002,7 +993,7 @@ function buildTaiwan(scene) {
     const crest260 = band(260, -5.0, 1.4, 12, hillMat('trees', 85, 1), 1.1);
     const crest150 = band(150, -7.8, 1.6, 13, hillMat('forest', 87, 1), 1.0);
     // villages and tree clumps on the crests (the nearer band's houses are geometry, not drawn)
-    buildRidges(root, { L, dirAt, crests: [{ R: 150, top: crest150, houses: true, tree: 2.6 }, { R: 260, top: crest260, houses: false, tree: 3.4 }] });
+    buildRidges(root, { kit: houseKit, L, dirAt, crests: [{ R: 150, top: crest150, houses: true, tree: 2.6 }, { R: 260, top: crest260, houses: false, tree: 3.4 }] });
 
     // the basin city, Taipei 101 and Nan Shan Plaza (./taiwan/taipei.js)
     buildTaipei(root, { L, dirAt, az101: TX.PANO.T101, dist101: 520, baseY: -46 });
@@ -1039,8 +1030,8 @@ function buildTaiwan(scene) {
     const white = ink({ tone: 1, facing: 0.4, hatch: 0.6, local: true, hatchFreq: 40 });
     const g = group(root, 2.55, PY + 0.85, -13.2, Math.PI);
     const bodyG = group(g, 0, 0, 0);
-    const body = sphere(bodyG, 0.13, 0, 0.14, 0, patch, [1, 1.2, 1.05], { seg: 24 });
-    const chest = sphere(bodyG, 0.09, 0, 0.16, 0.07, white, [1, 1.2, 0.8], { seg: 18 });
+    sphere(bodyG, 0.13, 0, 0.14, 0, patch, [1, 1.2, 1.05], { seg: 24 });
+    sphere(bodyG, 0.09, 0, 0.16, 0.07, white, [1, 1.2, 0.8], { seg: 18 });
     for (const sx of [-1, 1]) { const l = add(new THREE.CapsuleGeometry(0.028, 0.1, 4, 8), white, bodyG); l.position.set(sx * 0.045, 0.06, 0.1); }
     for (const sx of [-1, 1]) sphere(bodyG, 0.06, sx * 0.08, 0.05, -0.04, patch, [0.8, 0.7, 1.3], { seg: 14 });
     const headG = group(bodyG, 0, 0.33, 0.04);
@@ -1062,7 +1053,6 @@ function buildTaiwan(scene) {
     const tailG = group(bodyG, 0, 0, 0);
     add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(tailPts), 20, 0.025, 8, false), patch, tailG);
     sphere(tailG, 0.025, ...tailPts[tailPts.length - 1].toArray(), patch, [1, 1, 1], { seg: 10 });
-    void body; void chest;
     return { g, bodyG, headG, eyes, tailG, stretch: 0, blinkT: 2 };
   })();
 
@@ -1071,8 +1061,7 @@ function buildTaiwan(scene) {
   {
     const g = group(root, 1.1, 0, 1.6, -0.4);
     box(g, 0.08, 1.35, 0.08, 0, 0, 0, M.woodDark);
-    const arm = facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.05, 0, M.wood, signMat('機場', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
-    void arm;
+    facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.05, 0, M.wood, signMat('機場', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
     facedBox(g, 0.6, 0.2, 0.04, -0.15, 0.78, 0.02, M.wood, signMat('九份', { vertical: false, seed: 22, w: 300, h: 120, size: 70 }), [4, 5]).rotation.y = 0.5;
     solidCircle(1.1, 1.6, 0.12);
     actionSpot('home', 'Back to the airport', { x: 0.75, z: 1.25, radius: 0.85, prompt: [1.1, 1.6, 1.6], act: (ctx) => ctx.travel('lobby') });
@@ -1178,7 +1167,7 @@ function buildTaiwan(scene) {
     if (!o.isMesh || o.layers.mask !== 1 || camBlockers.includes(o) || o === pano) return;
     if (o.geometry.type === 'SphereGeometry' && o.geometry.parameters.radius === 1) return;
     if (o.parent && auntie.root.getObjectById(o.id)) return;
-    if (o.userData.farField || npcs.some((v) => v.root.getObjectById(o.id))) return;
+    if (o.userData.noBlock || o.userData.farField || npcs.some((v) => v.root.getObjectById(o.id))) return;
     o.geometry.computeBoundingBox();
     o.geometry.boundingBox.getSize(size);
     size.multiply(new THREE.Vector3().setFromMatrixScale(o.matrixWorld));
@@ -1194,8 +1183,7 @@ function buildTaiwan(scene) {
     const p = ctx.player.pos;
     for (let i = 0; i < ZONES.length; i++) if (Math.hypot(p.x - ZONES[i][0], p.z - ZONES[i][1]) < 1.6) visited.add(i);
     if (visited.size >= ZONES.length) ctx.complete('explore');
-    const objEl = document.getElementById('obj-explore');
-    if (objEl && !objEl.classList.contains('done')) { const txt = exploreText(); if (objEl.textContent !== txt) objEl.textContent = txt; }
+    ctx.refreshObjective('explore');
 
     // auntie: turns to face you while you talk, otherwise tends the counter
     auntieTalk = Math.max(0, auntieTalk - dt);

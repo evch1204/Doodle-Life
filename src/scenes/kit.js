@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-// Geometry batching for the far scenery (the Bund, Pudong, Taipei): every piece is merged
+// Geometry batching (the far scenery, the lobby's lights, the Bay Area street): every piece is merged
 // into one mesh per material (one draw call each), and keeps its own outline
 // id so the ink pass still draws the line between touching parts.
 
@@ -96,8 +96,7 @@ export class Batch {
       const m = new THREE.Mesh(mergeGeometries(geos), mat);
       m.castShadow = cast;
       m.receiveShadow = receive;
-      m.userData.noBlock = true;
-      m.userData.farField = true;
+      m.userData.noBlock = true; // batched pieces never block the camera (scenes add invisible blockers)
       root.add(m);
       meshes.push(m);
     }

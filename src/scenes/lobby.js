@@ -307,7 +307,7 @@ function buildLobby(scene, ctx) {
     face.rotation.x = Math.PI / 2; face.rotation.y = Math.PI; face.position.set(0, cy, cz);
     const bez = add(new THREE.TorusGeometry(0.41, 0.04, 6, 40), M.iron, P);
     bez.position.set(0, cy, cz + 0.03);
-    const hand = (len, w, z) => { const g = group(P, 0, cy, cz + z); const m = box(g, w, len, 0.012, 0, -0.04, 0, M.iron, { cast: false }); void m; return g; };
+    const hand = (len, w, z) => { const g = group(P, 0, cy, cz + z); box(g, w, len, 0.012, 0, -0.04, 0, M.iron, { cast: false }); return g; };
     clockHands.h = hand(0.22, 0.04, 0.035); clockHands.m = hand(0.32, 0.026, 0.045); clockHands.s = hand(0.34, 0.01, 0.055);
     sphere(P, 0.025, 0, cy, cz + 0.06, M.iron, [1, 1, 1], { seg: 8 });
     // the board: a plane, "Different Cities. Same Sky.", a cloud drifting across it
