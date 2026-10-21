@@ -149,7 +149,7 @@ const ZH = {
   'Visit the info desk': '到服務台看看',
   'Check in to Shanghai': '前往上海登機門',
   'Check in to Taipei': '前往台北登機門',
-  'Check in to Santa Clara': '前往聖克拉拉登機門',
+  'Check in to the Bay Area': '前往灣區登機門',
   'See the next stop': '看看下一站',
   'Ask at the info desk': '詢問服務台',
   'Sit down': '坐下',
@@ -162,7 +162,6 @@ const ZH = {
   'Coming soon': '即將開放',
   'More gates opening soon.': '更多登機門即將開放。',
   '{city}: this gate opens soon.': '{city}：這個登機門即將開放。',
-  'Santa Clara': '聖克拉拉',
   'Back to the airport': '回到機場',
   'Gates': '登機門',
 
