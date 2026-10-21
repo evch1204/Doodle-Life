@@ -65,7 +65,7 @@ check('language choice persists across reload', await page.evaluate(() => window
 
 // ---- every reachable string has a translation ---------------------------------------
 const STR = {};
-for (const scene of ['room', 'lobby', 'taiwan', 'shanghai']) {
+for (const scene of ['room', 'lobby', 'taiwan', 'shanghai', 'bayarea']) {
   await page.evaluate((s) => window.__dw.loadScene(s), scene);
   await page.waitForTimeout(300);
   STR[scene] = await page.evaluate(() => window.__dw.collectStrings());

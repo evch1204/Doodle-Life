@@ -3,12 +3,13 @@ import { ink } from '../../ink.js';
 import * as TW from '../../taiwanTextures.js';
 import * as TX from '../../shanghaiTextures.js';
 import * as BX from '../../bayTextures.js';
-import { farId } from '../kit.js';
+import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { farId, placer } from '../kit.js';
 
-// Shared pieces for the Bay Area: one set of materials, and the trees, lamps,
-// benches and planters that appear on the campus and on the waterfront alike
-// (the same palms line Palm Drive and the Embarcadero). Every builder adds to a
-// Batch (one draw call per material) at a placement matrix.
+// Shared pieces for the Bay Area waterfront: one set of materials, and the
+// trees, lamps, benches, bins and café furniture along the street and the
+// promenade. Every builder adds to a Batch (one draw call per material) at a
+// placement matrix.
 
 export function bayMaterials() {
   const stucco = BX.stuccoTexture();
@@ -17,17 +18,13 @@ export function bayMaterials() {
     stucco2: ink({ map: stucco, tri: 1 / 3, mapAmt: 0.5, tone: 0.92, facing: 0.45, hatchFreq: 9 }),
     trim: ink({ tone: 0.99, facing: 0.55, hatchFreq: 9 }),
     ledge: ink({ tone: 0.88, facing: 0.5, hatch: 0 }),
-    tile: ink({ map: BX.barrelTileTexture(), mapAmt: 0.8, tone: 0.92, facing: 0.45, hatchFreq: 7 }),
     reveal: ink({ tone: 0.7, facing: 0.5, hatchFreq: 9 }),
     dark: ink({ tone: 0.24, facing: 0.2, hatch: 0 }),
     glass: ink({ map: TX.sashTexture(925), mapAmt: 0.85, facing: 0.1, hatch: 0 }),
-    door: ink({ tone: 0.36, facing: 0.3, hatch: 0.4 }),
     paving: ink({ map: TX.tileTexture(927), tri: 1 / 2, facing: 0.2, mapAmt: 0.6, hatch: 0.6 }),
     path: ink({ map: TW.pavingTexture(), tri: 1 / 2.2, facing: 0.2, mapAmt: 0.65, hatch: 0.6 }),
     kerb: ink({ map: TX.kerbTexture(), tri: 1 / 2.4, facing: 0.5, mapAmt: 0.7, tone: 0.92 }),
     stone: ink({ map: TW.stoneBlockTexture(), tri: 1 / 1.6, mapAmt: 0.65, tone: 0.88, facing: 0.5 }),
-    lawn: ink({ map: TW.scrubTexture(), tri: 1 / 4, mapAmt: 0.45, tone: 0.97, facing: 0.15, hatch: 0.5 }),
-    soil: ink({ tone: 0.35, hatch: 0 }),
     leaf: ink({ tone: 0.95, facing: 0.7, hatchFreq: 16 }),
     leafDark: ink({ tone: 0.8, facing: 0.7, hatchFreq: 16 }),
     frond: ink({ map: BX.frondTexture(), mapAmt: 0.85, tone: 0.97, facing: 0.5, hatchFreq: 16, side: THREE.DoubleSide }),
@@ -40,8 +37,24 @@ export function bayMaterials() {
     glow: ink({ tone: 1, facing: 0, hatch: 0 }),
     paper: ink(),
     canvas: ink({ tone: 0.96, facing: 0.4, side: THREE.DoubleSide }),
-    banner: ink({ map: BX.scuBannerTexture(), facing: 0.15, hatch: 0, side: THREE.DoubleSide }),
+    banner: ink({ map: BX.cityBannerTexture(), facing: 0.15, hatch: 0, side: THREE.DoubleSide }),
+    foliage: ink({ map: BX.foliageTexture(), tri: 1 / 2.5, mapAmt: 0.6, tone: 0.97, facing: 0.75, hatchFreq: 14 }),
+    foliageDark: ink({ map: BX.foliageTexture(958), tri: 1 / 2.5, mapAmt: 0.6, tone: 0.86, facing: 0.75, hatchFreq: 14 }),
+    chalk: ink({ map: BX.chalkboardTexture(), facing: 0.1, hatch: 0 }),
     planks: ink({ map: BX.planksTexture(), tri: 1 / 3, mapAmt: 0.7, tone: 0.9, facing: 0.3, hatch: 0.6 }),
+    // the street's buildings
+    brick: ink({ map: BX.brickTexture(), tri: 1 / 1.6, mapAmt: 0.6, tone: 0.93, facing: 0.45, hatchFreq: 9 }),
+    siding: ink({ map: BX.sidingTexture(), tri: 1 / 2, mapAmt: 0.55, tone: 0.97, facing: 0.45, hatchFreq: 9 }),
+    awning: ink({ map: TX.awningTexture(), facing: 0.35, side: THREE.DoubleSide }),
+    doorway: ink({ map: TX.doorTexture(), facing: 0.2, hatch: 0 }),
+    shopWin: ['plain', 'bread', 'books', 'gifts'].reduce((o, k, i) => ({ ...o, [k]: ink({ map: BX.shopWindowTexture(k, 960 + i), facing: 0.1, hatch: 0 }) }), {}),
+    boards: ink({ map: TW.boardsTexture(), tri: 1 / 2, facing: 0.3, mapAmt: 0.6, tone: 0.92, hatch: 0.6 }),
+    plaster: ink({ map: TW.plasterTexture(), tri: 1 / 3, facing: 0.15, mapAmt: 0.5, tone: 0.97, hatch: 0.35 }),
+    menuA: ink({ map: TX.menuTexture(['MENU', 'Espresso', 'Cappuccino', 'Latte', 'Mocha', 'Tea']), facing: 0 }),
+    menuB: ink({ map: TX.menuTexture(['PASTRIES', 'Croissant', 'Scone', 'Sourdough', 'Muffin'], 366), facing: 0 }),
+    street: ink({ map: BX.streetTexture(), tri: 1 / 4, mapAmt: 0.7, tone: 0.9, facing: 0.15, hatch: 0.5 }),
+    rail: ink({ tone: 0.5, facing: 0.5, hatch: 0 }),
+    signs: new Map(), // fascia sign materials by text (street.js)
   };
 }
 
@@ -49,18 +62,13 @@ export function bayMaterials() {
 export const boxG = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y + h / 2, z); return g; };
 export const cylG = (rt, rb, h, x, y, z, seg = 12) => { const g = new THREE.CylinderGeometry(rt, rb, h, seg); g.translate(x, y + h / 2, z); return g; };
 export const sphG = (r, x, y, z, sx = 1, sy = 1, sz = 1, seg = 12) => { const g = new THREE.SphereGeometry(r, seg, Math.max(6, Math.round(seg * 0.7))); g.scale(sx, sy, sz); g.translate(x, y, z); return g; };
-// a placement: put(geo, mat, id) at (x, y, z) turned by ry
-export function at(B, x, y, z, ry = 0) {
-  const m = new THREE.Matrix4().makeRotationY(ry).setPosition(x, y, z);
-  return (geo, mat, id) => B.geo(geo, mat, id, m);
-}
 
 // ---- trees ------------------------------------------------------------------------------
 // A Washingtonia palm: a slender ringed trunk with a slight lean, a skirt and
 // a crown of drooping fronds (drawn leaflets).
 export function palm(B, M, x, y, z, { h = 9, lean = 0.06, seed = 1 } = {}) {
   const r = mulberry(seed);
-  const put = at(B, x, y, z, r() * Math.PI * 2);
+  const put = placer(B, x, y, z, r() * Math.PI * 2);
   const id = farId(r());
   const pts = [];
   for (let i = 0; i <= 8; i++) { const t = i / 8; pts.push(new THREE.Vector3(Math.sin(t * 1.4) * lean * h, t * h, 0)); }
@@ -96,26 +104,6 @@ export function palm(B, M, x, y, z, { h = 9, lean = 0.06, seed = 1 } = {}) {
   }
   return { x, z, r: 0.35 };
 }
-// An Italian cypress: a tall flame-shaped column.
-export function cypress(B, M, x, y, z, { h = 9, w = 0.95, seed = 2 } = {}) {
-  const r = mulberry(seed);
-  const prof = [];
-  for (let i = 0; i <= 12; i++) { const t = i / 12; prof.push(new THREE.Vector2(Math.max(0.02, w * Math.pow(Math.sin(Math.PI * Math.min(1, 0.12 + t * 0.95)), 0.8) * (1 - 0.35 * t)), 0.4 + t * h)); }
-  const g = new THREE.LatheGeometry(prof, 12);
-  g.translate(x, y, z);
-  B.add(g, M.leafDark, farId(r()));
-  B.add(cylG(0.12, 0.15, 0.6, x, y, z, 6), M.woodDark, farId(r()));
-  return { x, z, r: w * 0.7 };
-}
-// A round oak: a few overlapping crowns on a short trunk.
-export function oak(B, M, x, y, z, { s = 1, seed = 3 } = {}) {
-  const r = mulberry(seed), id = farId(r());
-  B.add(cylG(0.16 * s, 0.26 * s, 2.4 * s, x, y, z, 8), M.woodDark, id);
-  for (const [dx, dy, dz, rr] of [[0, 3.6, 0, 1.9], [1.3, 3.0, 0.5, 1.4], [-1.3, 3.1, -0.4, 1.5], [0.3, 4.6, -0.3, 1.3], [-0.4, 3.2, 1.3, 1.2]]) {
-    B.add(sphG(rr * s * (0.9 + r() * 0.2), x + dx * s, y + dy * s, z + dz * s, 1, 0.85, 1, 12), M.leaf, id);
-  }
-  return { x, z, r: 0.35 * s };
-}
 // A low shrub / flower bed: a rounded mound with white blossoms.
 export function shrubs(B, M, x0, z0, x1, z1, y = 0, { seed = 4, flowers = true } = {}) {
   const r = mulberry(seed), id = farId(r());
@@ -128,9 +116,10 @@ export function shrubs(B, M, x0, z0, x1, z1, y = 0, { seed = 4, flowers = true }
 }
 
 // ---- street furniture ------------------------------------------------------------------
-// A vintage lamppost: fluted base, slim post, lantern; banner: an SCU banner on an arm.
-export function lamp(B, M, x, y, z, { h = 3.6, banner = false, ry = 0, twin = false } = {}) {
-  const put = at(B, x, y, z, ry), id = farId(Math.abs(Math.sin(x * 12.9 + z * 7.1)));
+// A vintage lamppost: fluted base, slim post, lantern; banner: a city banner on an arm;
+// basket: a hanging flower basket.
+export function lamp(B, M, x, y, z, { h = 3.6, banner = false, ry = 0, twin = false, basket = false } = {}) {
+  const put = placer(B, x, y, z, ry), id = farId(Math.abs(Math.sin(x * 12.9 + z * 7.1)));
   put(cylG(0.2, 0.25, 0.14, 0, 0, 0, 14), M.iron, id);
   put(cylG(0.13, 0.18, 0.6, 0, 0.14, 0, 12), M.iron, id);
   put(cylG(0.05, 0.08, h - 0.7, 0, 0.74, 0, 10), M.iron, id);
@@ -151,11 +140,19 @@ export function lamp(B, M, x, y, z, { h = 3.6, banner = false, ry = 0, twin = fa
     g.translate(0.33, h - 1.25, 0);
     put(g, M.banner, id + 0.006);
   }
+  if (basket) {
+    // a hanging flower basket on a short arm opposite the banner
+    put(boxG(0.5, 0.04, 0.04, -0.25, h - 0.45, 0), M.iron, id);
+    for (const dz of [-0.1, 0.1]) put(cylG(0.006, 0.006, 0.3, -0.45, h - 0.75, dz, 4), M.iron, id);
+    put(sphG(0.22, -0.45, h - 0.82, 0, 1, 0.6, 1, 10), M.woodDark, id + 0.008);
+    for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; put(sphG(0.13, -0.45 + Math.cos(a) * 0.17, h - 0.74 - (k % 2) * 0.12, Math.sin(a) * 0.17, 1, 0.8, 1, 8), M.leaf, id + 0.01); }
+    put(sphG(0.14, -0.45, h - 0.66, 0, 1, 0.8, 1, 8), M.leaf, id + 0.01);
+  }
   return { x, z, r: 0.22 };
 }
 // A bench with cast-iron ends and wooden slats, facing local -z.
 export function bench(B, M, x, y, z, ry = 0) {
-  const put = at(B, x, y, z, ry), id = farId(Math.abs(Math.sin(x * 3.1 + z * 5.7)));
+  const put = placer(B, x, y, z, ry), id = farId(Math.abs(Math.sin(x * 3.1 + z * 5.7)));
   for (const sx of [-0.82, 0.82]) {
     put(boxG(0.06, 0.44, 0.06, sx, 0, -0.2), M.iron, id);
     const back = boxG(0.06, 0.86, 0.06, 0, 0, 0); back.rotateX(-0.08); back.translate(sx, 0, 0.21); put(back, M.iron, id);
@@ -175,25 +172,86 @@ export function bin(B, M, x, y, z) {
   for (let k = 0; k < 10; k++) { const a = (k / 10) * Math.PI * 2; B.add(boxG(0.025, 0.7, 0.025, x + Math.cos(a) * 0.275, y + 0.08, z + Math.sin(a) * 0.275), M.iron, id); }
   return { x, z, r: 0.3 };
 }
-// A stone planter box with shrubs and flowers.
-export function planter(B, M, x, y, z, w = 1.6, d = 0.9, seed = 5) {
-  const id = farId(Math.abs(Math.sin(x * 7.3 + z * 1.3)));
-  B.add(boxG(w, 0.55, d, x, y, z), M.stone, id);
-  B.add(boxG(w + 0.08, 0.06, d + 0.08, x, y + 0.55, z), M.trim, id);
-  B.add(boxG(w - 0.12, 0.04, d - 0.12, x, y + 0.56, z), M.soil, id + 0.002);
-  shrubs(B, M, x - w / 2 + 0.35, z, x + w / 2 - 0.35, z, y + 0.4, { seed });
-  return { type: 'box', minX: x - w / 2, maxX: x + w / 2, minZ: z - d / 2, maxZ: z + d / 2 };
+
+// ---- the street ----------------------------------------------------------------------
+// A street tree in an iron grate (a London plane): a leaning trunk that forks,
+// and a crown of lumpy leaf clusters (the lumps give the drawn, scalloped edge).
+export function streetTree(B, M, x, y, z, { s = 1, seed = 6 } = {}) {
+  const r = mulberry(seed), put = placer(B, x, y, z, r() * Math.PI * 2), id = farId(r());
+  put(boxG(1.2, 0.03, 1.2, 0, 0, 0), M.iron, id);
+  for (let i = -2; i <= 2; i++) put(boxG(1.1, 0.035, 0.04, 0, 0.005, i * 0.22), M.ironMid, id);
+  const branch = (pts, r0, r1) => {
+    const c = new THREE.CatmullRomCurve3(pts.map(([a, b, d]) => new THREE.Vector3(a * s, b * s, d * s)));
+    const g = new THREE.TubeGeometry(c, 8, 1, 6, false);
+    const p = g.attributes.position, n = 9;
+    for (let i = 0; i < p.count; i++) {
+      const k = Math.floor(i / 7) / (n - 1), q = c.getPointAt(Math.min(1, k)), rr = (r0 + (r1 - r0) * k) * s;
+      p.setXYZ(i, q.x + (p.getX(i) - q.x) * rr, q.y + (p.getY(i) - q.y) * rr, q.z + (p.getZ(i) - q.z) * rr);
+    }
+    g.computeVertexNormals();
+    put(g, M.woodDark, id);
+  };
+  branch([[0, 0, 0], [0.05, 1.4, 0.02], [0.12, 2.6, 0.05]], 0.15, 0.11);
+  branch([[0.12, 2.5, 0.05], [0.6, 3.3, 0.3], [1.1, 4.0, 0.4]], 0.09, 0.05);
+  branch([[0.12, 2.5, 0.05], [-0.4, 3.4, -0.2], [-0.9, 4.2, -0.3]], 0.09, 0.05);
+  branch([[0.12, 2.6, 0.05], [0.2, 3.6, -0.5], [0.1, 4.6, -0.6]], 0.08, 0.04);
+  const blob = (bx, by, bz, rad, mat) => {
+    const g = mergeVertices(new THREE.IcosahedronGeometry(rad * s, 2));
+    const p = g.attributes.position, v = new THREE.Vector3();
+    const ph = r() * 10;
+    for (let i = 0; i < p.count; i++) {
+      v.fromBufferAttribute(p, i).normalize();
+      const k = 1 + 0.13 * Math.sin(v.x * 7 + ph) * Math.sin(v.y * 6 + ph * 0.7) * Math.sin(v.z * 7 + ph * 1.3) + 0.07 * Math.sin(v.x * 13 + v.z * 11 + ph);
+      p.setXYZ(i, p.getX(i) * k, p.getY(i) * k * 0.82, p.getZ(i) * k);
+    }
+    g.computeVertexNormals();
+    g.translate(bx * s, by * s, bz * s);
+    put(g, mat, id + 0.003);
+  };
+  blob(0.1, 4.7, 0, 1.55, M.foliage);
+  blob(1.2, 4.2, 0.5, 1.15, M.foliage);
+  blob(-1.0, 4.4, -0.3, 1.2, M.foliage);
+  blob(0.2, 5.6, -0.5, 1.05, M.foliage);
+  blob(-0.3, 3.9, 0.9, 0.95, M.foliageDark);
+  blob(0.7, 3.8, -0.9, 0.9, M.foliageDark);
+  return { x, z, r: 0.2 };
 }
-// A clipped hedge along a line.
-export function hedge(B, M, x0, z0, x1, z1, y = 0, h = 0.9, w = 0.8) {
-  const L = Math.hypot(x1 - x0, z1 - z0);
-  const g = new THREE.BoxGeometry(L, h, w, 6, 1, 1);
-  const p = g.attributes.position;
-  for (let i = 0; i < p.count; i++) { const k = 1 + 0.06 * Math.sin(p.getX(i) * 3.1) + 0.05 * Math.sin(p.getX(i) * 7.3); p.setY(i, p.getY(i) * k); }
-  g.computeVertexNormals();
-  g.rotateY(-Math.atan2(z1 - z0, x1 - x0));
-  g.translate((x0 + x1) / 2, y + h / 2, (z0 + z1) / 2);
-  B.add(g, M.leaf, farId(Math.abs(Math.sin(x0 * 2.3 + z1))));
+// A café table (round marble top on a cast-iron stand) with chairs round it.
+// chairs: angles (radians) where the chairs stand.
+export function cafeTable(B, M, x, y, z, { chairs = [0, Math.PI], seed = 7 } = {}) {
+  const id = farId(mulberry(seed)());
+  B.add(cylG(0.36, 0.36, 0.04, x, y + 0.72, z, 20), M.trim, id);
+  B.add(cylG(0.03, 0.04, 0.7, x, y + 0.02, z, 8), M.iron, id);
+  for (let k = 0; k < 3; k++) { const a = (k / 3) * Math.PI * 2; const g = boxG(0.36, 0.03, 0.05, 0.16, 0, 0); g.rotateY(a); g.translate(x, y, z); B.add(g, M.iron, id); }
+  for (const a of chairs) cafeChair(B, M, x + Math.sin(a) * 0.62, y, z + Math.cos(a) * 0.62, a, id + 0.002);
+  return { x, z, r: 0.95 };
+}
+// A bistro chair facing local -z after the turn ry (its back toward +z).
+export function cafeChair(B, M, x, y, z, ry, id) {
+  const put = placer(B, x, y, z, ry);
+  for (const [sx, sz] of [[-0.18, -0.18], [0.18, -0.18], [-0.18, 0.18], [0.18, 0.18]]) put(cylG(0.014, 0.016, 0.45, sx, 0, sz, 6), M.iron, id);
+  put(cylG(0.22, 0.22, 0.03, 0, 0.45, 0, 14), M.wood, id);
+  for (const sx of [-0.17, 0.17]) put(cylG(0.013, 0.013, 0.42, sx, 0.47, 0.19, 6), M.iron, id);
+  const back = new THREE.TorusGeometry(0.18, 0.016, 5, 12, Math.PI); back.translate(0, 0.86, 0.19); put(back, M.iron, id);
+  put(boxG(0.34, 0.08, 0.02, 0, 0.7, 0.19), M.wood, id);
+}
+// The A-frame chalkboard, its faces toward local +z and -z.
+export function aFrame(B, M, x, y, z, ry = 0) {
+  const put = placer(B, x, y, z, ry), id = farId(Math.abs(Math.sin(x * 4.1 + z * 2.3)));
+  for (const sd of [-1, 1]) {
+    const g = new THREE.BoxGeometry(0.62, 0.95, 0.04);
+    g.translate(0, 0.475, 0); g.rotateX(sd * 0.2); g.translate(0, 0, sd * 0.1);
+    put(g, [M.woodDark, M.woodDark, M.woodDark, M.woodDark, sd > 0 ? M.chalk : M.woodDark, sd > 0 ? M.woodDark : M.chalk], id);
+  }
+  return { x, z, r: 0.4 };
+}
+// A cast-iron bollard.
+export function bollard(B, M, x, y, z) {
+  const id = farId(Math.abs(Math.sin(x * 5.3 + z * 3.9)));
+  B.add(cylG(0.11, 0.14, 0.75, x, y, z, 10), M.iron, id);
+  B.add(cylG(0.15, 0.15, 0.06, x, y + 0.62, z, 10), M.iron, id);
+  B.add(sphG(0.12, x, y + 0.78, z, 1, 0.7, 1, 10), M.iron, id);
+  return { x, z, r: 0.18 };
 }
 
 // small deterministic rng per object

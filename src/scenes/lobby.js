@@ -16,8 +16,8 @@ import { Batch } from './kit.js';
 // i18n.js); the hall spaces the gates evenly around the back wall.
 //   id        stable id (remembered as the last gate)
 //   nameEn / nameZh   the sign
-//   icon      sign glyph: 'pearl' | 't101' | 'bridge' | 'campus' | 'globe' (lobbyTextures.js ICONS)
-//   sceneArt  the view through the arch: 'pudong' | 'taipei' | 'bayarea' | 'santaclara' | 'worldmap'
+//   icon      sign glyph: 'pearl' | 't101' | 'bridge' | 'globe' (lobbyTextures.js ICONS)
+//   sceneArt  the view through the arch: 'pudong' | 'taipei' | 'bayarea' | 'worldmap'
 //   prompt    (optional) the prompt, when "Check in to {nameEn}" does not read well
 //   route     the scene id it flies to (scenes/index.js), or null
 //   enabled   false: shows a "coming soon" card instead of the jetway
@@ -27,7 +27,7 @@ export const GATES = [
   { id: 'bayarea', nameEn: 'Bay Area', nameZh: '舊金山灣區', icon: 'bridge', sceneArt: 'bayarea', route: 'bayarea', enabled: true, prompt: 'Check in to the Bay Area' },
   { id: 'next', nameEn: 'Next Stop', nameZh: '下一站', icon: 'globe', sceneArt: 'worldmap', route: null, enabled: false },
 ];
-const ART = { pudong: LX.pudongView, taipei: LX.taipeiView, bayarea: LX.bayAreaView, santaclara: LX.santaClaraView, worldmap: LX.worldMapView };
+const ART = { pudong: LX.pudongView, taipei: LX.taipeiView, bayarea: LX.bayAreaView, worldmap: LX.worldMapView };
 const LAST_GATE = 'doodleworld.lastGate';
 const promptFor = (g) => g.prompt ?? (g.id === 'next' ? 'See the next stop' : `Check in to ${g.nameEn}`);
 
