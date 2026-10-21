@@ -2,6 +2,8 @@
 // ground model read from the running game, grid A* routes and a monitor that
 // samples the player for penetration, popping and falls.
 export function createHarness(page) {
+  // TIMEOUT_SCALE stretches the walking timeouts on a slow (software-rendered) machine
+  const TS = Number(process.env.TIMEOUT_SCALE || 1);
   const sleep = (ms) => page.waitForTimeout(ms);
   const st = () => page.evaluate(() => window.__dw.state());
   const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
@@ -26,10 +28,12 @@ export function createHarness(page) {
   // ---- per-scene collision model + grid A* (binary heap) ----------------------------
   let model = null;
   async function loadModel() {
-    const colliders = await page.evaluate(() => window.__dw.colliders);
+    // moving colliders (people, vehicles) are left out of the static model
+    const colliders = await page.evaluate(() => window.__dw.colliders.filter((c) => !c.moving));
     const sceneId = (await st()).scene;
     const B = sceneId === 'taiwan' ? { x0: -7.6, x1: 9.0, z0: -29.4, z1: 4.8 }
       : sceneId === 'shanghai' ? { x0: -18.2, x1: 16.4, z0: -3.0, z1: 7.4 }
+      : sceneId === 'bayarea' ? { x0: -13.4, x1: 34.6, z0: -78.0, z1: 12.6 }
       : { x0: -4.7, x1: 4.7, z0: -5.0, z1: 4.2 };
     const G = 0.12;
     const NX = Math.ceil((B.x1 - B.x0) / G) + 1, NZ = Math.ceil((B.z1 - B.z0) / G) + 1;
@@ -148,6 +152,7 @@ export function createHarness(page) {
   }
   async function walkStraight(x, z, { tol = 0.18, timeout = 7000 } = {}) {
     const t0 = Date.now();
+    timeout *= TS;
     await faceToward(x, z);
     await page.keyboard.down('KeyW');
     let s, lastSteer = 0;
@@ -191,19 +196,19 @@ export function createHarness(page) {
   
   // ---- the airport: from the lobby, stand at a gate and check in; resolves on landing ---------
   async function checkInAt(gate, to) {
-    await page.waitForFunction(() => window.__dw.state().scene === 'lobby' && !window.__dw.state().traveling, null, { timeout: 60000 });
+    await page.waitForFunction(() => window.__dw.state().scene === 'lobby' && !window.__dw.state().traveling, null, { timeout: 60000 * TS });
     await page.evaluate((g) => { const it = window.__dw.interactables().find((i) => i.id === `gate-${g}`); window.__dw.setPlayer(it.x, it.z, Math.atan2(-it.x, -it.z)); window.__dw.setView(Math.atan2(it.x, it.z), 0.2); }, gate);
     await sleep(600);
     await press('KeyE');
-    await page.waitForFunction((to) => window.__dw.state().scene === to && !window.__dw.state().traveling, to, { timeout: 60000 });
+    await page.waitForFunction((to) => window.__dw.state().scene === to && !window.__dw.state().traveling, to, { timeout: 60000 * TS });
   }
   // from the lobby: through the doors home to the room
   async function homeFromLobby() {
-    await page.waitForFunction(() => window.__dw.state().scene === 'lobby' && !window.__dw.state().traveling, null, { timeout: 60000 });
+    await page.waitForFunction(() => window.__dw.state().scene === 'lobby' && !window.__dw.state().traveling, null, { timeout: 60000 * TS });
     await page.evaluate(() => { const it = window.__dw.interactables().find((i) => i.id === 'home'); window.__dw.setPlayer(it.x, it.z, 0); });
     await sleep(500);
     await press('KeyE');
-    await page.waitForFunction(() => window.__dw.state().scene === 'room' && !window.__dw.state().traveling, null, { timeout: 60000 });
+    await page.waitForFunction(() => window.__dw.state().scene === 'room' && !window.__dw.state().traveling, null, { timeout: 60000 * TS });
   }
 
   return { checkInAt, homeFromLobby, sleep, st, wrap, dragTurn, press, loadModel, overlaps, penetrating, findPath, sample, faceToward, walkStraight, goTo, interactAt, mon, get model() { return model; }, hAt };

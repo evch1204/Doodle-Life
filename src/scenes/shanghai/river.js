@@ -16,8 +16,9 @@ import { inkShared } from '../../ink.js';
 
 const SKY_HALF = 1100, SHORE_HALF = 1600, SKY_MAX = 300, SHORE_MAX = 30;
 
-// skyZ: the plane the skyline is projected onto (about its distance from the viewer)
-export function buildRiver(root, { WATER_Y, SHORE_Z, SHORE_Y, sky, shore, skyZ: SKY_Z = -420 }) {
+// skyZ: the plane the skyline is projected onto (about its distance from the viewer);
+// zNear: how far toward +z the water reaches
+export function buildRiver(root, { WATER_Y, SHORE_Z, SHORE_Y, sky, shore, skyZ: SKY_Z = -420, zNear = 3 }) {
   // silhouette profiles: row 0 = skyline height on the plane z = SKY_Z (seen
   // from the promenade), row 1 = the bank band on the plane z = SHORE_Z
   const N = 2048;
@@ -152,9 +153,10 @@ export function buildRiver(root, { WATER_Y, SHORE_Z, SHORE_Y, sky, shore, skyZ: 
         gl_FragColor = vec4(col, 1.0);
       }`,
   });
-  const water = new THREE.Mesh(new THREE.PlaneGeometry(3200, -SHORE_Z + 10, 1, 1), mat);
+  const zFar = SHORE_Z - 7;
+  const water = new THREE.Mesh(new THREE.PlaneGeometry(3200, zNear - zFar, 1, 1), mat);
   water.rotation.x = -Math.PI / 2;
-  water.position.set(0, WATER_Y, SHORE_Z / 2 - 2);
+  water.position.set(0, WATER_Y, (zNear + zFar) / 2);
   water.castShadow = water.receiveShadow = false;
   water.userData.noBlock = true;
   root.add(water);

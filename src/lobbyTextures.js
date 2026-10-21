@@ -11,7 +11,7 @@ const SIGN_BG = '#2c2622';
 
 // ---- glyphs shared by signs ---------------------------------------------------------
 // a small airliner seen from above, nose pointing right
-function planeGlyph(ctx, x, y, s, color = '#fff') {
+export function planeGlyph(ctx, x, y, s, color = '#fff') {
   ctx.save();
   ctx.translate(x, y); ctx.scale(s / 100, s / 100);
   ctx.fillStyle = color;
@@ -46,14 +46,6 @@ const ICONS = {
     let y = -78;
     for (let k = 0; k < 6; k++) { ctx.beginPath(); ctx.moveTo(-10, y); ctx.lineTo(10, y); ctx.lineTo(7, y + 17); ctx.lineTo(-7, y + 17); ctx.closePath(); ctx.stroke(); y += 17; }
     ctx.beginPath(); ctx.moveTo(-7, y); ctx.lineTo(-14, 50); ctx.moveTo(7, y); ctx.lineTo(14, 50); ctx.moveTo(-34, 50); ctx.lineTo(34, 50); ctx.stroke();
-  },
-  campus(ctx) {
-    ctx.strokeRect(-34, 0, 40, 50); ctx.strokeRect(6, 18, 28, 32);
-    for (let i = 0; i < 3; i++) ctx.strokeRect(-28 + i * 12, 10, 6, 10);
-    // a palm
-    ctx.beginPath(); ctx.moveTo(26, 18); ctx.quadraticCurveTo(22, -20, 30, -50); ctx.stroke();
-    for (const a of [-2.6, -2.0, -1.2, -0.5]) { ctx.beginPath(); ctx.moveTo(30, -50); ctx.quadraticCurveTo(30 + Math.cos(a) * 22, -50 + Math.sin(a) * 22 - 6, 30 + Math.cos(a) * 34, -50 + Math.sin(a) * 26 + 14); ctx.stroke(); }
-    ctx.beginPath(); ctx.moveTo(-40, 50); ctx.lineTo(40, 50); ctx.stroke();
   },
   bridge(ctx) {
     // a Golden Gate tower and its cable sweeping down either side
@@ -322,38 +314,7 @@ export function taipeiView() {
   return s.texture();
 }
 
-export function santaClaraView() {
-  const { W, H, s, ctx, r, ox } = viewBase(625);
-  const base = 680;
-  s.stroke([[-10, 560], [200, 520], [420, 545], [640, 505], [880, 530], [1100, 500], [W + 10, 540]], { w: 2.4, j: 1.0, alpha: 0.6 }); // far hills
-  ctx.save(); ctx.translate(ox, 0);
-  cloud(s, 210, 200, 210); cloud(s, 650, 270, 150);
-  // low office buildings: long ribbon windows, a flat roof
-  const office = (x, w, h) => { s.rect(x, base - h, w, h, { w: 3, j: 0.4, fill: '#fff' }); for (let y = base - h + 18; y < base - 12; y += 26) s.rect(x + 10, y, w - 20, 10, { w: 1.6, j: 0.2, fill: '#888' }); s.line(x - 6, base - h, x + w + 6, base - h, { w: 4, j: 0.2 }); };
-  office(40, 300, 120); office(380, 260, 90); office(560, 240, 150);
-  // a mission-style arcade
-  s.rect(320, base - 70, 200, 70, { w: 3, j: 0.4, fill: '#fff' });
-  for (let i = 0; i < 4; i++) s.stroke([[336 + i * 46, base], [336 + i * 46, base - 34], ...s.ellipsePts(352 + i * 46, base - 34, 16, 16, Math.PI, Math.PI * 2, 8), [368 + i * 46, base]], { w: 2.4, j: 0.2, fill: '#555' });
-  s.stroke([[310, base - 70], [420, base - 104], [530, base - 70]], { w: 3, j: 0.3, closed: true, fill: '#bbb' });
-  // palms and cypresses
-  const palm = (x, h) => {
-    s.stroke([[x, base + 8], [x - 6, base - h * 0.5], [x + 4, base - h]], { w: 4, j: 0.3 });
-    for (const a of [-2.8, -2.2, -1.6, -1.0, -0.4]) s.stroke([[x + 4, base - h], [x + 4 + Math.cos(a) * 30, base - h + Math.sin(a) * 30 - 10], [x + 4 + Math.cos(a) * 60, base - h + Math.sin(a) * 26 + 22]], { w: 3, j: 0.3 });
-  };
-  palm(110, 260); palm(300, 220); palm(720, 280);
-  for (const x of [520, 560]) s.stroke([[x - 14, base], [x - 10, base - 90], [x, base - 170], [x + 10, base - 90], [x + 14, base]], { w: 2.6, j: 0.4, closed: true, fill: '#fff' });
-  ctx.restore();
-  // the office park carries on either side
-  office(-20, 200, 100); palm(160, 240);
-  office(W - 230, 220, 110); palm(W - 60, 250);
-  // the path
-  s.line(-4, base, W + 4, base, { w: 3, j: 0.5 });
-  s.stroke([[W * 0.42, H], [W * 0.48, base + 4]], { w: 2.6, j: 0.6 }); s.stroke([[W * 0.72, H], [W * 0.54, base + 4]], { w: 2.6, j: 0.6 });
-  for (let i = 0; i < 30; i++) { const x = r() * W, y = base + 30 + r() * 300; s.line(x, y, x + 4, y - 10, { w: 1.4, j: 0.2, alpha: 0.5 }); }
-  return s.texture();
-}
-
-// The Bay Area: the Golden Gate Bridge across the water, the Mission's bell tower and palms in front.
+// The Bay Area: the Golden Gate Bridge across the water, a cable car and a street lamp in front.
 export function bayAreaView() {
   const { W, H, s, ctx, r, ox } = viewBase(629);
   const base = 640;
@@ -378,20 +339,22 @@ export function bayAreaView() {
   // the water
   s.line(-4, base, W + 4, base, { w: 3, j: 0.5 });
   for (let i = 0; i < 40; i++) { const y = base + 20 + r() * 200, x = r() * W, l = 20 + r() * 60; s.line(x, y, x + l, y, { w: 1.6, j: 0.4, alpha: 0.5 }); }
-  // in front: the Mission's bell tower on the right, palms on the left
-  const bx = W - 300, by = H;
-  s.stroke([[bx, by], [bx, 520], [bx + 120, 520], [bx + 120, by]], { w: 3.4, j: 0.3, fill: '#fff' });
-  s.stroke([[bx + 10, 520], [bx + 10, 420], [bx + 110, 420], [bx + 110, 520]], { w: 3.4, j: 0.3, fill: '#fff' });
-  for (const [x0, w] of [[bx + 34, 52]]) s.stroke([[x0, 510], [x0, 460], ...s.ellipsePts(x0 + w / 2, 460, w / 2, w / 2, Math.PI, Math.PI * 2, 8), [x0 + w, 510]], { w: 3, j: 0.2, fill: '#555' });
-  s.stroke([[bx + 22, 420], [bx + 22, 370], [bx + 98, 370], [bx + 98, 420]], { w: 3.2, j: 0.3, fill: '#fff' });
-  s.arc(bx + 60, 370, 34, 40, Math.PI, Math.PI * 2, { w: 3.2, j: 0.2, fill: '#fff' });
-  s.line(bx + 60, 330, bx + 60, 290, { w: 3.4, j: 0 }); s.line(bx + 48, 304, bx + 72, 304, { w: 3.4, j: 0 });
-  for (let y = 560; y < by; y += 60) s.line(bx + 4, y, bx + 116, y, { w: 1.2, j: 0.3, alpha: 0.35 });
-  const palmV = (x, h) => {
-    s.stroke([[x, H + 6], [x - 6, H - h * 0.5], [x + 4, H - h]], { w: 5, j: 0.3 });
-    for (const a of [-2.9, -2.4, -1.9, -1.3, -0.8, -0.3]) s.stroke([[x + 4, H - h], [x + 4 + Math.cos(a) * 40, H - h + Math.sin(a) * 34 - 10], [x + 4 + Math.cos(a) * 80, H - h + Math.sin(a) * 30 + 30]], { w: 3.4, j: 0.3 });
-  };
-  palmV(110, 520); palmV(240, 440);
+  // in front: a cable car on the right, a lamp post with its banner on the left
+  const cx = W - 430, cy = H - 40;
+  s.stroke([[cx, cy], [cx, cy - 250], [cx + 340, cy - 250], [cx + 340, cy]], { w: 3.4, j: 0.3, fill: '#fff' });
+  s.rect(cx - 16, cy - 286, 372, 36, { w: 3.4, j: 0.3, fill: '#bbb' });
+  s.rect(cx + 40, cy - 330, 260, 44, { w: 3, j: 0.3, fill: '#fff' });
+  for (let i = 0; i < 5; i++) s.rect(cx + 20 + i * 62, cy - 230, 46, 92, { w: 2.6, j: 0.2, fill: '#888' });
+  s.rect(cx, cy - 120, 340, 26, { w: 2.4, j: 0.2 });
+  for (let i = 0; i < 6; i++) s.rect(cx + 14 + i * 54, cy - 84, 40, 60, { w: 1.8, j: 0.2, alpha: 0.7 });
+  for (const wx of [cx + 60, cx + 120, cx + 230, cx + 290]) s.ellipse(wx, cy + 6, 22, 22, { w: 3, j: 0.2, fill: '#555' });
+  s.line(cx - 200, cy + 28, W + 10, cy + 28, { w: 3, j: 0.3 });
+  const lx = 150;
+  s.line(lx, H + 6, lx, 330, { w: 7, j: 0.2 });
+  s.stroke([[lx - 26, 330], [lx - 18, 280], [lx + 18, 280], [lx + 26, 330]], { w: 3, j: 0.2, closed: true, fill: '#fff' });
+  s.line(lx - 30, 330, lx + 30, 330, { w: 4, j: 0.2 });
+  s.rect(lx + 10, 380, 90, 200, { w: 3, j: 0.3, fill: '#555' });
+  s.line(lx, 380, lx + 104, 380, { w: 4, j: 0.2 });
   return s.texture();
 }
 
