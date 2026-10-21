@@ -72,7 +72,7 @@ export default {
   },
   start: { x: 0, z: 3.4, facing: Math.PI, yaw: 0, pitch: 0.05 },
   sun: { dir: [-0.55, 2.3, 1.35], extent: 15, follow: true, far: 60 },
-  camera: { far: 2600, dist: 3.0 },
+  camera: { near: 0.2, far: 2600, dist: 3.0 },
   // distant lines thin and lighten, distant tones fade toward the paper; the landmarks stay bold
   render: { grazeFix: 1, aerial: { near: 100, far: 900, line: 0.55, tone: 0.32, bold: BOLD } },
   build: buildShanghai,
@@ -272,7 +272,7 @@ function buildShanghai(scene) {
     const w = x1 - x0, d = z1 - z0;
     box(root, w, 0.75, d, (x0 + x1) / 2, 0, (z0 + z1) / 2, M.kerb);
     box(root, w + 0.08, 0.06, d + 0.08, (x0 + x1) / 2, 0.75, (z0 + z1) / 2, M.stone);
-    box(root, w - 0.12, 0.05, d - 0.12, (x0 + x1) / 2, 0.76, (z0 + z1) / 2, M.soil, { cast: false });
+    box(root, w - 0.12, 0.05, d - 0.12, (x0 + x1) / 2, 0.78, (z0 + z1) / 2, M.soil, { cast: false }); // mounded 2 cm over the rim
     const n = Math.max(2, Math.round(d / 0.7));
     for (let i = 0; i < n; i++) {
       const z = z0 + (i + 0.5) * (d / n);
@@ -378,7 +378,7 @@ function buildShanghai(scene) {
   function planterTree(x, z, s = 1) {
     const g = group(root, x, 0, z);
     cyl(g, 0.55, 0.5, 0.55, 0, 0, 0, M.kerb, { seg: 20 });
-    cyl(g, 0.5, 0.5, 0.02, 0, 0.53, 0, M.soil, { seg: 20, cast: false });
+    cyl(g, 0.5, 0.5, 0.025, 0, 0.545, 0, M.soil, { seg: 20, cast: false }); // mounded over the pot's rim
     cyl(g, 0.07, 0.1, 1.9 * s, 0, 0.5, 0, M.woodDark, { seg: 8 });
     for (const [dx, dy, dz, r] of [[0, 2.5, 0, 0.75], [0.45, 2.2, 0.2, 0.55], [-0.4, 2.25, -0.2, 0.58], [0.1, 2.9, -0.15, 0.5], [-0.15, 2.15, 0.42, 0.45]]) {
       sphere(g, r * s, dx * s, 0.5 + dy * s, dz * s, M.leaf, [1, 0.9, 1], { seg: 14 });

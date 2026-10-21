@@ -81,7 +81,7 @@ export default {
   },
   start: { x: 0, z: 1.4, facing: Math.PI, yaw: 0, pitch: 0.36 },
   sun: { dir: [0.5, 3.2, 0.8], extent: 14, follow: true, far: 60 },
-  camera: { far: 1600, dist: 2.5 },
+  camera: { near: 0.15, far: 1600, dist: 2.5 },
   // distant lines thin and lighten, distant tones fade toward the paper; Taipei 101 stays bold
   render: { grazeFix: 1, aerial: { near: 110, far: 1000, line: 0.5, tone: 0.3, bold: BOLD } },
   build: buildTaiwan,
@@ -264,9 +264,9 @@ function buildTaiwan(scene) {
           ? box(root, w, y - bottom, Math.abs(b - a), cx, bottom, (a + b) / 2, M.steps, { cast: false })
           : box(root, Math.abs(b - a), y - bottom, d, (a + b) / 2, bottom, cz, M.steps, { cast: false });
         camBlockers.push(m);
-        // nosing: a slightly proud lip on each tread
-        if (r.axis === 'z') box(root, w, 0.03, 0.05, cx, y - 0.03, a + Math.sign(b - a) * 0.025, M.steps, { cast: false });
-        else box(root, 0.05, 0.03, d, a + Math.sign(b - a) * 0.025, y - 0.03, cz, M.steps, { cast: false });
+        // nosing: a lip on each tread, 1 cm proud of the tread and overhanging the riser
+        if (r.axis === 'z') box(root, w, 0.03, 0.05, cx, y - 0.02, a - Math.sign(b - a) * 0.015, M.steps, { cast: false });
+        else box(root, 0.05, 0.03, d, a - Math.sign(b - a) * 0.015, y - 0.02, cz, M.steps, { cast: false });
       }
     } else if (r.y !== undefined) {
       camBlockers.push(box(root, w, DEPTH, d, cx, r.y - DEPTH, cz, M.paving, { cast: false }));
@@ -298,7 +298,7 @@ function buildTaiwan(scene) {
     camBlockers.push(box(g, W, top - H1 + 0.02, D, 0, H1 - 0.02, -D / 2, wallM));
     camBlockers.push(box(g, W, H1 - base, D - recess, 0, base, -recess - (D - recess) / 2, shop ? M.interior : wallM));
     // stone plinth where the street drops away along the frontage
-    if (o.plinth) box(g, W + 0.02, o.plinth + 0.02, 0.12, 0, -o.plinth - 0.02, 0.05, M.steps, { cast: false });
+    if (o.plinth) box(g, W + 0.02, o.plinth + 0.01, 0.12, 0, -o.plinth - 0.02, 0.05, M.steps, { cast: false }); // top 1 cm under the street
     // ground floor front
     if (shop) {
       box(g, W, 0.1, recess, 0, -0.1, -recess / 2, M.paving, { cast: false });

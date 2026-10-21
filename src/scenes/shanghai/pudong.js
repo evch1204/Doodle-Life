@@ -50,7 +50,7 @@ export function buildPudong(root, { SKY, at, SHORE_Z, SHORE_Y, WATER_Y }) {
   // ---- the far bank: embankment wall, riverside walk with its railing, the park ------
   {
     B.box(3200, SHORE_Y - WATER_Y + 1.2, 8, 0, WATER_Y - 1.2, SHORE_Z - 4, M.shore, 0.9);
-    B.box(3200, 0.5, 6, 0, SHORE_Y - 0.5, SHORE_Z - 3.2, M.walk, 0.92);
+    B.box(3200, 0.5, 6, 0, SHORE_Y - 0.48, SHORE_Z - 3.2, M.walk, 0.92); // 2 cm over the embankment's top
     B.box(3200, 0.12, 0.12, 0, SHORE_Y + 1.0, SHORE_Z - 0.4, M.rail, 0.93);
     B.box(3200, 1, 1200, 0, SHORE_Y - 0.5, SHORE_Z - 8 - 600, M.ground, 0.91);
     for (let x = -900; x < 900; x += 6 + cr() * 5) {
@@ -245,9 +245,9 @@ export function buildPudong(root, { SKY, at, SHORE_Z, SHORE_Y, WATER_Y }) {
     put(torG(4.6, 0.75, 22.5), C, idRim);
     // lower sphere, its observation band and rims
     put(sphG(9.6, 31, 48), M.pearl, idSph);
-    put(cylG(9.72, 9.72, 2.0, 30.4, 48), M.pearlBand, idRim);
-    put(torG(9.75, 0.32, 32.4), M.ledge, idRim);
-    put(torG(9.75, 0.32, 30.4), M.ledge, idRim);
+    put(cylG(9.9, 9.9, 2.0, 30.4, 48), M.pearlBand, idRim); // well proud of the sphere: it is seen from 350 m
+    put(torG(9.95, 0.32, 32.4), M.ledge, idRim);
+    put(torG(9.95, 0.32, 30.4), M.ledge, idRim);
     // the five small spheres up the columns
     for (let i = 0; i < 5; i++) {
       const a = (i / 3) * Math.PI * 2 + Math.PI / 2;

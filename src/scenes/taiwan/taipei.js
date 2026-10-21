@@ -191,10 +191,10 @@ export function buildTaipei(root, { L, dirAt, az101, dist101, baseY }) {
     const HB = 42, sb0 = 13, sb1 = 8.6;
     prism(sb0, sb1, 0, HB, M.glass, idBody);
     const lean = Math.atan((sb0 - sb1) / HB), sAt = (y) => sb0 + (sb1 - sb0) * (y / HB);
-    onFaces(coinGeo(3.4, 0.5), sAt(31) - 0.2, 31, lean, M.orn, idOrn);
-    onFaces(ruyiGeo(1.9, 0.5), sAt(38.6) - 0.2, 38.6, lean, M.orn, idOrn);
+    onFaces(coinGeo(3.4, 0.5), sAt(31) - 0.1, 31, lean, M.orn, idOrn);
+    onFaces(ruyiGeo(1.9, 0.5), sAt(38.6) - 0.1, 38.6, lean, M.orn, idOrn);
     let y = HB;
-    ledge(sb1 * 1.06, y, idLedge, 0.7);
+    ledge(sb1 * 1.08, y, idLedge, 0.7); // ledges stand well proud: the tower is seen from ~500 m
     y += 0.7;
     // eight flaring segments of eight floors, each on a ledge, ornaments at the corners
     const sS0 = 8.6, sS1 = 10.8, HS = 8 * FLH;
@@ -212,7 +212,7 @@ export function buildTaipei(root, { L, dirAt, az101, dist101, baseY }) {
         put(g, M.orn, idOrn);
       }
       y += HS;
-      ledge(sS1 * 1.03, y, idLedge, 0.5);
+      ledge(sS1 * 1.05, y, idLedge, 0.5);
       y += 0.5;
     }
     // the crown: three receding tiers on ledges, a pinnacle, the spire

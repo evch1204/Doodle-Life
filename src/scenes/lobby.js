@@ -196,8 +196,9 @@ function buildLobby(scene, ctx) {
     };
     const gaps = gateAz.map((a) => [a - halfGap, a + halfGap]).sort((a, b) => a[0] - b[0]);
     let a = gaps[gaps.length - 1][1] - Math.PI * 2;
-    for (const [g0, g1] of gaps) { wallPiece(a, g0, 0, OH + 0.75); a = g1; }
-    wallPiece(-Math.PI, Math.PI, OH + 0.75, H);
+    // the ring over the gates comes down to the top of their frames (OH + 0.18 + 0.42)
+    for (const [g0, g1] of gaps) { wallPiece(a, g0, 0, OH + 0.58); a = g1; }
+    wallPiece(-Math.PI, Math.PI, OH + 0.58, H);
     // pilasters round the wall, between the gates and the doors
     for (let k = 0; k < 32; k++) {
       const a = (k / 32) * Math.PI * 2 - Math.PI;

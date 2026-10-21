@@ -291,7 +291,8 @@ export class InkRenderer {
     this.renderer = renderer;
     const size = renderer.getDrawingBufferSize(new THREE.Vector2());
     this.colorRT = new THREE.WebGLRenderTarget(size.x, size.y, { samples: 4, type: THREE.HalfFloatType });
-    this.niRT = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.UnsignedByteType });
+    // half float: outline ids of touching parts are often only 0.002 apart, which 8 bits can't tell apart
+    this.niRT = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType });
     this.niRT.depthTexture = new THREE.DepthTexture(size.x, size.y, THREE.FloatType);
     this.niRT.texture.minFilter = this.niRT.texture.magFilter = THREE.NearestFilter;
 
@@ -368,7 +369,7 @@ export class InkRenderer {
             if (c0.a > 0.0 && cn.a > 0.0) {
               vec3 nn = cn.rgb * 2.0 - 1.0;
               eNorm = smoothstep(0.28, 0.5, 1.0 - dot(n0, nn));
-              eId = step(0.003, abs(c0.a - cn.a)) * step(abs(relh), 0.08);
+              eId = step(0.0009, abs(c0.a - cn.a)) * step(abs(relh), 0.08);
             }
             e = max(e, max(eDepth, max(eNorm, eId * 0.9)));
           }
