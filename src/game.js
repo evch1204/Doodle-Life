@@ -61,6 +61,7 @@ export async function startGame(SCENES, firstId) {
   // ---- state ----------------------------------------------------------------
   let def = null;      // current scene module
   let world = null;    // what its build() returned
+  let startAt = null;  // where the player was set down (world.start or def.start)
   let heightAt = flat;
   const player = {
     pos: new THREE.Vector3(),
@@ -236,7 +237,7 @@ export async function startGame(SCENES, firstId) {
         if (!overlaps(px, pz, player.radius)) return [px, pz];
       }
     }
-    return [def.start.x, def.start.z];
+    return [startAt.x, startAt.z];
   }
 
   // ---- camera -----------------------------------------------------------------
@@ -513,6 +514,14 @@ export async function startGame(SCENES, firstId) {
 
   const ictx = {
     caption: (t, s) => showCaption(t, s),
+    hideCaption: () => { captionEl.classList.add('hidden'); captionTimer = 0; captionSrc = null; },
+    // re-read a live objective's text (world.objectiveText), e.g. a running count
+    refreshObjective: (id) => {
+      const d = objEls[id];
+      if (!d || done.has(id)) return;
+      const txt = world.objectiveText?.(id, false);
+      if (txt && d.textContent !== txt) d.textContent = txt;
+    },
     sound: playSound,
     hero,
     openJournal,
@@ -691,9 +700,10 @@ export async function startGame(SCENES, firstId) {
       if (o.geometry) o.geometry.dispose();
       if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => mats.add(m));
     });
+    // every texture a material holds: its map and any texture uniform (ink maps, the river's
+    // profile...); the shared ink uniforms hold none
     for (const m of mats) {
-      const tex = m.userData.ink?.uMap?.value ?? m.uniforms?.uMap?.value;
-      tex?.dispose?.();
+      for (const u of [...Object.values(m.userData.ink ?? {}), ...Object.values(m.uniforms ?? {})]) if (u?.value?.isTexture) u.value.dispose();
       m.map?.dispose?.();
       m.dispose();
     }
@@ -720,7 +730,6 @@ export async function startGame(SCENES, firstId) {
     const ext = def.sun.extent;
     Object.assign(sun.shadow.camera, { left: -ext, right: ext, top: ext, bottom: -ext, near: 1, far: def.sun.far ?? 45 });
     sun.shadow.camera.updateProjectionMatrix();
-    placeSun(true);
     inkShared.uGrazeFix.value = def.render?.grazeFix ?? 0;
     inkR.setAerial(def.render?.aerial);
     // outdoors a deeper near plane buys depth precision for the far scenery (the camera keeps 0.35 m off walls)
@@ -739,7 +748,7 @@ export async function startGame(SCENES, firstId) {
     done = new Set();
     hero.setPose('stand');
     hero.setBackpack(true);
-    const st = world.start ?? def.start;
+    const st = startAt = world.start ?? def.start;
     player.pos.set(st.x, 0, st.z);
     player.vel.set(0, 0, 0);
     player.facing = wishFacing = st.facing ?? Math.PI;
@@ -754,11 +763,13 @@ export async function startGame(SCENES, firstId) {
     view.dist = view.baseDist;
     camTarget.set(st.x, player.y + 1, st.z);
     updateCamera(0, true);
+    placeSun(); // after the hero is placed: a following sun frames the shadows round them
     captionEl.classList.add('hidden');
     captionTimer = 0;
     buildHud();
   }
   // Fade to black, show the doodle travel card, swap scenes, fade back in.
+  let pendingTravel = null; // the scene being travelled to (its card text follows a language switch)
   const travelEl = document.getElementById('travel');
   const travelText = document.getElementById('travel-text');
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -767,37 +778,41 @@ export async function startGame(SCENES, firstId) {
     if (traveling || !SCENES[id]) return;
     traveling = true;
     pendingTravel = id;
-    if (settingsOpen) closeSettings();
-    if (occ) occ = null;
-    auto = null;
-    keys.clear();
-    travelText.textContent = tr(SCENES[id].travelText);
-    if (!quick) playSound('whoosh');
-    travelEl.classList.toggle('paper', paper);
-    travelEl.classList.remove('off');
-    await wait(fast ? 120 : quick ? 260 : 750);
-    travelEl.classList.add('card-on');
-    await wait(fast ? 50 : quick ? 120 : 300);
-    const t0 = performance.now();
-    prevSceneId = def?.id ?? null;
-    loadScene(id);
-    // render once while hidden so shaders compile behind the card
-    inkR.render(scene, camera);
-    const spent = performance.now() - t0;
-    await wait(Math.max(0, (fast ? 100 : quick ? 700 : 1500) - spent));
-    travelEl.classList.remove('card-on');
-    await wait(fast ? 50 : 350);
-    travelEl.classList.add('off');
-    announce(tr(SCENES[id].arrival ?? 'Arriving in {place}', { place: tr(SCENES[id].name) }));
-    await wait(fast ? 100 : 700);
-    travelEl.classList.remove('paper');
-    traveling = false;
+    try {
+      if (settingsOpen) closeSettings();
+      if (occ) occ = null;
+      auto = null;
+      keys.clear();
+      travelText.textContent = tr(SCENES[id].travelText);
+      if (!quick) playSound('whoosh');
+      travelEl.classList.toggle('paper', paper);
+      travelEl.classList.remove('off');
+      await wait(fast ? 120 : quick ? 260 : 750);
+      travelEl.classList.add('card-on');
+      await wait(fast ? 50 : quick ? 120 : 300);
+      const t0 = performance.now();
+      prevSceneId = def?.id ?? null;
+      loadScene(id);
+      // render once while hidden so shaders compile behind the card
+      inkR.render(scene, camera);
+      const spent = performance.now() - t0;
+      await wait(Math.max(0, (fast ? 100 : quick ? 700 : 1500) - spent));
+      travelEl.classList.remove('card-on');
+      await wait(fast ? 50 : 350);
+      travelEl.classList.add('off');
+      announce(tr(SCENES[id].arrival ?? 'Arriving in {place}', { place: tr(SCENES[id].name) }));
+      await wait(fast ? 100 : 700);
+    } finally {
+      // never leave the game stuck in travel (input is dead while traveling)
+      travelEl.classList.remove('paper', 'card-on'); travelEl.classList.add('off');
+      traveling = false; pendingTravel = null;
+    }
   }
   // screen readers hear where they landed (a polite live region)
   const announceEl = document.getElementById('announce');
   function announce(text) { if (announceEl) { announceEl.textContent = ''; requestAnimationFrame(() => { announceEl.textContent = text; }); } }
 
-  function placeSun(snap) {
+  function placeSun() {
     // Shadow frustum follows the player outdoors, snapped to whole texels so
     // shadow edges (and the hatching that comes from them) don't crawl.
     const c = new THREE.Vector3();
@@ -814,7 +829,6 @@ export async function startGame(SCENES, firstId) {
     sun.target.position.copy(c);
     sun.position.copy(c).addScaledVector(sunDir, 20);
     sun.target.updateMatrixWorld();
-    void snap;
   }
 
   // ---- language: static HTML text, and re-render everything on a switch -------------
@@ -838,8 +852,6 @@ export async function startGame(SCENES, firstId) {
     if (captionSrc) captionEl.textContent = tr(captionSrc);
     if (traveling && pendingTravel) travelText.textContent = tr(SCENES[pendingTravel].travelText);
   });
-  let pendingTravel = null;
-
   // ---- resize -------------------------------------------------------------------
   function onResize() {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -912,7 +924,7 @@ export async function startGame(SCENES, firstId) {
     } else if (!world.cameraControl?.(camera, dt)) {
       updateCamera(dt);
     }
-    if (def.sun.follow) placeSun(false);
+    if (def.sun.follow) placeSun();
 
     // prompt: nearest interactable, or the "get up" hint while seated
     current = paused || occ || auto || traveling || world.busy?.() ? null : findInteractable();
@@ -990,7 +1002,7 @@ export async function startGame(SCENES, firstId) {
     collectStrings() {
       const out = new Set();
       const fake = {
-        caption: (x) => out.add(x), sound() {}, hero: { reach() {}, pickup() {} }, openJournal() {}, complete() {}, travel() {},
+        caption: (x) => out.add(x), hideCaption() {}, refreshObjective() {}, sound() {}, hero: { reach() {}, pickup() {} }, openJournal() {}, complete() {}, travel() {},
         frame() {}, pan() {}, face() {}, walk() {}, prevScene: null, player, camera, view,
       };
       for (const o of def.hud.objectives) out.add(o.text);

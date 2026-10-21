@@ -100,9 +100,9 @@ export function makeHouseKit() {
   return { M, house, tree };
 }
 
-export function buildHillside(root, { hillY, blocked, lookout }) {
+// kit: one makeHouseKit() shared with buildRidges, so both batch into the same materials
+export function buildHillside(root, { kit, hillY, blocked, lookout }) {
   const r = makeRng(5150);
-  const kit = makeHouseKit();
   const B = new Batch();
   for (let gz = -18.6, row = 0; gz > -152; gz -= 4.6 + row * 0.02, row++) {
     const spread = 28 + Math.max(0, -gz - 40) * 0.55, lod = gz < -80;
@@ -128,9 +128,8 @@ export function buildHillside(root, { hillY, blocked, lookout }) {
 
 // Villages and tree clumps along the crests of the nearer hill bands, so their
 // ridge lines break up into roofs and trees. crest(R, az) gives the top of a band.
-export function buildRidges(root, { L, dirAt, crests }) {
+export function buildRidges(root, { kit, L, dirAt, crests }) {
   const r = makeRng(5170);
-  const kit = makeHouseKit();
   const B = new Batch();
   for (const { R, top, houses, tree } of crests) {
     for (let az = -104; az < 104; az += 0.9 + r() * 1.4) {

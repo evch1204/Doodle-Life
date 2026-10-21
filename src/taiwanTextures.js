@@ -306,25 +306,6 @@ export function scrubTexture() {
   return s.texture({ repeat: true });
 }
 
-// City facades: a loose grid of windows (tiled in world space, mipmapped so it
-// fades to a light tone at distance instead of shimmering).
-export function cityWindowTexture() {
-  const S = 256, s = new Sketch(S, S, { seed: 73 });
-  const r = makeRng(74);
-  const ctx = s.ctx;
-  ctx.fillStyle = '#000';
-  for (let row = 0; row < 8; row++) {
-    for (let col = 0; col < 6; col++) {
-      if (r() < 0.25) continue;
-      ctx.globalAlpha = 0.55 + r() * 0.35;
-      ctx.fillRect(10 + col * 41, 8 + row * 31, 22, 15);
-    }
-  }
-  ctx.globalAlpha = 1;
-  for (let row = 0; row <= 8; row++) s.line(0, row * 31 + 2, S, row * 31 + 2, { w: 1.2, j: 0.3, alpha: 0.35 });
-  return s.texture({ repeat: true });
-}
-
 // Hill bands between the street and the city. kind 'town': rooftops and trees
 // stepping down the slope; 'trees': scattered tree clumps; 'ridge': light hatching.
 export function hillTexture(kind, seed = 81) {

@@ -650,7 +650,6 @@ export function createCharacter(opts = {}) {
     setPose(p) { pose = p; },
     get pose() { return pose; },
     setBackpack(v) { packVisible = v; },
-    hopNow() { hop = 1; },
     reach() { reachT = 0.7; },
     pickup() { pickT = 0.65; },
     resetGround() { groundY = null; },

@@ -275,13 +275,6 @@ export function curtainTexture() {
   return s.texture();
 }
 
-export function screenTexture() {
-  const s = new Sketch(256, 192, { seed: 131, bg: '#141414' });
-  s.line(30, 40, 80, 20, { w: 7, color: '#fff', alpha: 0.9 });
-  s.line(30, 64, 54, 54, { w: 6, color: '#fff', alpha: 0.9 });
-  return s.texture();
-}
-
 // ---------------------------------------------------------------------------
 // Window view, painted as three parallax layers. Each layer is described in
 // world meters on its own plane: cx/cy = plane center, w/h = plane size.
