@@ -14,9 +14,10 @@ import { inkShared } from '../../ink.js';
 //    embankment leave a darker band along the waterline
 //  - toward the horizon the strokes merge into an even, lighter tone
 
-const SKY_Z = -420, SKY_HALF = 1100, SHORE_HALF = 1600, SKY_MAX = 300, SHORE_MAX = 30;
+const SKY_HALF = 1100, SHORE_HALF = 1600, SKY_MAX = 300, SHORE_MAX = 30;
 
-export function buildRiver(root, { WATER_Y, SHORE_Z, SHORE_Y, sky, shore }) {
+// skyZ: the plane the skyline is projected onto (about its distance from the viewer)
+export function buildRiver(root, { WATER_Y, SHORE_Z, SHORE_Y, sky, shore, skyZ: SKY_Z = -420 }) {
   // silhouette profiles: row 0 = skyline height on the plane z = SKY_Z (seen
   // from the promenade), row 1 = the bank band on the plane z = SHORE_Z
   const N = 2048;
