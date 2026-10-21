@@ -90,7 +90,20 @@ const LOBBY_VIEWS = {
   lb_sign: { player: [0, 4.6, Math.PI], free: [[-1.6, 2.6, -3.6], [-3.2, 3.4, -7.9]] },
   lb_tunnel: { player: [0, 4.6, Math.PI], free: [[0, 1.3, 46], [0, 1.25, 60]] },
 };
-const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : SCENE === 'shanghai' ? SHANGHAI_VIEWS : SCENE === 'lobby' ? LOBBY_VIEWS : ROOM_VIEWS;
+const BAY_VIEWS = {
+  ba_start: { player: [-1, 2.2, Math.PI + 0.17], view: [0.17, 0.12] },
+  ba_campus: { player: [18, -4.5, Math.PI], view: [0, 0.16] },
+  ba_church: { player: [18, -4.5, Math.PI], free: [[17, 2.2, -30], [18, 8.5, -52]] },
+  ba_tower: { player: [18, -4.5, Math.PI], free: [[33, 11, -38], [27, 19, -52]] },
+  ba_path: { player: [-19, 1.4, Math.PI * 0.75], view: [0.6, 0.2] },
+  ba_wharf: { player: [-30, -12.5, Math.PI], view: [-0.5, 0.14] },
+  ba_pier: { player: [-13, -43.2, Math.PI], view: [0.62, 0.06] },
+  ba_bridge: { player: [-1, 2.2, Math.PI], free: [[-180, 70, -470], [-620, 65, -780]] },
+  ba_city: { player: [-1, 2.2, Math.PI], free: [[-30, 45, -420], [20, 45, -880]] },
+  ba_aerial: { player: [-1, 2.2, Math.PI], free: [[-55, 45, 45], [6, -2, -32]] },
+  ba_aerial2: { player: [-1, 2.2, Math.PI], free: [[62, 38, 22], [8, 0, -34]] },
+};
+const VIEWS = SCENE === 'taiwan' ? TAIPEI_VIEWS : SCENE === 'shanghai' ? SHANGHAI_VIEWS : SCENE === 'lobby' ? LOBBY_VIEWS : SCENE === 'bayarea' ? BAY_VIEWS : ROOM_VIEWS;
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: { width: 1536, height: 1024 } });
