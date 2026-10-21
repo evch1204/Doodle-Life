@@ -45,12 +45,12 @@ const gateSpot = async (page, id) => page.evaluate((id) => { const it = window._
   check('arrives at the entrance facing the gates', Math.abs(s.player.z - 4.6) < 0.05 && Math.abs(s.player.x) < 0.05, JSON.stringify(s.player));
   await page.screenshot({ path: `${out}/01_arrival.png` });
   const d = await dbg(page);
-  check('gates come from the config, in order', JSON.stringify(d.gates) === JSON.stringify(['shanghai', 'taipei', 'santaclara', 'next']), JSON.stringify(d.gates));
+  check('gates come from the config, in order', JSON.stringify(d.gates) === JSON.stringify(['shanghai', 'taipei', 'bayarea', 'next']), JSON.stringify(d.gates));
   await page.context().close();
 }
 
 // ---- 2. each enabled gate: prompt, hover, walk, push, jetway, landing; back to its gate ------
-for (const [gate, route, label] of [['shanghai', 'shanghai', 'Check in to Shanghai'], ['taipei', 'taiwan', 'Check in to Taipei']]) {
+for (const [gate, route, label] of [['shanghai', 'shanghai', 'Check in to Shanghai'], ['taipei', 'taiwan', 'Check in to Taipei'], ['bayarea', 'bayarea', 'Check in to the Bay Area']]) {
   const page = await open('lobby');
   await gateSpot(page, gate);
   await page.waitForTimeout(900);
@@ -112,10 +112,10 @@ for (const key of ['KeyE', 'Escape']) {
   await page.context().close();
 }
 
-// ---- 4. coming soon: Santa Clara, Next Stop; the info desk ---------------------------------
+// ---- 4. coming soon: Next Stop; the info desk -----------------------------------------------
 {
   const page = await open('lobby');
-  for (const [gate, re] of [['santaclara', /Santa Clara/], ['next', /More gates/]]) {
+  for (const [gate, re] of [['next', /More gates/]]) {
     await gateSpot(page, gate);
     await page.waitForTimeout(700);
     await page.keyboard.press('KeyE');
@@ -160,7 +160,7 @@ for (const key of ['KeyE', 'Escape']) {
 {
   const page = await open('lobby');
   const btns = await page.evaluate(() => [...document.querySelectorAll('#lb-gates button')].map((b) => b.getAttribute('aria-label')));
-  check('gate buttons, left to right, labelled "Check in to ..."', JSON.stringify(btns) === JSON.stringify(['Check in to Shanghai', 'Check in to Taipei', 'Check in to Santa Clara', 'See the next stop']), JSON.stringify(btns));
+  check('gate buttons, left to right, labelled "Check in to ..."', JSON.stringify(btns) === JSON.stringify(['Check in to Shanghai', 'Check in to Taipei', 'Check in to the Bay Area', 'See the next stop']), JSON.stringify(btns));
   check('the gate list is out of sight until focused', await page.evaluate(() => getComputedStyle(document.getElementById('lb-gates')).opacity === '0'));
   await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
   const focused = await page.evaluate(() => document.activeElement?.getAttribute('aria-label'));
