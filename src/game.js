@@ -12,7 +12,7 @@ import { t as tr, getLang, setLang, onLang } from './i18n.js';
 // Scene module shape:
 //   { id, travelText, hud: { title, sub?, style: 'single'|'card', map: 'minimap'|'compass',
 //       objectives: [{ id, text, count? }] },
-//     start: { x, z, facing, yaw, pitch }, sun: { dir, extent, follow }, camera: { far, dist },
+//     start: { x, z, facing, yaw, pitch }, sun: { dir, extent, follow }, camera: { near, far, dist },
 //     build(ctx) -> { root, colliders, camBlockers, interactables, stars, update(t, dt, ctx),
 //                     heightAt?(x, z), viewAt?(x, z), camBounds?, minimap?, monitors?,
 //                     start?        (overrides the module's start, e.g. by ctx.prevScene),
@@ -723,6 +723,8 @@ export async function startGame(SCENES, firstId) {
     placeSun(true);
     inkShared.uGrazeFix.value = def.render?.grazeFix ?? 0;
     inkR.setAerial(def.render?.aerial);
+    // outdoors a deeper near plane buys depth precision for the far scenery (the camera keeps 0.35 m off walls)
+    camera.near = def.camera?.near ?? 0.05;
     camera.far = def.camera?.far ?? 100;
     camera.updateProjectionMatrix();
     view.baseDist = def.camera?.dist ?? 2.6;
