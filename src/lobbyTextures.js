@@ -55,6 +55,14 @@ const ICONS = {
     for (const a of [-2.6, -2.0, -1.2, -0.5]) { ctx.beginPath(); ctx.moveTo(30, -50); ctx.quadraticCurveTo(30 + Math.cos(a) * 22, -50 + Math.sin(a) * 22 - 6, 30 + Math.cos(a) * 34, -50 + Math.sin(a) * 26 + 14); ctx.stroke(); }
     ctx.beginPath(); ctx.moveTo(-40, 50); ctx.lineTo(40, 50); ctx.stroke();
   },
+  bridge(ctx) {
+    // a Golden Gate tower and its cable sweeping down either side
+    for (const x of [-10, 10]) { ctx.beginPath(); ctx.moveTo(x, 50); ctx.lineTo(x * 0.8, -92); ctx.stroke(); }
+    for (const y of [-80, -54, -28]) { ctx.beginPath(); ctx.moveTo(-9, y); ctx.lineTo(9, y); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(-46, 6); ctx.quadraticCurveTo(-24, -10, -8, -88); ctx.moveTo(46, 6); ctx.quadraticCurveTo(24, -10, 8, -88); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-46, 6); ctx.lineTo(46, 6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-40, 50); ctx.lineTo(40, 50); ctx.stroke();
+  },
   globe(ctx) {
     ctx.beginPath(); ctx.arc(0, 0, 44, 0, Math.PI * 2); ctx.stroke();
     ctx.beginPath(); ctx.ellipse(0, 0, 18, 44, 0, 0, Math.PI * 2); ctx.stroke();
@@ -342,6 +350,48 @@ export function santaClaraView() {
   s.line(-4, base, W + 4, base, { w: 3, j: 0.5 });
   s.stroke([[W * 0.42, H], [W * 0.48, base + 4]], { w: 2.6, j: 0.6 }); s.stroke([[W * 0.72, H], [W * 0.54, base + 4]], { w: 2.6, j: 0.6 });
   for (let i = 0; i < 30; i++) { const x = r() * W, y = base + 30 + r() * 300; s.line(x, y, x + 4, y - 10, { w: 1.4, j: 0.2, alpha: 0.5 }); }
+  return s.texture();
+}
+
+// The Bay Area: the Golden Gate Bridge across the water, the Mission's bell tower and palms in front.
+export function bayAreaView() {
+  const { W, H, s, ctx, r, ox } = viewBase(629);
+  const base = 640;
+  // hills either side of the strait
+  s.stroke([[-10, base], [120, 560], [300, 520], [470, base]], { w: 2.6, j: 0.8, fill: '#fff' });
+  s.stroke([[820, base], [1000, 540], [1180, 570], [W + 10, 600], [W + 10, base]], { w: 2.6, j: 0.8, fill: '#fff' });
+  centred(ctx, ox, () => {
+    cloud(s, 640, 170, 190);
+    birds(s, r, 3, 80, 300, 200, 280);
+    // the bridge: two towers, the cable's sag, the deck, hangers
+    const deck = 540, t1 = 180, t2 = 600, top = 250;
+    for (const tx of [t1, t2]) {
+      for (const dx of [-12, 12]) s.line(tx + dx, base + 10, tx + dx * 0.75, top, { w: 4.4, j: 0.2 });
+      for (const y of [top + 14, top + 70, top + 130, top + 190]) s.line(tx - 11, y, tx + 11, y, { w: 3.4, j: 0.1 });
+    }
+    const cab = (x) => { if (x < t1) return top + (deck - 8 - top) * ((t1 - x) / t1) ** 1.4; if (x > t2) return top + (deck - 8 - top) * ((x - t2) / (832 - t2)) ** 1.4; const u = (x - (t1 + t2) / 2) / ((t2 - t1) / 2); return deck - 14 - (deck - 14 - top) * u * u; };
+    const pts = []; for (let x = -40; x <= 872; x += 12) pts.push([x, cab(x)]);
+    s.stroke(pts, { w: 3, j: 0.3 });
+    for (let x = -30; x < 870; x += 16) if (Math.abs(x - t1) > 14 && Math.abs(x - t2) > 14) s.line(x, cab(x), x, deck, { w: 1.2, j: 0, alpha: 0.7 });
+    s.rect(-40, deck, 912, 14, { w: 3, j: 0.3, fill: '#bbb' });
+  });
+  // the water
+  s.line(-4, base, W + 4, base, { w: 3, j: 0.5 });
+  for (let i = 0; i < 40; i++) { const y = base + 20 + r() * 200, x = r() * W, l = 20 + r() * 60; s.line(x, y, x + l, y, { w: 1.6, j: 0.4, alpha: 0.5 }); }
+  // in front: the Mission's bell tower on the right, palms on the left
+  const bx = W - 300, by = H;
+  s.stroke([[bx, by], [bx, 520], [bx + 120, 520], [bx + 120, by]], { w: 3.4, j: 0.3, fill: '#fff' });
+  s.stroke([[bx + 10, 520], [bx + 10, 420], [bx + 110, 420], [bx + 110, 520]], { w: 3.4, j: 0.3, fill: '#fff' });
+  for (const [x0, w] of [[bx + 34, 52]]) s.stroke([[x0, 510], [x0, 460], ...s.ellipsePts(x0 + w / 2, 460, w / 2, w / 2, Math.PI, Math.PI * 2, 8), [x0 + w, 510]], { w: 3, j: 0.2, fill: '#555' });
+  s.stroke([[bx + 22, 420], [bx + 22, 370], [bx + 98, 370], [bx + 98, 420]], { w: 3.2, j: 0.3, fill: '#fff' });
+  s.arc(bx + 60, 370, 34, 40, Math.PI, Math.PI * 2, { w: 3.2, j: 0.2, fill: '#fff' });
+  s.line(bx + 60, 330, bx + 60, 290, { w: 3.4, j: 0 }); s.line(bx + 48, 304, bx + 72, 304, { w: 3.4, j: 0 });
+  for (let y = 560; y < by; y += 60) s.line(bx + 4, y, bx + 116, y, { w: 1.2, j: 0.3, alpha: 0.35 });
+  const palmV = (x, h) => {
+    s.stroke([[x, H + 6], [x - 6, H - h * 0.5], [x + 4, H - h]], { w: 5, j: 0.3 });
+    for (const a of [-2.9, -2.4, -1.9, -1.3, -0.8, -0.3]) s.stroke([[x + 4, H - h], [x + 4 + Math.cos(a) * 40, H - h + Math.sin(a) * 34 - 10], [x + 4 + Math.cos(a) * 80, H - h + Math.sin(a) * 30 + 30]], { w: 3.4, j: 0.3 });
+  };
+  palmV(110, 520); palmV(240, 440);
   return s.texture();
 }
 

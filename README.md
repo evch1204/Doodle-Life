@@ -10,6 +10,7 @@ npm run dev        # http://localhost:5173        (starts in the room)
                    # http://localhost:5173/?scene=lobby      (straight to the airport)
                    # http://localhost:5173/?scene=taiwan     (straight to Taiwan)
                    # http://localhost:5173/?scene=shanghai   (straight to the Bund)
+                   # http://localhost:5173/?scene=bayarea    (straight to the Bay Area)
 ```
 
 Controls: **WASD** move · **mouse** look (click to capture, or drag) · **E** interact · **Esc** settings
@@ -51,7 +52,17 @@ the doors behind the airport's entrance go home.
     `scenes/kit.js` (merged batches, one draw call per material, each piece keeping its outline id). The
     ink pass fades distant lines and tones (aerial perspective) except for the landmarks. Interactions: the viewpoint, the photo spot (saves the frame as a postcard into an album that
     lasts the session), the barista's dialogue panel, benches, the seagull and the life ring.
-  A new chapter (Santa Clara) is one new module there plus one line in `index.js`, then a gate for it.
+  - `bayarea.js` builds the Bay Area, San Francisco and Santa Clara University compressed into one
+    walkable postcard: a regional overlook (the Bay Area map, the signpost back to the airport) with the
+    Golden Gate Bridge and the city across the bay on one side and the Mission Church on the other; a
+    curving path down to an Embarcadero-style waterfront and a pier with a lookout. Built in
+    `scenes/bayarea/`: `campus.js` (the Mission Church with its curved gable, rose window, portal, niches
+    and bell tower; arcaded halls with tile hip roofs; the palm walk, SCU banners and sign), `sf.js` (the
+    Golden Gate Bridge with stepped towers, sagging cables and hangers; Salesforce Tower, the Transamerica
+    Pyramid, the Ferry Building, Coit Tower, Alcatraz; the city on its hills, the Marin Headlands) and
+    `props.js` (palms, cypresses, oaks, lamps, benches shared by both areas). The bay is the Shanghai river
+    shader. Its textures are in `src/bayTextures.js`.
+  A new chapter is one new module there plus one line in `index.js`, then a gate for it.
 
 ### Adding a gate
 Gates are the `GATES` array at the top of `src/scenes/lobby.js`; the hall spaces them evenly round the
