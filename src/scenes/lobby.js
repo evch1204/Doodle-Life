@@ -16,19 +16,20 @@ import { Batch } from './kit.js';
 // i18n.js); the hall spaces the gates evenly around the back wall.
 //   id        stable id (remembered as the last gate)
 //   nameEn / nameZh   the sign
-//   icon      sign glyph: 'pearl' | 't101' | 'campus' | 'globe' (lobbyTextures.js ICONS)
-//   sceneArt  the view through the arch: 'pudong' | 'taipei' | 'santaclara' | 'worldmap'
+//   icon      sign glyph: 'pearl' | 't101' | 'bridge' | 'campus' | 'globe' (lobbyTextures.js ICONS)
+//   sceneArt  the view through the arch: 'pudong' | 'taipei' | 'bayarea' | 'santaclara' | 'worldmap'
+//   prompt    (optional) the prompt, when "Check in to {nameEn}" does not read well
 //   route     the scene id it flies to (scenes/index.js), or null
 //   enabled   false: shows a "coming soon" card instead of the jetway
 export const GATES = [
   { id: 'shanghai', nameEn: 'Shanghai', nameZh: '上海', icon: 'pearl', sceneArt: 'pudong', route: 'shanghai', enabled: true },
   { id: 'taipei', nameEn: 'Taipei', nameZh: '台北', icon: 't101', sceneArt: 'taipei', route: 'taiwan', enabled: true },
-  { id: 'santaclara', nameEn: 'Santa Clara', nameZh: '聖克拉拉', icon: 'campus', sceneArt: 'santaclara', route: null, enabled: false },
+  { id: 'bayarea', nameEn: 'Bay Area', nameZh: '舊金山灣區', icon: 'bridge', sceneArt: 'bayarea', route: 'bayarea', enabled: true, prompt: 'Check in to the Bay Area' },
   { id: 'next', nameEn: 'Next Stop', nameZh: '下一站', icon: 'globe', sceneArt: 'worldmap', route: null, enabled: false },
 ];
-const ART = { pudong: LX.pudongView, taipei: LX.taipeiView, santaclara: LX.santaClaraView, worldmap: LX.worldMapView };
+const ART = { pudong: LX.pudongView, taipei: LX.taipeiView, bayarea: LX.bayAreaView, santaclara: LX.santaClaraView, worldmap: LX.worldMapView };
 const LAST_GATE = 'doodleworld.lastGate';
-const promptFor = (g) => (g.id === 'next' ? 'See the next stop' : `Check in to ${g.nameEn}`);
+const promptFor = (g) => g.prompt ?? (g.id === 'next' ? 'See the next stop' : `Check in to ${g.nameEn}`);
 
 // Layout (meters): the hall is a circle of radius R around the origin, you
 // enter at +z (the doors home) and face the gates at -z. Azimuth az is measured
@@ -646,7 +647,7 @@ function buildLobby(scene, ctx) {
     busy: () => !!seq,
     cameraControl,
     onKey,
-    strings: ['Gates', 'How this works', ...HELP, 'Coming soon', 'More gates opening soon.', '{city}: this gate opens soon.', 'Santa Clara', 'Arriving in {place}', 'Arriving at the airport', ...GATES.map(promptFor)],
+    strings: ['Gates', 'How this works', ...HELP, 'Coming soon', 'More gates opening soon.', '{city}: this gate opens soon.', 'Arriving in {place}', 'Arriving at the airport', ...GATES.map(promptFor)],
     debug: () => ({ seq: seq ? { gate: seq.gate.g.id, phase: seq.phase } : null, card: cardKind, hover: gates.map((r) => +r.hover.toFixed(2)), gates: GATES.map((g) => g.id) }),
     dispose() { offLang(); flash.remove(); card.remove(); nav.remove(); },
   };
