@@ -205,7 +205,8 @@ await page.waitForFunction(() => window.__dw.state().occupied?.settled, null, { 
 s = await st();
 check('sits on a bench facing the bay', r.ok && s.occupied?.settled && s.hero.pose === 'sit', JSON.stringify(s.occupied));
 await shot('07_bench');
-await press('KeyW', 120); await sleep(1500);
+await press('KeyW', 120);
+await page.waitForFunction(() => !window.__dw.state().occupied && window.__dw.state().hero.pose === 'stand', null, { timeout: 10000 * TS }).catch(() => {});
 s = await st();
 check('stands up again', !s.occupied && s.hero.pose === 'stand', `pose ${s.hero.pose}`);
 
