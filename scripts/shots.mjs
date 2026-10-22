@@ -99,8 +99,10 @@ const BAY_VIEWS = {
   ba_car: { player: [-3.6, -6, Math.PI], view: [-0.55, 0.12] },
   ba_car_close: { player: [-4.4, -8, Math.PI], free: [[-3.2, 1.8, -7.5], [0, 1.6, -15]] },
   ba_rail: { player: [6.5, -12, Math.PI / 2], view: [-0.75, 0.08, 3.2] },
-  ba_pier: { player: [32, -29, Math.PI / 2], view: [-0.9, 0.06] },
-  ba_wharf: { player: [-3.2, -66, Math.PI], view: [0.25, 0.12] },
+  ba_pier: { player: [19.6, -21.6, Math.PI], view: [-0.3, 0.06] },
+  ba_wharf: { player: [-4.2, -24, Math.PI], view: [0.1, 0.12] },
+  ba_end_prom: { player: [5.2, -25, Math.PI], view: [-0.15, 0.14] },
+  ba_end_back: { player: [-1.5, -4, 0], view: [Math.PI - 0.3, 0.16] },
   ba_back: { player: [-4.4, 4, 0], view: [Math.PI, 0.12] },
   // the bridge (sf.js BRIDGE): the south tower at (81, -514), the north tower at (365, -735)
   ba_bridge: { player: [-4.6, 6.5, Math.PI], free: [[20, 30, -250], [215, 60, -630]] },
@@ -108,6 +110,7 @@ const BAY_VIEWS = {
   ba_deck: { player: [-4.6, 6.5, Math.PI], free: [[150, 22, -520], [200, 45, -600]] },
   ba_city: { player: [-4.6, 6.5, Math.PI], free: [[40, 30, -200], [480, 40, -700]] },
   ba_aerial: { player: [-4.6, 6.5, Math.PI], free: [[45, 42, 30], [-6, 0, -30]] },
+  ba_block: { player: [-4.6, 6.5, Math.PI], free: [[30, 30, 14], [0, 0, -10]] },
   ba_aerial2: { player: [-4.6, 6.5, Math.PI], free: [[-45, 60, -110], [10, 0, -30]] },
 };
 

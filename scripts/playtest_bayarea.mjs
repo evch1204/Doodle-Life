@@ -107,8 +107,8 @@ await shot('03_cablecar');
 // 4. The bay boundary: push toward the water every 3 m along the railing (straight and bend)
 // =====================================================================================
 let worstU = -Infinity, offGround = 0, inWater = 0;
-for (let sp = -10; sp <= 74; sp += 3) {
-  if (sp > 24 && sp < 34) continue; // the pier's mouth (tested below)
+for (let sp = -9; sp <= 29; sp += 2) {
+  if (sp > 16 && sp < 26) continue; // the pier's mouth (tested below)
   const [x, z] = at(sp, 6.4);
   await page.evaluate(([x, z]) => { window.__dw.setPlayer(x, z); }, [x, z]);
   // face the water: the camera yaw that looks along +u
@@ -122,29 +122,34 @@ for (let sp = -10; sp <= 74; sp += 3) {
   if (s.player.y < 0) inWater++;
 }
 check('the railing holds all along the promenade (never past it)', worstU < 7.6 && offGround === 0 && inWater === 0, `max u ${worstU.toFixed(3)} (rail at 7.6), off-ground ${offGround}`);
-// the pier: its two sides and its end
+// the pier (s 18..24 -> z -18..-24, out to x 22): its two sides and its end
 const pier = await page.evaluate(() => window.__dw.interactables().find((i) => i.id === 'lookout'));
 let pierOk = true, pierDetail = [];
-for (const [x, z, yaw] of [[18, -27.0, 0], [18, -31.0, Math.PI], [31.6, -29, -Math.PI / 2], [12, -26.6, 0], [26, -31.4, Math.PI]]) {
+for (const [x, z, yaw] of [[14, -19.0, 0], [14, -23.0, Math.PI], [20.0, -21, -Math.PI / 2], [10, -18.6, 0], [17, -23.4, Math.PI]]) {
   await page.evaluate(([x, z, y]) => { window.__dw.setPlayer(x, z); window.__dw.setView(y, 0.2); }, [x, z, yaw]);
   await page.keyboard.down('KeyW'); await sleep(900); await page.keyboard.up('KeyW');
   s = await st();
-  const ok = s.ground > -50 && s.player.y > 0.1 && s.player.z < -26.0 && s.player.z > -32.0 && s.player.x < 34;
+  const ok = s.ground > -50 && s.player.y > 0.1 && s.player.z < -18.0 && s.player.z > -24.0 && s.player.x < 22;
   pierOk &&= ok; pierDetail.push(`${s.player.x.toFixed(2)},${s.player.z.toFixed(2)}`);
 }
 check('the pier rails hold (sides and end)', pierOk, pierDetail.join(' '));
 // both ends of the walk
-await page.evaluate(([x, z]) => { window.__dw.setPlayer(x, z); window.__dw.setView(Math.PI, 0.2); }, at(-10, -4.6));
-await page.keyboard.down('KeyW'); await sleep(1500); await page.keyboard.up('KeyW');
-s = await st();
-check('the terminus end holds (behind the spawn)', toStreet(s.player.x, s.player.z)[0] > -12.05 && s.ground > -50, `s ${toStreet(s.player.x, s.player.z)[0].toFixed(2)}`);
-await page.evaluate(([x, z, y]) => { window.__dw.setPlayer(x, z); window.__dw.setView(y, 0.2); }, [...at(74, -4.6), (74 - S1) / R]);
-await page.keyboard.down('KeyW'); await sleep(1500); await page.keyboard.up('KeyW');
-s = await st();
-check('the Fisherman\'s Wharf end holds', toStreet(s.player.x, s.player.z)[0] < 76.05 && s.ground > -50, `s ${toStreet(s.player.x, s.player.z)[0].toFixed(2)}`);
+// both ends, pushed across the sidewalk, the street (bollards, chains, the bumper) and the promenade
+let endWorst = [Infinity, -Infinity], endOff = 0;
+for (const u of [-7.5, -5.5, -4.2, -2.1, -1.2, 0, 1.2, 2.1, 4.0, 5.4]) {
+  for (const [s0, yaw] of [[-7.2, Math.PI], [28, 0]]) {
+    await page.evaluate(([x, z, y]) => { window.__dw.setPlayer(x, z); window.__dw.setView(y, 0.2); }, [...at(s0, u), yaw]);
+    await page.keyboard.down('KeyW'); await sleep(1300); await page.keyboard.up('KeyW');
+    s = await st();
+    const [ps] = toStreet(s.player.x, s.player.z);
+    endWorst = [Math.min(endWorst[0], ps), Math.max(endWorst[1], ps)];
+    if (s.ground < -50) endOff++;
+  }
+}
+check('both ends hold all the way across (terminus behind, the Wharf end ahead)', endWorst[0] > -10.6 && endWorst[1] < 30.3 && endOff === 0, `s ${endWorst[0].toFixed(2)} .. ${endWorst[1].toFixed(2)}, off-ground ${endOff}`);
 // the facades: walk into the shopfronts
 let worstF = Infinity;
-for (const sp of [-8, 6, 20, 46, 66]) {
+for (const sp of [-8, 6, 20, 27]) {
   const th = sp <= S1 ? 0 : (sp - S1) / R;
   await page.evaluate(([x, z, y]) => { window.__dw.setPlayer(x, z); window.__dw.setView(y, 0.2); }, [...at(sp, -5.4), Math.PI / 2 + th]);
   await page.keyboard.down('KeyW'); await sleep(1200); await page.keyboard.up('KeyW');
@@ -160,12 +165,12 @@ await page.evaluate(() => window.__dw.setPlayer(-4.6, 6.5, Math.PI));
 await loadModel();
 H.mon.pen = 0;
 const t0 = Date.now();
-s = await goTo(...at(72, -4.6), { timeout: 20000 });
+s = await goTo(...at(27.5, -4.6), { timeout: 20000 });
 const walked = toStreet(s.player.x, s.player.z)[0];
-check('walks the whole sidewalk to Fisherman\'s Wharf', walked > 70, `reached s ${walked.toFixed(1)} in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+check('walks the whole sidewalk to the Wharf end', walked > 27, `reached s ${walked.toFixed(1)} in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
 check('Fisherman\'s Wharf caption at the far end', /Fisherman/.test(s.caption ?? ''), s.caption);
 await shot('04_wharf');
-s = await goTo(...at(40, 5.2), { timeout: 20000 });
+s = await goTo(...at(16, 5.2), { timeout: 20000 });
 check('crosses the street to the promenade', toStreet(s.player.x, s.player.z)[1] > 3, `u ${toStreet(s.player.x, s.player.z)[1].toFixed(2)}`);
 check('no penetration of colliders while walking', H.mon.pen === 0, `samples ${H.mon.samples} pen ${H.mon.pen}`);
 
@@ -215,14 +220,14 @@ check('stands up again', !s.occupied && s.hero.pose === 'stand', `pose ${s.hero.
 // 8. Camera orbits along the street: never inside a building, never under the ground
 // =====================================================================================
 let camBad = 0, camDetail = '';
-for (const sp of [-8, 3, 18, 36, 52, 70]) {
+for (const sp of [-8, 3, 12, 20, 28]) {
   await page.evaluate(([x, z]) => window.__dw.setPlayer(x, z, Math.PI), at(sp, -6.4));
   for (let k = 0; k < 8; k++) {
     await page.evaluate((y) => window.__dw.setView(y, 0.25), (k / 8) * Math.PI * 2);
     await sleep(120);
     s = await st();
     const [cs, cu] = toStreet(s.cam.x, s.cam.z);
-    if (cs > -12 && cs < 76 && cu < -9.25) { camBad++; camDetail = `s ${cs.toFixed(1)} u ${cu.toFixed(2)}`; }
+    if (cs > -10 && cs < 30 && cu < -9.25) { camBad++; camDetail = `s ${cs.toFixed(1)} u ${cu.toFixed(2)}`; }
     if (s.cam.y < 0.3) { camBad++; camDetail = `cam y ${s.cam.y}`; }
   }
 }
