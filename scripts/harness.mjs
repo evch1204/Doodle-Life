@@ -33,7 +33,7 @@ export function createHarness(page) {
     const sceneId = (await st()).scene;
     const B = sceneId === 'taiwan' ? { x0: -7.6, x1: 9.0, z0: -29.4, z1: 4.8 }
       : sceneId === 'shanghai' ? { x0: -18.2, x1: 16.4, z0: -3.0, z1: 7.4 }
-      : sceneId === 'bayarea' ? { x0: -13.4, x1: 34.6, z0: -78.0, z1: 12.6 }
+      : sceneId === 'bayarea' ? { x0: -10.4, x1: 22.6, z0: -32.0, z1: 10.6 }
       : { x0: -4.7, x1: 4.7, z0: -5.0, z1: 4.2 };
     const G = 0.12;
     const NX = Math.ceil((B.x1 - B.x0) / G) + 1, NZ = Math.ceil((B.z1 - B.z0) / G) + 1;

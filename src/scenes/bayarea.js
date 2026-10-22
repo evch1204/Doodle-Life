@@ -26,17 +26,20 @@ import { buildSF, BRIDGE_MID } from './bayarea/sf.js';
 //   u -9 .. -2.45   the sidewalk (y 0.15): café seating, the walk, lamps and trees
 //   u -2.45 .. 2.45 the street (y 0): the cable car tracks down the middle
 //   u 2.45 .. 7.9   the promenade (y 0.15): planting, benches, signs, the railing at u 7.6
-//   u > 7.9         the bay (y -1.6); the fishing pier at s 26..32 runs out to u 34
-//   s -12 .. 76     walkable; planters close both ends (the terminus behind, the
-//                   Fisherman's Wharf sign ahead)
+//   u > 7.9         the bay (y -1.6); the fishing pier at s 18..24 runs out to u 22
+//   s -10 .. 30     walkable: one block, the café at the spawn, the pier ahead on the
+//                   right; planter rows, bollards and chains close both ends (the cable
+//                   car terminus behind, the street clock and the Fisherman's Wharf
+//                   sign ahead). The street, its buildings and the promenade run on
+//                   past both ends to keep the city going.
 //
 // Walkable ground is heightAt(); outside it is "no ground", so the bay can never be entered.
 
 const WATER_Y = -1.6, WALK_Y = 0.15, SHORE_Y = WATER_Y + 3;
 const S1 = 40, R = 160, S2 = 110, TH2 = (S2 - S1) / R;
 const FACADE = -9, KERB = 2.45, RAIL_U = 7.6, EDGE_U = 7.9;
-const S_MIN = -12, S_MAX = 76;
-const PIER = { s0: 26, s1: 32, u1: 34 };
+const S_MIN = -10, S_MAX = 30;
+const PIER = { s0: 18, s1: 24, u1: 22 };
 const OFF = -100;
 
 // ---- the street frame -----------------------------------------------------------------
@@ -212,7 +215,7 @@ function buildBayArea(scene, ctx) {
   const bladeAt = (s, mat, o) => { const [x, z] = at(s, FACADE); const mtx = new THREE.Matrix4().makeRotationY(heading(s) + Math.PI / 2).setPosition(x, WALK_Y, z); bladeSign((g, m, i) => B.geo(g, m, i, mtx), M, 0, GF + 0.85, mat, { seed: s, ...o }); };
   bladeAt(4.3, cafeSignMat, { bw: 1.9, bh: 1.1 });
   bladeAt(13.3, ink({ map: BX.shopSignTexture('BAKERY', { sub: 'est. 1906', dark: true, W: 512, H: 300, seed: 977 }), facing: 0.1, hatch: 0 }), { bw: 1.2, bh: 0.7 });
-  bladeAt(41.2, ink({ map: BX.shopSignTexture("FISHERMAN'S WHARF", { sub: '→', dark: true, W: 900, H: 300, seed: 979 }), facing: 0.1, hatch: 0 }), { bw: 1.9, bh: 0.62 });
+  bladeAt(29.6, ink({ map: BX.shopSignTexture("FISHERMAN'S WHARF", { sub: '→', dark: true, W: 900, H: 300, seed: 979 }), facing: 0.1, hatch: 0 }), { bw: 1.9, bh: 0.62 });
   bladeAt(60.3, ink({ map: BX.shopSignTexture('GRILL', { sub: 'OPEN', dark: false, W: 512, H: 300, seed: 981 }), facing: 0.1, hatch: 0 }), { bw: 1.1, bh: 0.65 });
 
   // =====================================================================
@@ -231,7 +234,7 @@ function buildBayArea(scene, ctx) {
   for (const s of LAMPS_L) { const [x, z] = at(s, -KERB - 0.6); const c = lamp(B, M, x, WALK_Y, z, { h: 4.2, banner: true, basket: true, ry: heading(s) }); if (s <= S_MAX + 1) solidC(c); }
   const TREES = [-14, 22, 34, 46, 58, 70, 82, 94, 106, 118, 130]; // none just ahead of the spawn: it would hide the bridge
   for (const s of TREES) { const [x, z] = at(s, -KERB - 0.75); const c = streetTree(B, M, x, WALK_Y, z, { s: 1, seed: s * 1.7 + 3 }); if (s <= S_MAX + 1 && s >= S_MIN - 1) solidC(c); }
-  for (const s of [-1, 19, 43, 67]) { const [x, z] = at(s, -KERB - 0.65); solidC(bin(B, M, x, WALK_Y, z)); }
+  for (const s of [7, 19, 43, 67]) { const [x, z] = at(s, -KERB - 0.65); solidC(bin(B, M, x, WALK_Y, z)); }
   // the street name on the lamp by the spawn
   {
     const [x, z] = at(4, -KERB - 0.6), put = placer(B, x, WALK_Y, z, 0), sid = id(0.33);
@@ -254,13 +257,13 @@ function buildBayArea(scene, ctx) {
     }
     if (s1 >= S_MIN && s0 <= S_MAX + 2) solidS(s0, s1, KERB + 0.4, KERB + 1.4);
   }
-  const LAMPS_R = [-6, 6, 18, 33, 46, 58, 70, 84, 98, 112, 126];
+  const LAMPS_R = [-6, 6, 15, 29.4, 46, 58, 70, 84, 98, 112, 126];
   for (const s of LAMPS_R) { if (s > PIER.s0 - 1 && s < PIER.s1 + 1) continue; const [x, z] = at(s, RAIL_U - 0.45); const c = lamp(B, M, x, WALK_Y, z, { h: 3.6, twin: true, ry: heading(s) }); if (s <= S_MAX + 1) solidC(c); }
   // benches facing the water (sit: look at the bridge)
-  const BENCHES = [-3, 11, 39, 50, 63];
+  const BENCHES = [-3, 11, 27];
   const benchPos = [];
   for (const s of BENCHES) { const [x, z] = at(s, RAIL_U - 1.25); bench(B, M, x, WALK_Y, z, heading(s) - Math.PI / 2); solidC({ x, z, r: 0.78 }); benchPos.push({ s, x, z }); }
-  for (const s of [9, 48, 66]) { const [x, z] = at(s, RAIL_U - 0.5); solidC(bin(B, M, x, WALK_Y, z)); }
+  for (const s of [9, 25.2, 48, 66]) { const [x, z] = at(s, RAIL_U - 0.5); solidC(bin(B, M, x, WALK_Y, z)); }
   // palms along the promenade (the Embarcadero's), past the bend
   for (const s of [55, 90, 109, 128]) { const [x, z] = at(s, KERB + 0.9); const c = palm(B, M, x, WALK_Y, z, { h: 9, seed: s }); if (s <= S_MAX + 1) solidC(c); }
 
@@ -319,27 +322,52 @@ function buildBayArea(scene, ctx) {
   solidS(S_MIN - 2, PIER.s0, RAIL_U - 0.2, EDGE_U + 2); solidS(PIER.s1, S_MAX + 4, RAIL_U - 0.2, EDGE_U + 2);
   // life rings on the railing
   const ringMat = ink({ map: TX.lifeRingTexture(), facing: 0.5, hatchFreq: 40 });
-  for (const s of [-1.2, 44.4]) { const [x, z] = at(s, RAIL_U + 0.08); const g = new THREE.TorusGeometry(0.3, 0.075, 8, 22); g.rotateY(Math.PI / 2); g.translate(x, WALK_Y + 0.62, z); B.add(g, ringMat, id(0.39)); }
+  for (const s of [-1.2, 28.8]) { const [x, z] = at(s, RAIL_U + 0.08); const g = new THREE.TorusGeometry(0.3, 0.075, 8, 22); g.rotateY(Math.PI / 2); g.translate(x, WALK_Y + 0.62, z); B.add(g, ringMat, id(0.39)); }
 
-  // ---- the ends of the walk: the terminus behind, the Fisherman's Wharf sign ahead ---------
-  // planters and bollards across the sidewalk and the promenade; the track's bumper post
+  // ---- the ends of the walk: the terminus behind, the street clock and the Wharf sign ahead ---
+  // a near-continuous row of planters across the sidewalk and the promenade; on the
+  // street, bollards joined by chains on both sides of the track's bumper post, so
+  // every gap that is closed looks closed
+  const chain = (x0, z0, x1, z1, y, sag = 0.16) => {
+    const pts = [];
+    for (let i = 0; i <= 8; i++) { const t = i / 8; pts.push(new THREE.Vector3(x0 + (x1 - x0) * t, y - sag * 4 * t * (1 - t), z0 + (z1 - z0) * t)); }
+    B.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 10, 0.018, 4, false), M.iron, id(0.44));
+  };
   for (const [s, dir] of [[S_MIN - 0.6, 1], [S_MAX + 0.8, -1]]) {
     for (const [u0, u1] of [[FACADE + 0.3, -KERB - 0.3], [KERB + 0.3, RAIL_U - 0.3]]) {
-      const n = Math.max(1, Math.round((u1 - u0) / 2.2));
+      const n = Math.max(1, Math.round((u1 - u0) / 2.2)), w = (u1 - u0) / n - 0.12;
       for (let i = 0; i < n; i++) {
         const u = u0 + ((u1 - u0) * (i + 0.5)) / n, [x, z] = at(s, u);
         const put = placer(B, x, WALK_Y, z, heading(s));
-        put(boxG(1.4, 0.6, 0.8, 0, 0, 0), M.stone, id(0.45)); put(boxG(1.48, 0.06, 0.88, 0, 0.6, 0), M.trim, id(0.45));
-        shrubs(B, M, ...at(s, u - 0.45), ...at(s, u + 0.45), WALK_Y + 0.5, { seed: s * 13 + u });
+        put(boxG(w, 0.6, 0.8, 0, 0, 0), M.stone, id(0.45)); put(boxG(w + 0.08, 0.06, 0.88, 0, 0.6, 0), M.trim, id(0.45));
+        shrubs(B, M, ...at(s, u - w / 2 + 0.25), ...at(s, u + w / 2 - 0.25), WALK_Y + 0.5, { seed: s * 13 + u });
       }
       solidS(s - 0.5, s + 0.5, u0, u1);
     }
-    for (const u of [-1.7, 1.7]) { const [x, z] = at(s, u); solidC(bollard(B, M, x, 0, z)); }
+    // bollards on the kerbs and either side of the track, chains between them
+    const BU = [-KERB - 0.15, -1.7, 1.7, KERB + 0.15];
+    for (const u of BU) { const [x, z] = at(s, u), y = Math.abs(u) > KERB ? WALK_Y : 0; solidC(bollard(B, M, x, y, z)); }
+    for (const [ua, ub] of [[BU[0], BU[1]], [BU[2], BU[3]]]) chain(...at(s, ua), ...at(s, ub), 0.62);
+    for (const ub of [BU[1], BU[2]]) chain(...at(s, ub), ...at(s - dir * 0.6, Math.sign(ub) * 0.85), 0.62, 0.08);
     const [x, z] = at(s - dir * 0.6, 0);
     const put = placer(B, x, 0, z, heading(s));
     put(boxG(1.6, 0.7, 0.35, 0, 0, 0), M.ironMid, id(0.46)); put(boxG(1.8, 0.12, 0.45, 0, 0.7, 0), M.iron, id(0.46));
     solidS(s - dir * 0.6 - 0.3, s - dir * 0.6 + 0.3, -1.4, 1.4);
     solidS(s - 0.5, s + 0.5, -KERB - 0.3, KERB + 0.3);
+  }
+  // the street clock on the sidewalk by the far end: a fluted post, a two-faced drum clock
+  {
+    const s = S_MAX - 4.6, [x, z] = at(s, -KERB - 0.9), put = placer(B, x, WALK_Y, z, heading(s)), cid = id(0.47);
+    const face = ink({ map: clockFaceTexture(), facing: 0.1, hatch: 0 });
+    put(cylG(0.22, 0.26, 0.5, 0, 0, 0, 14), M.iron, cid);
+    put(cylG(0.1, 0.12, 2.9, 0, 0.5, 0, 12), M.iron, cid);
+    for (let k = 0; k < 6; k++) { const a = (k / 6) * Math.PI * 2; put(cylG(0.03, 0.03, 2.6, Math.cos(a) * 0.115, 0.65, Math.sin(a) * 0.115, 4), M.ironMid, cid + 0.002); }
+    put(cylG(0.16, 0.12, 0.2, 0, 3.4, 0, 12), M.iron, cid);
+    const drum = new THREE.CylinderGeometry(0.42, 0.42, 0.24, 28); drum.rotateX(Math.PI / 2); drum.translate(0, 3.95, 0);
+    put(drum, [M.iron, face, face], cid + 0.004);
+    const rim = new THREE.TorusGeometry(0.43, 0.04, 6, 28); for (const sz of [-0.12, 0.12]) put(rim.clone().translate(0, 3.95, sz), M.iron, cid + 0.006);
+    put(sphG(0.08, 0, 4.47, 0, 1, 1.5, 1, 10), M.iron, cid);
+    solidC({ x, z, r: 0.3 });
   }
   // the round Fisherman's Wharf sign on its post, facing back up the street
   {
@@ -389,8 +417,8 @@ function buildBayArea(scene, ctx) {
     woodRail(xa + 0.3, za + 0.1, xb - 0.1, za + 0.1); woodRail(xa + 0.3, zb - 0.1, xb - 0.1, zb - 0.1); woodRail(xb - 0.1, za + 0.1, xb - 0.1, zb - 0.1);
     solid(xa + 0.1, xb + 1, za - 1, za + 0.25); solid(xa + 0.1, xb + 1, zb - 0.25, zb + 1); solid(xb - 0.3, xb + 1, za - 1, zb + 1);
     // lamps on the pier, a bench, bollards with mooring lines
-    for (const x of [xa + 8, xa + 18]) { solidC(lamp(B, M, x, WALK_Y, za + 0.45, { h: 3.4 })); solidC(lamp(B, M, x, WALK_Y, zb - 0.45, { h: 3.4 })); }
-    for (const x of [xa + 5, xa + 13, xa + 21]) for (const z of [za + 0.4, zb - 0.4]) { if (Math.abs(x - xa - 8) < 1.5 || Math.abs(x - xa - 18) < 1.5) continue; solidC(bollard(B, M, x, WALK_Y, z)); }
+    for (const x of [xa + 4.5, xa + 10.5]) { solidC(lamp(B, M, x, WALK_Y, za + 0.45, { h: 3.4 })); solidC(lamp(B, M, x, WALK_Y, zb - 0.45, { h: 3.4 })); }
+    for (const x of [xa + 2, xa + 7.5]) for (const z of [za + 0.4, zb - 0.4]) solidC(bollard(B, M, x, WALK_Y, z));
     // the lookout at the end's bay-side corner: coin binoculars aimed at the bridge, and the plaque
     const lk = { x: xb - 1.4, z: za + 1.2 };
     const put = placer(B, lk.x, WALK_Y, lk.z, Math.atan2(-(BRIDGE_MID[0] - lk.x), -(BRIDGE_MID[1] - lk.z))), lid = id(0.51);
@@ -408,8 +436,8 @@ function buildBayArea(scene, ctx) {
     PIER.look = lk; PIER.plaque = pl; PIER.xa = xa; PIER.xb = xb; PIER.za = za; PIER.zb = zb;
   }
   // dock posts and buoys in the water
-  for (const [s, u] of [[18, 10], [18.6, 12], [39, 11], [40, 13.5], [-6, 10.5], [-30, 11]]) { const [x, z] = at(s, u); B.add(cylG(0.2, 0.24, 2.6, x, WATER_Y - 1, z, 8), M.woodDark, id(0.52)); B.add(sphG(0.21, x, WATER_Y + 1.6, z, 1, 0.5, 1, 8), M.woodDark, id(0.52)); }
-  const buoys = [[22, 20], [45, 26], [10, 30], [60, 22]].map(([s, u]) => at(s, u));
+  for (const [s, u] of [[14, 10], [14.6, 12], [28, 11], [28.8, 13.5], [-6, 10.5], [-30, 11]]) { const [x, z] = at(s, u); B.add(cylG(0.2, 0.24, 2.6, x, WATER_Y - 1, z, 8), M.woodDark, id(0.52)); B.add(sphG(0.21, x, WATER_Y + 1.6, z, 1, 0.5, 1, 8), M.woodDark, id(0.52)); }
+  const buoys = [[31, 18], [45, 26], [10, 30], [60, 22]].map(([s, u]) => at(s, u));
 
   // =====================================================================
   // THE PIER SHED behind the spawn: a bulkhead front with a great arch
@@ -494,13 +522,12 @@ function buildBayArea(scene, ctx) {
   const river = buildRiver(root, { WATER_Y, SHORE_Z: -1400, SHORE_Y, sky: sf.sky, shore: [], skyZ: -850, zNear: 220 });
   updaters.push(river.update);
 
-  // ---- the cable cars: one running up and down the straight, one waiting at the bend --------
+  // ---- the cable cars: one running up and down the block, one waiting past the far end -------
   const CM = cableCarMaterials();
   const carShape = (car, s) => { const [x, z] = at(s, 0); car.position.set(x, 0.03, z); car.rotation.y = heading(s) + Math.PI / 2; };
   const parked = buildCableCar(CM, { seed: 0.57 });
-  root.add(parked); carShape(parked, 33.5);
-  solidS(33.5 - CAR.L / 2 - 0.25, 33.5 + CAR.L / 2 + 0.25, -CAR.W / 2 - 0.15, CAR.W / 2 + 0.15);
-  { const g = new THREE.BoxGeometry(CAR.W, 3.6, CAR.L); g.translate(0, 1.8, 0); blocker(g, ...((([x, z]) => [x, 0, z])(at(33.5, 0)))); }
+  root.add(parked); carShape(parked, 37);
+  { const g = new THREE.BoxGeometry(CAR.W, 3.6, CAR.L); g.translate(0, 1.8, 0); blocker(g, ...((([x, z]) => [x, 0, z])(at(37, 0)))); }
   const car = buildCableCar(CM, { seed: 0.41 });
   root.add(car);
   const carCol = { type: 'box', minX: 0, maxX: 0, minZ: 0, maxZ: 0, moving: true };
@@ -544,12 +571,12 @@ function buildBayArea(scene, ctx) {
     barista.root.position.set(v.x, WALK_Y, v.z); barista.root.rotation.y = cafe.ry;
     root.add(barista.root);
   }
-  const walkers = [[24, -5.3, 1, 0.9, 0.55], [40, -4.6, -1, 0.95, 0.3], [58, -5.0, 1, 0.85, 0.75], [30, 4.4, -1, 0.8, 0.45]].map(([s, u, dir, v, tone], i) => {
+  const walkers = [[8, -5.3, 1, 0.9, 0.55], [26, -4.6, -1, 0.95, 0.3], [16, -5.0, 1, 0.85, 0.75], [20, 4.4, -1, 0.8, 0.45]].map(([s, u, dir, v, tone], i) => {
     const ch = createCharacter({ style: 'auntie', bun: i % 2 === 0, topTone: tone });
     root.add(ch.root);
     const col = { type: 'circle', x: 0, z: 0, r: 0.3, moving: true };
     colliders.push(col);
-    return { ch, s, u0: u, u, dir, v, col, lo: u > 0 ? 34 : 18, hi: 72, speed: 0 };
+    return { ch, s, u0: u, u, dir, v, col, lo: u > 0 ? 8.5 : 6, hi: 27.5, speed: 0 };
   });
   // the walkable band of each side (a walker steps aside within it to let the player by)
   const LANE = { side: [FACADE + 1.6, -KERB - 1.15], prom: [KERB + 1.55, RAIL_U - 2.5] }; // clear of the beds, benches, lamps
