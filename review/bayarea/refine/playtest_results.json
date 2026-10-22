@@ -1,0 +1,186 @@
+[
+  {
+    "name": "arrives on the sidewalk at the start point, facing down the street",
+    "ok": true,
+    "detail": "at -4.6,6.5 facing 3.142 yaw -0.04"
+  },
+  {
+    "name": "stands on the sidewalk (y 0.15)",
+    "ok": true,
+    "detail": "y=0.15"
+  },
+  {
+    "name": "HUD objectives: café / cable car / pier",
+    "ok": true,
+    "detail": "Stop by Cafe Bay View | Take a look at the cable car | See the Golden Gate from the pier"
+  },
+  {
+    "name": "café prompt at the chalkboard",
+    "ok": true,
+    "detail": "interact=cafe at -5.422,-3.276"
+  },
+  {
+    "name": "café caption",
+    "ok": true,
+    "detail": "Cafe Bay View: coffee, tea and sourdough pastries, with the bay just across the street."
+  },
+  {
+    "name": "café objective done",
+    "ok": true,
+    "detail": "cafe"
+  },
+  {
+    "name": "the cable car runs along its stretch of track",
+    "ok": true,
+    "detail": "s 12.98 -> 20.7"
+  },
+  {
+    "name": "the cable car stops for the player on the track",
+    "ok": true,
+    "detail": "{\"s\":20.94,\"v\":0,\"waiting\":true} player s 26.91"
+  },
+  {
+    "name": "…and never pushes into the player",
+    "ok": true,
+    "detail": "0,-26.91"
+  },
+  {
+    "name": "…and moves on once the track is clear",
+    "ok": true,
+    "detail": "{\"s\":20.95,\"v\":0.11,\"waiting\":false}"
+  },
+  {
+    "name": "cable car prompt beside it",
+    "ok": true,
+    "detail": "interact=cablecar car s 21 player -2.808,-20.915"
+  },
+  {
+    "name": "cable car caption + objective",
+    "ok": true,
+    "detail": "San Francisco's cable cars have climbed these hills since 1873, pulled along by a cable running under the street."
+  },
+  {
+    "name": "the railing holds all along the promenade (never past it)",
+    "ok": true,
+    "detail": "max u 7.140 (rail at 7.6), off-ground 0"
+  },
+  {
+    "name": "the pier rails hold (sides and end)",
+    "ok": true,
+    "detail": "14.00,-21.02 14.00,-21.01 21.44,-21.00 10.00,-20.70 17.00,-21.48"
+  },
+  {
+    "name": "both ends hold all the way across (terminus behind, the Wharf end ahead)",
+    "ok": true,
+    "detail": "s -9.84 .. 30.00, off-ground 0"
+  },
+  {
+    "name": "the shopfronts hold (never inside a building)",
+    "ok": true,
+    "detail": "min u -8.008 (facades at -9)"
+  },
+  {
+    "name": "walks the whole sidewalk to the Wharf end",
+    "ok": true,
+    "detail": "reached s 27.6 in 16.2 s"
+  },
+  {
+    "name": "Fisherman's Wharf caption at the far end",
+    "ok": true,
+    "detail": "Fisherman's Wharf: sourdough, chowder and the sea lions just past the next pier."
+  },
+  {
+    "name": "crosses the street to the promenade",
+    "ok": true,
+    "detail": "u 5.26"
+  },
+  {
+    "name": "no penetration of colliders while walking",
+    "ok": true,
+    "detail": "samples 430 pen 0"
+  },
+  {
+    "name": "lookout prompt at the end of the pier",
+    "ok": true,
+    "detail": "interact=lookout at 20.578,-22.167"
+  },
+  {
+    "name": "lookout caption + objective",
+    "ok": true,
+    "detail": "The Golden Gate Bridge, opened in 1937, spans the strait where the bay meets the Pacific."
+  },
+  {
+    "name": "the lookout turns the view to the bridge",
+    "ok": true,
+    "detail": "yaw -6.623 want ~-0.32"
+  },
+  {
+    "name": "plaque prompt + caption",
+    "ok": true,
+    "detail": "The bridge is 1.7 miles long, and its towers rise 746 feet above the water. Alcatraz sits out in the bay in front of it."
+  },
+  {
+    "name": "all three objectives done",
+    "ok": true,
+    "detail": "cafe,cablecar,pier"
+  },
+  {
+    "name": "the map card opens",
+    "ok": true,
+    "detail": "interact=map"
+  },
+  {
+    "name": "E closes the map card",
+    "ok": true
+  },
+  {
+    "name": "sits on a bench facing the bay",
+    "ok": true,
+    "detail": "{\"id\":\"bench1\",\"settled\":true,\"dir\":1}"
+  },
+  {
+    "name": "stands up again",
+    "ok": true,
+    "detail": "pose stand"
+  },
+  {
+    "name": "camera orbits stay out of the buildings",
+    "ok": true,
+    "detail": ""
+  },
+  {
+    "name": "passers-by walk",
+    "ok": true,
+    "detail": "12.2,26.9,10.5,24.7 -> 10.4,25,8.8,23.1"
+  },
+  {
+    "name": "boats sail and the ferry crosses",
+    "ok": true,
+    "detail": "150 -> 156.4"
+  },
+  {
+    "name": "the water moves",
+    "ok": true,
+    "detail": "141.76 -> 143.76"
+  },
+  {
+    "name": "frame rate at the spawn (headless)",
+    "ok": true,
+    "detail": "fps 60"
+  },
+  {
+    "name": "\"Back to the airport\" prompt at the fingerpost",
+    "ok": true,
+    "detail": "interact=null"
+  },
+  {
+    "name": "lands in front of the Bay Area gate",
+    "ok": true,
+    "detail": "2.21,-5.47 gate 2.5473248352282023,-6.304850211054155"
+  },
+  {
+    "name": "no page errors",
+    "ok": true,
+    "detail": ""
+  }
+]
