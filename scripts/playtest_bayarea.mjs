@@ -178,8 +178,8 @@ s = await st();
 check('lookout caption + objective', /Golden Gate Bridge/.test(s.caption ?? '') && s.done.includes('pier'), s.caption);
 await sleep(2800 * TS);
 s = await st();
-// the bridge's middle (sf.js BRIDGE: az -7 / 15, d 820 / 900)
-const bridgeYaw = Math.atan2(-(Math.sin(4 * Math.PI / 180) * 860 - s.player.x), -(-Math.cos(4 * Math.PI / 180) * 860 - s.player.z));
+// the bridge's middle (sf.js BRIDGE_MID)
+const bridgeYaw = Math.atan2(-(223.2 - s.player.x), -(-624.4 - s.player.z));
 check('the lookout turns the view to the bridge', Math.abs(wrap(s.cam.yaw - bridgeYaw)) < 0.25, `yaw ${s.cam.yaw} want ~${bridgeYaw.toFixed(2)}`);
 await shot('05_lookout');
 const plaque = await page.evaluate(() => window.__dw.interactables().find((i) => i.id === 'plaque'));
@@ -202,6 +202,7 @@ const benchIt = await page.evaluate(() => window.__dw.interactables().find((i) =
 await near(benchIt, -1.5, 0);
 r = await interactAt('bench1', benchIt.x, benchIt.z);
 await page.waitForFunction(() => window.__dw.state().occupied?.settled, null, { timeout: 10000 * TS }).catch(() => {});
+await sleep(1500 * TS); // let the camera settle on the bridge
 s = await st();
 check('sits on a bench facing the bay', r.ok && s.occupied?.settled && s.hero.pose === 'sit', JSON.stringify(s.occupied));
 await shot('07_bench');
@@ -235,7 +236,7 @@ check('passers-by walk', d0.walkers.some((w, i) => Math.abs(w - d1.walkers[i]) >
 check('boats sail and the ferry crosses', d0.boats.some((b, i) => Math.hypot(b[0] - d1.boats[i][0], b[1] - d1.boats[i][1]) > 0.3) && Math.abs(d0.ferry - d1.ferry) > 0.3, `${d0.ferry} -> ${d1.ferry}`);
 check('the water moves', d1.waterTime > d0.waterTime, `${d0.waterTime} -> ${d1.waterTime}`);
 await page.evaluate(() => window.__dw.setPlayer(-4.6, 6.5, Math.PI));
-await page.evaluate(() => window.__dw.setView(0.06, 0.1));
+await page.evaluate(() => window.__dw.setView(-0.04, 0.1));
 await sleep(3000);
 s = await st();
 check('frame rate at the spawn (headless)', s.fps >= 20, `fps ${s.fps}`);

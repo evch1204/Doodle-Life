@@ -14,7 +14,7 @@ await page.waitForTimeout(1500);
 const VIEWS = {
   shanghai: { river: [0, 3.4, Math.PI, 0, 0.05], land: [0, 5.6, 0, Math.PI, 0.18], along: [-9.5, 1.2, Math.PI / 2, -Math.PI / 2 + 0.45, 0.22] },
   taiwan: { start: [0, 1.4, Math.PI, 0, 0.36], plaza: [1.4, -14.6, Math.PI * 0.75, -0.8, 0.35], lookout: [4.5, -28.2, Math.PI, 0.12, 0.08] },
-  bayarea: { start: [-4.6, 6.5, Math.PI, 0.06, 0.1], rail: [6.2, -12, Math.PI / 2, -0.75, 0.08], pier: [31, -29, Math.PI / 2, -1.0, 0.06] },
+  bayarea: { start: [-4.6, 6.5, Math.PI, -0.04, 0.1], rail: [6.2, -12, Math.PI / 2, -0.75, 0.08], pier: [31, -29, Math.PI / 2, -1.0, 0.06] },
 };
 for (const [name, v] of Object.entries(VIEWS[process.env.SCENE || 'shanghai'])) {
   await page.evaluate((v) => { window.__dw.freeCam(null); window.__dw.setPlayer(v[0], v[1], v[2]); window.__dw.setView(v[3], v[4], 3.0); }, v);

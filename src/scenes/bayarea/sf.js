@@ -4,23 +4,30 @@ import { makeRng } from '../../sketch.js';
 import * as BX from '../../bayTextures.js';
 import { cityTexture } from '../../shanghaiTextures.js';
 import { Batch, boldId, farId, placer } from '../kit.js';
+import { buildBridge } from './bridge.js';
 
 // Everything beyond the street, compressed into a postcard of the bay:
 //  - our side: the city climbing the hills behind the street's buildings
 //    (Telegraph Hill with Coit Tower), the shore running on past the street's
-//    bend to a headland that carries the Golden Gate Bridge's south end
+//    bend to a headland (the Presidio) that carries the Golden Gate Bridge's
+//    south end
+//  - the bridge itself (bridge.js), seen at an angle: the south tower nearer,
+//    the span running away to the right, so the towers' portals show
 //  - across the water: the Marin Headlands at the bridge's north end, and to
 //    their right the downtown skyline (Salesforce Tower, the Transamerica
-//    Pyramid) on its own shore; ridges all round
-//  - Alcatraz in the bay
+//    Pyramid) on its own shore; the open strait under the bridge; ridges all round
+//  - Alcatraz in the bay, in front of Marin
 // Positions are given as azimuth (degrees from -z, + to the right) and distance
 // from the spawn at the origin, or in street coordinates (s along the street,
 // u across it, + toward the water). Returns the silhouettes the bay reflects.
 
 const far = (o) => ink({ facing: 0.5, hatchFreq: 0.5, tone: 1, ...o });
 
-const BRIDGE = { south: { az: -7, d: 820 }, north: { az: 15, d: 900 } };
 const polar = (az, d) => { const a = THREE.MathUtils.degToRad(az); return [Math.sin(a) * d, -Math.cos(a) * d]; };
+// the south tower, the deck's heading (degrees, turned from +x toward -z), the main and side spans
+const BRIDGE = { south: polar(9, 520), heading: 38, span: 360, side: 100 };
+const bridgeAt = (x) => { const a = THREE.MathUtils.degToRad(BRIDGE.heading); return [BRIDGE.south[0] + Math.cos(a) * x, BRIDGE.south[1] - Math.sin(a) * x]; };
+export const BRIDGE_MID = bridgeAt(BRIDGE.span / 2); // where the lookout and the benches turn to
 const gauss = (x, y, x0, y0, sx, sy) => Math.exp(-(((x - x0) / sx) ** 2) - (((y - y0) / sy) ** 2));
 
 export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
@@ -28,10 +35,14 @@ export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
   const r = makeRng(1937);
   const sky = [];
   const M = {
-    tower: far({ tone: 0.5, facing: 0.5, hatch: 0 }),              // the bridge's towers: darker than everything near them
+    // the bridge: darker than everything near it; shaded faces take a sparse hatch
+    tower: far({ tone: 0.5, facing: 0.55, hatch: 0.7, hatchFreq: 0.4 }),
+    strut: far({ tone: 0.44, facing: 0.5, hatch: 0.7, hatchFreq: 0.4 }),
+    rib: far({ tone: 0.32, facing: 0.4, hatch: 0 }),
     towerEdge: far({ tone: 0.36, facing: 0.5, hatch: 0 }),
     cable: far({ tone: 0.3, hatch: 0 }),
-    deck: far({ map: BX.trussTexture(), mapAmt: 0.6, tone: 0.62, facing: 0.4, hatch: 0 }),
+    deck: far({ tone: 0.5, facing: 0.5, hatch: 0.6, hatchFreq: 0.4 }),
+    truss: far({ map: BX.trussTexture(), mapAmt: 0.75, tone: 0.6, facing: 0.4, hatch: 0 }),
     pier: far({ tone: 0.82, facing: 0.5, hatchFreq: 0.6 }),
     land: far({ tone: 0.95, facing: 0.6, hatchFreq: 0.5 }),
     shore: far({ tone: 0.84, facing: 0.4, hatch: 0 }),
@@ -54,7 +65,10 @@ export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
   // hills behind the buildings; the headland bulges out toward the strait
   const BACK = 12; // the land starts rising this far behind the facades' line (u = -9): behind the buildings
   const [SA, SB] = street.built;
-  const headU = (s) => 7.8 + 250 * Math.exp(-(((s - 800) / 120) ** 2));
+  // the headland reaches out under the bridge's south approach and stops short of the tower
+  const [hs, hu] = street.toStreet(...bridgeAt(-BRIDGE.side / 2)), [, tu] = street.toStreet(...bridgeAt(0));
+  const HEAD = { s: hs + 8, u: (hu + tu) / 2 };
+  const headU = (s) => 7.8 + (HEAD.u - 7.8) * Math.exp(-(((s - HEAD.s) / 85) ** 2));
   const ourH = (s, u) => {
     if (u > headU(s)) return -Infinity;
     const dd = -9 - BACK - u;                                     // distance behind the street's buildings
@@ -62,28 +76,31 @@ export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
       if (s >= SA && s <= SB) return u > -9.5 ? -0.4 : 1.6;     // under the street (hidden), level ground under the buildings
       if (u <= 7.8) return 1.6;
       // the headland: a plateau with a bluff at the bridge's end (the Presidio)
-      return 1.6 + Math.min(1, (headU(s) - u) / 30) * (20 + 8 * Math.sin(s * 0.03 + u * 0.02)) + 28 * gauss(s, u, 810, 100, 90, 70);
+      return 1.6 + Math.min(1, (headU(s) - u) / 30) * (20 + 8 * Math.sin(s * 0.03 + u * 0.02)) + 28 * gauss(s, u, HEAD.s - 20, HEAD.u * 0.45, 70, 60);
     }
     return 2 + Math.min(1, dd / 30) * 6 + Math.min(dd * 0.08, 30)
       + 48 * gauss(s, dd, 72, 115, 40, 50)                        // Telegraph Hill
       + 60 * gauss(s, dd, 190, 230, 80, 90)                       // Russian Hill
       + 52 * gauss(s, dd, -40, 240, 90, 90)                       // Nob Hill
       + 140 * gauss(s, dd, 300, 900, 260, 300)                    // Twin Peaks, far behind
-      + 40 * gauss(s, dd, 800, -120, 110, 120);                   // the headland's bluff (the Presidio)
+      + 40 * gauss(s, dd, HEAD.s - 20, -120, 110, 120);           // the headland's bluff (the Presidio)
   };
-  // across the water, by azimuth: Marin (az 12..30), the city's shore (30..64), the East Bay
+  // across the water, by azimuth: the open strait under the bridge, Marin (az 20..35)
+  // coming round to just past the north tower, the city's shore (35..68), the East Bay
+  const [nx, nz] = bridgeAt(BRIDGE.span), N_AZ = THREE.MathUtils.radToDeg(Math.atan2(nx, -nz)), N_D = Math.hypot(nx, nz) + 26;
   const farShore = (az) => {
-    if (az < 8 || az > 230) return Infinity;
-    if (az < 30) return 900 + (30 - az) * 2;
-    if (az < 64) return 640 + 20 * Math.sin(az * 0.3);
-    return 1400 + 500 * Math.sin((az - 64) * 0.03);
+    if (az < 20 || az > 230) return Infinity;
+    if (az < N_AZ) return N_D + 200 * ((N_AZ - az) / (N_AZ - 20)) ** 2;
+    if (az < 35) return N_D + 6 * (az - N_AZ);
+    if (az < 68) return 640 + 20 * Math.sin(az * 0.3);
+    return 1400 + 500 * Math.sin((az - 68) * 0.03);
   };
   const farH = (az, d) => {
     const s0 = farShore(az);
     if (d < s0) return -Infinity;
     const k = d - s0;
-    if (az < 30) return 3 + 150 * Math.min(1, k / 260) * (0.75 + 0.25 * Math.sin(az * 0.5)) + 70 * gauss(az, d, 20, 1500, 6, 300) + 30 * gauss(az, d, 23, 990, 3, 60);
-    if (az < 64) return 3 + Math.min(1, k / 60) * 4 + 45 * gauss(az, d, 50, 1100, 8, 200) + 70 * gauss(az, d, 35, 1500, 10, 300);
+    if (az < 35) return 3 + 150 * Math.min(1, k / 260) * (0.75 + 0.25 * Math.sin(az * 0.5)) + 70 * gauss(az, d, 27, 1500, 6, 300) + 30 * gauss(az, d, 31, N_D + 90, 3, 60);
+    if (az < 68) return 3 + Math.min(1, k / 60) * 4 + 45 * gauss(az, d, 54, 1100, 8, 200) + 70 * gauss(az, d, 39, 1500, 10, 300);
     return 3 + 110 * Math.min(1, k / 400) * (0.7 + 0.3 * Math.sin(az * 0.09));
   };
   const landH = (x, z) => {
@@ -116,7 +133,7 @@ export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
   // a low sea wall along the far city's shore
   {
     const pts = [];
-    for (let az = 31; az <= 63; az += 1) { const [x, z] = polar(az, farShore(az) + 2); pts.push(new THREE.Vector3(x, WATER_Y + 1.6, z)); }
+    for (let az = 36; az <= 67; az += 1) { const [x, z] = polar(az, farShore(az) + 2); pts.push(new THREE.Vector3(x, WATER_Y + 1.6, z)); }
     B.add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 1.2, 4, false), M.shore, farId(0.33));
   }
   // ridges on the horizon all round (not across the Golden Gate, which stays open to the ocean)
@@ -164,14 +181,14 @@ export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
   // ACROSS THE WATER: the downtown skyline on its shore
   // =====================================================================
   const groundFar = (az, d) => WATER_Y + Math.max(1, farH(az, d));
-  const keepClear = [[40, 830, 16], [50, 760, 14]]; // landmark footprints [az, d, radius]
+  const keepClear = [[44, 830, 16], [54, 760, 14]]; // landmark footprints [az, d, radius]
   for (let i = 0; i < 4000 && placed.length < 600; i++) {
-    const az = 32 + r() * 30, d = farShore(az) + 25 + r() * 320;
+    const az = 36 + r() * 30, d = farShore(az) + 25 + r() * 320;
     const [x, z] = polar(az, d);
     if (keepClear.some(([a, dd, rad]) => { const [lx, lz] = polar(a, dd); return Math.hypot(x - lx, z - lz) < rad + 10; })) continue;
     const w = 12 + r() * 14, dep = 12 + r() * 12;
     if (!free(x, z, w, dep)) continue;
-    const core = Math.exp(-(((az - 44) / 7) ** 2)) * Math.exp(-(((d - 820) / 120) ** 2));
+    const core = Math.exp(-(((az - 48) / 7) ** 2)) * Math.exp(-(((d - 820) / 120) ** 2));
     let h = 16 + r() * 20 + core * (25 + r() * 50);
     h = Math.round(h / 3.2) * 3.2;
     const y = groundFar(az, d) - 1, mat = M.city[Math.floor(r() * M.city.length)], id = farId(r()), ry = -THREE.MathUtils.degToRad(az) * 0.3;
@@ -190,57 +207,18 @@ export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
   const cyl = (rt, rb, h, y, seg = 16) => { const g = new THREE.CylinderGeometry(rt, rb, h, seg); g.translate(0, y + h / 2, 0); return g; };
   const bx = (w, h, d, x, y, z) => { const g = new THREE.BoxGeometry(w, h, d); g.translate(x, y + h / 2, z); return g; };
 
-  // ---- the Golden Gate Bridge -------------------------------------------------------------
+  // ---- the Golden Gate Bridge (bridge.js) ---------------------------------------------------
   {
-    const [p1x, p1z] = polar(BRIDGE.south.az, BRIDGE.south.d), [p2x, p2z] = polar(BRIDGE.north.az, BRIDGE.north.d);
-    const S = Math.hypot(p2x - p1x, p2z - p1z), ux = (p2x - p1x) / S, uz = (p2z - p1z) / S;
-    const put = placer(B, p1x, WATER_Y, p1z, Math.atan2(-uz, ux)); // local +x runs from the south tower to the north tower
-    const TH = 110, DECK = 30, CW = 7.2;                              // tower height, deck top, cable half-spacing
-    const idTower = bid(), idCable = bid(), idDeck = bid(), idHang = bid();
-    // the towers: two legs stepping in at every portal strut, the struts between them
-    const tower = (x0) => {
-      const portals = [[DECK + 12, 4], [DECK + 34, 3.6], [DECK + 54, 3.2], [DECK + 70, 3], [TH - 3, 3]];
-      let y = 0, lx = 6.4, lz = 5.2;
-      put(bx(30, 9, 22, x0, -2, 0), M.pier, idDeck);                 // the pier in the water
-      for (const [py, ph] of portals) {
-        for (const s of [-1, 1]) put(bx(lx, py + ph - y, lz, x0, y, s * (CW + 0.6)), M.tower, idTower);
-        put(bx(lx * 0.8, ph, 2 * CW, x0, py, 0), M.towerEdge, idTower); // the strut
-        y = py + ph - 0.01; lx *= 0.88; lz *= 0.9;
-      }
-      for (const s of [-1, 1]) put(bx(lx + 0.6, 1.4, lz + 0.6, x0, TH, s * (CW + 0.6)), M.towerEdge, idTower); // saddles
-    };
-    tower(0); tower(S);
-    // cables: a parabola over the main span, sagging chords down to the anchorages
-    const sideL = 130, top = TH + 1.4, mid = DECK + 2.5, anch = DECK + 1;
-    const cableY = (x) => {
-      if (x >= 0 && x <= S) { const t = (x - S / 2) / (S / 2); return mid + (top - mid) * t * t; }
-      const t = x < 0 ? -x / sideL : (x - S) / sideL;
-      return top + (anch - top) * t - 7 * 4 * t * (1 - t);
-    };
-    for (const s of [-1, 1]) {
-      const pts = [];
-      for (let x = -sideL; x <= S + sideL + 0.1; x += 5) pts.push(new THREE.Vector3(x, cableY(x), s * CW));
-      put(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 240, 1.1, 6, false), M.cable, idCable);
-      // hangers: every 7 m, from the cable down to the deck
-      for (let x = -sideL + 7; x < S + sideL; x += 7) {
-        if (Math.abs(x) < 5 || Math.abs(x - S) < 5) continue;
-        const yc = cableY(x);
-        if (yc - DECK < 1.5) continue;
-        put(bx(0.6, yc - DECK, 0.6, x, DECK, s * CW), M.cable, idHang);
-      }
-    }
-    // the deck with its side truss, running onto the land at both ends; the anchorages
-    const d0 = -sideL - 14, d1 = S + sideL + 14;
-    { const g = new THREE.BoxGeometry(d1 - d0, 5, 2 * CW + 2); const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * ((d1 - d0) / 8)); g.translate((d0 + d1) / 2, DECK - 2.5, 0); put(g, M.deck, idDeck); }
-    for (const x of [-sideL, S + sideL]) put(bx(28, DECK + 7, 30, x, -4, 0), M.pier, idDeck);
-    for (const x of [-sideL / 2, S + sideL / 2]) put(bx(8, DECK - 3, 10, x, -2, 0), M.pier, idDeck);
-    for (const [x, hw] of [[0, 9], [S, 9]]) { const wx = p1x + ux * x, wz = p1z + uz * x; sky.push({ x: wx, z: wz, hw, top: TH - SHORE_Y + WATER_Y }); }
-    for (let x = 30; x < S; x += 50) sky.push({ x: p1x + ux * x, z: p1z + uz * x, hw: 6, top: DECK - SHORE_Y + WATER_Y });
+    const { span: S, side } = BRIDGE, [sx, sz] = BRIDGE.south;
+    const put = placer(B, sx, WATER_Y, sz, THREE.MathUtils.degToRad(BRIDGE.heading));
+    const gg = buildBridge(put, M, { S, side, bold: bid, fine: (r2) => farId(r2) });
+    // what the bay reflects: the towers, the deck between them
+    for (const x of [0, S]) { const [wx, wz] = bridgeAt(x); sky.push({ x: wx, z: wz, hw: 12, top: gg.top + WATER_Y - SHORE_Y }); }
+    for (let x = -side + 20; x < S + side; x += 40) { const [wx, wz] = bridgeAt(x); sky.push({ x: wx, z: wz, hw: 8, top: gg.deck + WATER_Y - SHORE_Y }); }
   }
-
   // ---- Salesforce Tower: a rounded-square shaft tapering to a rounded top, its crown lighter
   {
-    const [x, z] = polar(40, 830), y0 = groundFar(40, 830) - 1, H = 122;
+    const [x, z] = polar(44, 830), y0 = groundFar(44, 830) - 1, H = 122;
     const put = placer(B, x, y0, z, 0.3);
     const NS = 48, NY = 24, pos = [], uv = [], idx = [];
     const rsq = (a) => { const c = Math.cos(a), s = Math.sin(a), p = 4; return 1 / Math.pow(Math.pow(Math.abs(c), p) + Math.pow(Math.abs(s), p), 1 / p); };
@@ -261,7 +239,7 @@ export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
   }
   // ---- the Transamerica Pyramid: a slender four-sided pyramid, its two wings, the spire
   {
-    const [x, z] = polar(50, 760), y0 = groundFar(50, 760) - 1, H = 96;
+    const [x, z] = polar(54, 760), y0 = groundFar(54, 760) - 1, H = 96;
     const put = placer(B, x, y0, z, Math.PI / 4 + 0.3);
     const g = new THREE.ConeGeometry(11, H, 4, 1); g.translate(0, H / 2, 0);
     const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * 6, uv.getY(i) * (H / 12.8));
@@ -282,7 +260,7 @@ export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
   }
   // ---- Alcatraz: an island with the cellhouse, the lighthouse and a water tower
   {
-    const [x, z] = polar(4, 430);
+    const [x, z] = polar(31, 400);
     const put = placer(B, x, WATER_Y, z, 0.4);
     const id = farId(0.66);
     const isl = new THREE.SphereGeometry(30, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2); isl.scale(1.6, 0.42, 0.75); isl.translate(0, -1, 0); put(isl, M.land, id);
@@ -298,5 +276,5 @@ export function buildSF(root, { WATER_Y, SHORE_Y, street }) {
   }
 
   B.flush(root);
-  return { sky, bridgeMid: polar((BRIDGE.south.az + BRIDGE.north.az) / 2, (BRIDGE.south.d + BRIDGE.north.d) / 2) };
+  return { sky, bridgeMid: BRIDGE_MID };
 }
