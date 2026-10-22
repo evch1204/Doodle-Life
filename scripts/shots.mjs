@@ -92,7 +92,7 @@ const LOBBY_VIEWS = {
 };
 const BAY_VIEWS = {
   // street coordinates: s along the street (z = -s until the bend at s 40), u across (x = u); the spawn is s -6.5, u -4.6
-  ba_start: { player: [-4.6, 6.5, Math.PI], view: [0.06, 0.1] },
+  ba_start: { player: [-4.6, 6.5, Math.PI], view: [-0.04, 0.1] },
   ba_walk: { player: [-4.4, -14, Math.PI], view: [0.1, 0.1] },
   ba_cafe: { player: [-4.4, 3.5, -Math.PI / 2], view: [Math.PI / 2 - 0.45, 0.14] },
   ba_cafe_close: { player: [-4.4, 3.5, Math.PI], free: [[-3.6, 2.2, 6.8], [-8.6, 2.6, -1.5]] },
@@ -102,7 +102,10 @@ const BAY_VIEWS = {
   ba_pier: { player: [32, -29, Math.PI / 2], view: [-0.9, 0.06] },
   ba_wharf: { player: [-3.2, -66, Math.PI], view: [0.25, 0.12] },
   ba_back: { player: [-4.4, 4, 0], view: [Math.PI, 0.12] },
-  ba_bridge: { player: [-4.6, 6.5, Math.PI], free: [[60, 40, -420], [50, 60, -860]] },
+  // the bridge (sf.js BRIDGE): the south tower at (81, -514), the north tower at (365, -735)
+  ba_bridge: { player: [-4.6, 6.5, Math.PI], free: [[20, 30, -250], [215, 60, -630]] },
+  ba_tower: { player: [-4.6, 6.5, Math.PI], free: [[-10, 55, -420], [81, 75, -514]] },
+  ba_deck: { player: [-4.6, 6.5, Math.PI], free: [[150, 22, -520], [200, 45, -600]] },
   ba_city: { player: [-4.6, 6.5, Math.PI], free: [[40, 30, -200], [480, 40, -700]] },
   ba_aerial: { player: [-4.6, 6.5, Math.PI], free: [[45, 42, 30], [-6, 0, -30]] },
   ba_aerial2: { player: [-4.6, 6.5, Math.PI], free: [[-45, 60, -110], [10, 0, -30]] },

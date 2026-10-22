@@ -10,7 +10,7 @@ import { buildRiver } from './shanghai/river.js';
 import { bayMaterials, boxG, cylG, sphG, palm, lamp, bench, bin, shrubs, streetTree, cafeTable, aFrame, bollard } from './bayarea/props.js';
 import { building, bladeSign, cafeRoom, DEPTH, GF } from './bayarea/street.js';
 import { buildCableCar, cableCarMaterials, CAR } from './bayarea/cablecar.js';
-import { buildSF } from './bayarea/sf.js';
+import { buildSF, BRIDGE_MID } from './bayarea/sf.js';
 
 // Chapter 3: the Bay Area. A walk down a San Francisco waterfront street (the
 // Embarcadero toward Fisherman's Wharf): storefronts on the left, a cable car
@@ -97,7 +97,7 @@ export default {
       { id: 'pier', text: 'See the Golden Gate from the pier' },
     ],
   },
-  start: { x: -4.6, z: 6.5, facing: Math.PI, yaw: 0.06, pitch: 0.1 },
+  start: { x: -4.6, z: 6.5, facing: Math.PI, yaw: -0.04, pitch: 0.1 },
   sun: { dir: [0.95, 2.3, 0.9], extent: 18, follow: true, far: 70 },
   camera: { near: 0.2, far: 3200, dist: 3.0 },
   // distant lines thin and lighten, distant tones fade toward the paper; the bridge and the landmarks stay bold
@@ -229,7 +229,7 @@ function buildBayArea(scene, ctx) {
   for (const s of [3.1, 4.6]) { const [x, z] = at(s, FACADE + 0.45); B.add(cylG(0.24, 0.18, 0.5, x, WALK_Y, z, 10), M.stone, id(0.3)); shrubs(B, M, x, z, x + 0.01, z, WALK_Y + 0.35, { seed: s }); solidC({ x, z, r: 0.28 }); }
   const LAMPS_L = [-20, 4, 16, 28, 40, 52, 64, 76, 88, 100, 112, 124];
   for (const s of LAMPS_L) { const [x, z] = at(s, -KERB - 0.6); const c = lamp(B, M, x, WALK_Y, z, { h: 4.2, banner: true, basket: true, ry: heading(s) }); if (s <= S_MAX + 1) solidC(c); }
-  const TREES = [-14, 10, 22, 34, 46, 58, 70, 82, 94, 106, 118, 130];
+  const TREES = [-14, 22, 34, 46, 58, 70, 82, 94, 106, 118, 130]; // none just ahead of the spawn: it would hide the bridge
   for (const s of TREES) { const [x, z] = at(s, -KERB - 0.75); const c = streetTree(B, M, x, WALK_Y, z, { s: 1, seed: s * 1.7 + 3 }); if (s <= S_MAX + 1 && s >= S_MIN - 1) solidC(c); }
   for (const s of [-1, 19, 43, 67]) { const [x, z] = at(s, -KERB - 0.65); solidC(bin(B, M, x, WALK_Y, z)); }
   // the street name on the lamp by the spawn
@@ -391,9 +391,9 @@ function buildBayArea(scene, ctx) {
     // lamps on the pier, a bench, bollards with mooring lines
     for (const x of [xa + 8, xa + 18]) { solidC(lamp(B, M, x, WALK_Y, za + 0.45, { h: 3.4 })); solidC(lamp(B, M, x, WALK_Y, zb - 0.45, { h: 3.4 })); }
     for (const x of [xa + 5, xa + 13, xa + 21]) for (const z of [za + 0.4, zb - 0.4]) { if (Math.abs(x - xa - 8) < 1.5 || Math.abs(x - xa - 18) < 1.5) continue; solidC(bollard(B, M, x, WALK_Y, z)); }
-    // the lookout at the end: coin binoculars and the plaque
-    const lk = { x: xb - 1.3, z: (za + zb) / 2 - 0.9 };
-    const put = placer(B, lk.x, WALK_Y, lk.z, -Math.PI / 2 + 0.25), lid = id(0.51);
+    // the lookout at the end's bay-side corner: coin binoculars aimed at the bridge, and the plaque
+    const lk = { x: xb - 1.4, z: za + 1.2 };
+    const put = placer(B, lk.x, WALK_Y, lk.z, Math.atan2(-(BRIDGE_MID[0] - lk.x), -(BRIDGE_MID[1] - lk.z))), lid = id(0.51);
     put(cylG(0.12, 0.16, 0.08, 0, 0, 0, 14), M.iron, lid);
     put(cylG(0.05, 0.07, 1.0, 0, 0.08, 0, 10), M.iron, lid);
     put(boxG(0.32, 0.2, 0.22, 0, 1.06, 0), M.ironMid, lid);
@@ -621,7 +621,8 @@ function buildBayArea(scene, ctx) {
     return g;
   }
   // moored along the pier (bow toward the shore), one off the promenade
-  const moored = [[PIER.xa + 9, PIER.za - 2.8, 0.9], [PIER.xa + 19, PIER.za - 2.8, 0.85], [PIER.xa + 12, PIER.zb + 2.8, 1.0], [PIER.xa + 22, PIER.zb + 2.8, 0.8]].map(([x, z, s], i) => ({ g: sailboat(s, true), x, z, ph: i * 1.7 }));
+  // (none off the pier's end on the bridge side: their masts would cross the lookout's view)
+  const moored = [[PIER.xa + 4, PIER.za - 2.8, 0.9], [PIER.xa + 6, PIER.zb + 2.8, 1.0], [PIER.xa + 12.5, PIER.zb + 2.8, 0.8]].map(([x, z, s], i) => ({ g: sailboat(s, true), x, z, ph: i * 1.7 }));
   // out on the bay: each sails a long straight leg and turns back
   const sailing = [[60, -90, 1.2, 0.5, -0.9], [140, -200, 1.4, -0.45, -0.6], [-20, -300, 1.6, 0.35, 1.3], [210, -40, 1.3, 0.4, -0.2], [90, -420, 1.8, -0.3, 1.0]].map(([x, z, s, v, ang], i) => ({ g: sailboat(s), x, z, v, ang, ph: i * 2.1 }));
   const ferryBoat = { g: ferry(), x0: 120, z0: -220, ang: -0.35, v: 3.4 };
@@ -716,7 +717,9 @@ function buildBayArea(scene, ctx) {
   });
   updaters.push(() => { const [x, z] = at(run.s, -1.9); carSpot.x = x; carSpot.z = z; carSpot.pos.set(x + 0.6, 3.2, z); });
   // 3. the lookout at the pier's end: pan to the bridge
-  spot('lookout', 'Look at the Golden Gate', PIER.look.x - 0.75, PIER.look.z, 1.1, [PIER.look.x, WALK_Y + 1.6, PIER.look.z], (c) => {
+  const toBridge = (x, z) => { const dx = BRIDGE_MID[0] - x, dz = BRIDGE_MID[1] - z, d = Math.hypot(dx, dz); return [dx / d, dz / d]; };
+  const [lkx, lkz] = toBridge(PIER.look.x, PIER.look.z);
+  spot('lookout', 'Look at the Golden Gate', PIER.look.x - lkx * 0.8, PIER.look.z - lkz * 0.8, 1.1, [PIER.look.x, WALK_Y + 1.6, PIER.look.z], (c) => {
     const [bx, bz] = sf.bridgeMid;
     c.face(bx, bz);
     const yaw = Math.atan2(-(bx - c.player.pos.x), -(bz - c.player.pos.z));
@@ -734,10 +737,10 @@ function buildBayArea(scene, ctx) {
   // benches: sit and look out at the bay
   const benchCaption = 'The fog rolls in over the bridge. Nobody is in a hurry here.';
   benchPos.forEach(({ s, x, z }, i) => {
-    const [ex, ez] = at(s, RAIL_U - 2.1), th = heading(s);
+    const [ex, ez] = at(s, RAIL_U - 2.1), th = heading(s), [bdx, bdz] = toBridge(x, z);
     interactables.push({
       id: `bench${i}`, label: 'Sit on the bench', kind: 'seat', x: ex, z: ez, radius: 0.9, pos: new THREE.Vector3(x, WALK_Y + 0.95, z),
-      seat: { seat: [x, WALK_Y + 0.28, z], exit: [ex, ez], via: [], pose: 'sit', facing: Math.PI / 2 + th, caption: benchCaption, cam: { yaw: -Math.PI / 2 + 0.55 + th, pitch: 0.1, dist: 3.2 } },
+      seat: { seat: [x, WALK_Y + 0.28, z], exit: [ex, ez], via: [], pose: 'sit', facing: Math.PI / 2 + th, caption: benchCaption, cam: { yaw: Math.atan2(-bdx, -bdz) - 0.15, pitch: 0.1, dist: 3.2 } },
     });
   });
   // Fisherman's Wharf: arriving at the far end
