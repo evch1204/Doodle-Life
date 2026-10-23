@@ -1,12 +1,11 @@
-import { Sketch, makeRng } from './sketch.js';
-import { HANZI } from './taiwanTextures.js';
+import { Sketch, makeRng, say, letteredTexture } from './sketch.js';
 
 // Line-art textures for the airport lobby (the destination picker): the same
 // wobbly pen on paper as everywhere else. Wayfinding signs are the one place a
-// clean sans is used (white on dark), like real airport signs.
+// clean sans is used (white on dark), like real airport signs. Writing follows
+// the language setting.
 
-const SANS = '"Helvetica Neue", Helvetica, Arial, sans-serif';
-const SANS_ZH = '"PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
+const SANS = '"Helvetica Neue", Helvetica, Arial, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
 const SIGN_BG = '#2c2622';
 
 // ---- glyphs shared by signs ---------------------------------------------------------
@@ -62,10 +61,11 @@ const ICONS = {
   },
 };
 
-// A gate sign: dark board, a frame line, the city icon, English name, Chinese
-// name smaller beneath, a small plane. The arrow is a separate mesh (it pulses),
+// A gate sign: dark board, a frame line, the city icon, the city's name in the
+// player's language, a small plane. The arrow is a separate mesh (it pulses),
 // so the sign leaves room for it on its side (dir -1: left, 1: right).
 export function gateSignTexture(gate, dir) {
+  return letteredTexture((lang) => {
   const W = 1024, H = 320, s = new Sketch(W, H, { seed: 601, bg: SIGN_BG });
   const ctx = s.ctx;
   s.rect(10, 10, W - 20, H - 20, { w: 4, j: 0.4, color: '#e9e2d6', alpha: 0.6 });
@@ -74,16 +74,11 @@ export function gateSignTexture(gate, dir) {
   ctx.save(); ctx.translate(x0 + 70, H / 2 + 4); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ICONS[gate.icon](ctx);
   ctx.restore();
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
-  let size = 112;
-  ctx.font = `500 ${size}px ${SANS}`;
   const room = W - x0 - 170 - (dir > 0 ? pad : 40);
-  while (ctx.measureText(gate.nameEn).width > room && size > 60) { size -= 4; ctx.font = `500 ${size}px ${SANS}`; }
-  ctx.fillText(gate.nameEn, x0 + 160, 150);
-  ctx.font = `400 74px ${SANS_ZH}`;
-  ctx.fillText(gate.nameZh, x0 + 162, 262);
+  s.fitText(lang === 'zh' ? gate.nameZh : gate.nameEn, x0 + 160, H / 2 + 4, room, 170, { max: 128, font: SANS, weight: 500, color: '#fff', align: 'left' });
   planeGlyph(ctx, dir < 0 ? 70 : W - 70, H - 64, 46, 'rgba(255,255,255,0.75)');
-  return s.texture();
+  return s;
+  });
 }
 
 // The arrow alone (white on the sign color), for the pulsing mesh.
@@ -95,21 +90,20 @@ export function arrowTexture(dir) {
 
 // The banner across the hall: "→ ✈ Choose Your Next Destination".
 export function bannerTexture(text) {
-  const W = 2048, H = 256, s = new Sketch(W, H, { seed: 605, bg: SIGN_BG });
-  const ctx = s.ctx;
-  s.rect(12, 12, W - 24, H - 24, { w: 5, j: 0.5, color: '#e9e2d6', alpha: 0.6 });
-  arrowGlyph(ctx, 150, H / 2, 120, 1);
-  planeGlyph(ctx, 330, H / 2, 120);
-  ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-  let size = 118;
-  ctx.font = `500 ${size}px ${SANS}`;
-  while (ctx.measureText(text).width > W - 520 && size > 60) { size -= 4; ctx.font = `500 ${size}px ${SANS}`; }
-  ctx.fillText(text, 440, H / 2 + 6);
-  return s.texture();
+  return letteredTexture((lang) => {
+    const W = 2048, H = 256, s = new Sketch(W, H, { seed: 605, bg: SIGN_BG });
+    const ctx = s.ctx;
+    s.rect(12, 12, W - 24, H - 24, { w: 5, j: 0.5, color: '#e9e2d6', alpha: 0.6 });
+    arrowGlyph(ctx, 150, H / 2, 120, 1);
+    planeGlyph(ctx, 330, H / 2, 120);
+    s.fitText(say(text, lang), 440, H / 2 + 6, W - 520, 150, { max: 118, font: SANS, weight: 500, color: '#fff', align: 'left' });
+    return s;
+  });
 }
 
 // The pillar board: a plane, "Different Cities. Same Sky.", a cloud line at the bottom (the cloud itself is a mesh).
 export function skyBoardTexture() {
+  return letteredTexture((lang) => {
   const W = 512, H = 1024, s = new Sketch(W, H, { seed: 607 });
   const ctx = s.ctx;
   s.rect(14, 14, W - 28, H - 28, { w: 9, j: 0.6 });
@@ -122,9 +116,11 @@ export function skyBoardTexture() {
   ctx.lineTo(-30, -6); ctx.lineTo(-40, -18); ctx.lineTo(-48, -18); ctx.lineTo(-42, 0); ctx.lineTo(-48, 18); ctx.lineTo(-40, 18); ctx.lineTo(-30, 6);
   ctx.lineTo(-8, 6); ctx.lineTo(-24, 40); ctx.lineTo(-14, 40); ctx.lineTo(10, 6); ctx.lineTo(44, 6); ctx.quadraticCurveTo(50, 4, 48, 0);
   ctx.stroke(); ctx.restore();
-  for (const [str, y] of [['Different', 480], ['Cities.', 580], ['Same Sky.', 690]]) s.text(str, W / 2, y, 92);
+  const rows = lang === 'zh' ? [['不同的', 440], ['城市，', 535], ['同一片', 630], ['天空。', 725]] : [['Different', 480], ['Cities.', 580], ['Same Sky.', 690]];
+  for (const [str, y] of rows) s.fitText(str, W / 2, y, W - 110, 100, { max: 92 });
   s.line(120, 790, W - 120, 792, { w: 2, j: 1, alpha: 0.4 });
-  return s.texture();
+  return s;
+  });
 }
 
 // Clock face without hands (the hands are meshes that tick).
@@ -154,17 +150,18 @@ export function infoTexture() {
 
 // Exit sign over the doors home.
 export function exitSignTexture() {
+  return letteredTexture((lang) => {
   const W = 512, H = 160, s = new Sketch(W, H, { seed: 613, bg: SIGN_BG });
   const ctx = s.ctx;
   s.rect(8, 8, W - 16, H - 16, { w: 3, j: 0.4, color: '#e9e2d6', alpha: 0.6 });
   arrowGlyph(ctx, 70, H / 2, 70, -1);
-  ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
-  ctx.font = `500 64px ${SANS}`; ctx.fillText('Exit', 130, H / 2 + 4);
-  ctx.font = `400 54px ${SANS_ZH}`; ctx.fillText('出口', 300, H / 2 + 4);
+  // between the arrow and the little house
+  s.fitText(lang === 'zh' ? '出口' : 'Exit', 270, H / 2 + 4, 250, 80, { max: 72, font: SANS, weight: 500, color: '#fff' });
   // a little house
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(430, 60); ctx.lineTo(462, 34); ctx.lineTo(494, 60); ctx.moveTo(438, 56); ctx.lineTo(438, 118); ctx.lineTo(486, 118); ctx.lineTo(486, 56); ctx.stroke();
-  return s.texture();
+  return s;
+  });
 }
 
 // Lobby wall, one tile = one 1.5 m panel (u) by the full wall height (v):

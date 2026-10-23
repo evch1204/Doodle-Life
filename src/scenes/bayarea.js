@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { ink, backdropMaterial } from '../ink.js';
 import * as TX from '../shanghaiTextures.js';
 import * as BX from '../bayTextures.js';
-import { t as tr, onLang } from '../i18n.js';
+import { t as tr, onLang, getLang } from '../i18n.js';
 import { createCharacter } from '../character.js';
 import { clockFaceTexture } from '../lobbyTextures.js';
 import { Batch, BOLD, farId, placer } from './kit.js';
@@ -175,20 +175,20 @@ function buildBayArea(scene, ctx) {
     { s0: -80, s1: -68, floors: 3, wall: 'stucco2', upper: 'flat', top: 'bracket' },
     { s0: -68, s1: -57, floors: 4, wall: 'brick', upper: 'balcony', top: 'parapet' },
     { s0: -57, s1: -47, floors: 3, wall: 'siding', upper: 'bay', top: 'bracket' },
-    { s0: -47, s1: -37, floors: 3, wall: 'brick', upper: 'flat', top: 'bracket', shop: { sign: 'MARINE SUPPLY', door: 'center' } },
-    { s0: -37, s1: -27, floors: 4, wall: 'stucco', upper: 'bay', top: 'parapet', shop: { sign: 'SOURDOUGH', sub: 'BREAD · CHOWDER', window: 'bread' } },
-    { s0: -27, s1: -17, floors: 4, wall: 'brick', upper: 'balcony', top: 'bracket', shop: { sign: 'HOTEL EMBARCADERO', door: 'center' } },
-    { s0: -17, s1: -7.5, floors: 3, wall: 'siding', upper: 'bay', top: 'pediment', shop: { sign: 'FLOWERS', window: 'plain', awning: 1.3, dark: false } },
-    { s0: -7.5, s1: 5, floors: 3, wall: 'stucco', upper: 'bay', top: 'pediment', cafe: true, shop: { sign: 'CAFE BAY VIEW', sub: 'COFFEE  •  TEA  •  PASTRIES', interior: true, awning: 2.3, door: 'right' } },
-    { s0: 5, s1: 14, floors: 3, wall: 'siding', upper: 'bay', top: 'bracket', shop: { sign: 'BAKERY', sub: 'SOURDOUGH  ·  PASTRIES', window: 'bread', awning: 1.4, door: 'left', dark: false } },
-    { s0: 14, s1: 23, floors: 4, wall: 'brick', upper: 'balcony', top: 'bracket', shop: { sign: 'BOOKS & MAPS', window: 'books' } },
-    { s0: 23, s1: 31, floors: 3, wall: 'stucco2', upper: 'flat', top: 'pediment', shop: { sign: 'CRAB HOUSE', sub: 'CHOWDER  ·  OYSTERS', awning: 1.5 } },
-    { s0: 31, s1: 42, floors: 4, wall: 'siding', upper: 'bay', top: 'parapet', shop: { sign: 'GIFTS & POSTCARDS', window: 'gifts', dark: false } },
-    { s0: 42, s1: 51, floors: 3, wall: 'brick', upper: 'flat', top: 'bracket', shop: { sign: 'ICE CREAM', sub: 'CHOCOLATE  ·  SUNDAES', awning: 1.4, door: 'center' } },
-    { s0: 51, s1: 61, floors: 4, wall: 'stucco', upper: 'bay', top: 'bracket', shop: { sign: 'SEAFOOD GRILL' } },
-    { s0: 61, s1: 70, floors: 3, wall: 'siding', upper: 'balcony', top: 'pediment', shop: { sign: 'SAN FRANCISCO', sub: 'TRADING CO.', window: 'gifts', awning: 1.4 } },
-    { s0: 70, s1: 81, floors: 4, wall: 'brick', upper: 'flat', top: 'parapet', shop: { sign: 'WATERFRONT MARKET', door: 'left' } },
-    { s0: 81, s1: 91, floors: 3, wall: 'stucco2', upper: 'bay', top: 'bracket', shop: { sign: 'OYSTER BAR' } },
+    { s0: -47, s1: -37, floors: 3, wall: 'brick', upper: 'flat', top: 'bracket', shop: { sign: { en: 'MARINE SUPPLY', zh: '航海用品' }, door: 'center' } },
+    { s0: -37, s1: -27, floors: 4, wall: 'stucco', upper: 'bay', top: 'parapet', shop: { sign: { en: 'SOURDOUGH', zh: '酸麵包' }, sub: { en: 'BREAD · CHOWDER', zh: '麵包・巧達濃湯' }, window: 'bread' } },
+    { s0: -27, s1: -17, floors: 4, wall: 'brick', upper: 'balcony', top: 'bracket', shop: { sign: { en: 'HOTEL EMBARCADERO', zh: '內河碼頭飯店' }, door: 'center' } },
+    { s0: -17, s1: -7.5, floors: 3, wall: 'siding', upper: 'bay', top: 'pediment', shop: { sign: { en: 'FLOWERS', zh: '花店' }, window: 'plain', awning: 1.3, dark: false } },
+    { s0: -7.5, s1: 5, floors: 3, wall: 'stucco', upper: 'bay', top: 'pediment', cafe: true, shop: { sign: { en: 'CAFE BAY VIEW', zh: '灣景咖啡' }, sub: { en: 'COFFEE  •  TEA  •  PASTRIES', zh: '咖啡・茶・糕點' }, interior: true, awning: 2.3, door: 'right' } },
+    { s0: 5, s1: 14, floors: 3, wall: 'siding', upper: 'bay', top: 'bracket', shop: { sign: { en: 'BAKERY', zh: '麵包坊' }, sub: { en: 'SOURDOUGH  ·  PASTRIES', zh: '酸麵包・糕點' }, window: 'bread', awning: 1.4, door: 'left', dark: false } },
+    { s0: 14, s1: 23, floors: 4, wall: 'brick', upper: 'balcony', top: 'bracket', shop: { sign: { en: 'BOOKS & MAPS', zh: '書店・地圖' }, window: 'books' } },
+    { s0: 23, s1: 31, floors: 3, wall: 'stucco2', upper: 'flat', top: 'pediment', shop: { sign: { en: 'CRAB HOUSE', zh: '螃蟹餐廳' }, sub: { en: 'CHOWDER  ·  OYSTERS', zh: '巧達濃湯・生蠔' }, awning: 1.5 } },
+    { s0: 31, s1: 42, floors: 4, wall: 'siding', upper: 'bay', top: 'parapet', shop: { sign: { en: 'GIFTS & POSTCARDS', zh: '禮品・明信片' }, window: 'gifts', dark: false } },
+    { s0: 42, s1: 51, floors: 3, wall: 'brick', upper: 'flat', top: 'bracket', shop: { sign: { en: 'ICE CREAM', zh: '冰淇淋' }, sub: { en: 'CHOCOLATE  ·  SUNDAES', zh: '巧克力・聖代' }, awning: 1.4, door: 'center' } },
+    { s0: 51, s1: 61, floors: 4, wall: 'stucco', upper: 'bay', top: 'bracket', shop: { sign: { en: 'SEAFOOD GRILL', zh: '海鮮燒烤' } } },
+    { s0: 61, s1: 70, floors: 3, wall: 'siding', upper: 'balcony', top: 'pediment', shop: { sign: { en: 'SAN FRANCISCO', zh: '舊金山' }, sub: { en: 'TRADING CO.', zh: '貿易商行' }, window: 'gifts', awning: 1.4 } },
+    { s0: 70, s1: 81, floors: 4, wall: 'brick', upper: 'flat', top: 'parapet', shop: { sign: { en: 'WATERFRONT MARKET', zh: '海濱市場' }, door: 'left' } },
+    { s0: 81, s1: 91, floors: 3, wall: 'stucco2', upper: 'bay', top: 'bracket', shop: { sign: { en: 'OYSTER BAR', zh: '生蠔吧' } } },
     { s0: 91, s1: 102, floors: 4, wall: 'siding', upper: 'balcony', top: 'bracket' },
     { s0: 102, s1: 112, floors: 3, wall: 'brick', upper: 'flat', top: 'pediment' },
     { s0: 112, s1: 124, floors: 4, wall: 'stucco', upper: 'bay', top: 'parapet' },
@@ -214,9 +214,9 @@ function buildBayArea(scene, ctx) {
   const cafeSignMat = ink({ map: BX.cafeSignTexture(), facing: 0.1, hatch: 0 });
   const bladeAt = (s, mat, o) => { const [x, z] = at(s, FACADE); const mtx = new THREE.Matrix4().makeRotationY(heading(s) + Math.PI / 2).setPosition(x, WALK_Y, z); bladeSign((g, m, i) => B.geo(g, m, i, mtx), M, 0, GF + 0.85, mat, { seed: s, ...o }); };
   bladeAt(4.3, cafeSignMat, { bw: 1.9, bh: 1.1 });
-  bladeAt(13.3, ink({ map: BX.shopSignTexture('BAKERY', { sub: 'est. 1906', dark: true, W: 512, H: 300, seed: 977 }), facing: 0.1, hatch: 0 }), { bw: 1.2, bh: 0.7 });
-  bladeAt(29.6, ink({ map: BX.shopSignTexture("FISHERMAN'S WHARF", { sub: '→', dark: true, W: 900, H: 300, seed: 979 }), facing: 0.1, hatch: 0 }), { bw: 1.9, bh: 0.62 });
-  bladeAt(60.3, ink({ map: BX.shopSignTexture('GRILL', { sub: 'OPEN', dark: false, W: 512, H: 300, seed: 981 }), facing: 0.1, hatch: 0 }), { bw: 1.1, bh: 0.65 });
+  bladeAt(13.3, ink({ map: BX.shopSignTexture({ en: 'BAKERY', zh: '麵包坊' }, { sub: { en: 'est. 1906', zh: '創立於 1906 年' }, dark: true, W: 512, H: 300, seed: 977 }), facing: 0.1, hatch: 0 }), { bw: 1.2, bh: 0.7 });
+  bladeAt(29.6, ink({ map: BX.shopSignTexture({ en: "FISHERMAN'S WHARF", zh: '漁人碼頭' }, { sub: '→', dark: true, W: 900, H: 300, seed: 979 }), facing: 0.1, hatch: 0 }), { bw: 1.9, bh: 0.62 });
+  bladeAt(60.3, ink({ map: BX.shopSignTexture({ en: 'GRILL', zh: '燒烤' }, { sub: { en: 'OPEN', zh: '營業中' }, dark: false, W: 512, H: 300, seed: 981 }), facing: 0.1, hatch: 0 }), { bw: 1.1, bh: 0.65 });
 
   // =====================================================================
   // THE SIDEWALK: café seating, the chalkboard, lamps with banners, trees, bins
@@ -239,7 +239,7 @@ function buildBayArea(scene, ctx) {
   {
     const [x, z] = at(4, -KERB - 0.6), put = placer(B, x, WALK_Y, z, 0), sid = id(0.33);
     const g = new THREE.BoxGeometry(0.04, 0.22, 1.05); g.translate(0, 3.15, 0);
-    const nm = ink({ map: BX.streetNameTexture('Embarcadero'), facing: 0.1, hatch: 0 });
+    const nm = ink({ map: BX.streetNameTexture({ en: 'Embarcadero', zh: '內河碼頭' }), facing: 0.1, hatch: 0 });
     put(g, [nm, nm, M.dark, M.dark, M.dark, M.dark], sid);
     put(boxG(0.06, 0.06, 0.06, 0, 3.35, 0), M.iron, sid);
   }
@@ -277,7 +277,7 @@ function buildBayArea(scene, ctx) {
     put(cylG(0.1, 0.1, 0.12, 0, 4.25, 0, 10), M.iron, pid);
     put(sphG(0.09, 0, 4.45, 0, 1, 1.4, 1, 10), M.iron, pid);
     // arms: board name, icon, direction (1 = points ahead / right of the board), height, yaw
-    const ARMS = [['Ferry Building', 'ferry', 3.75, Math.PI - 0.35], ['Embarcadero', null, 3.3, 0.12], ['Golden Gate Bridge', 'bridge', 2.85, 0.3], ['Alcatraz Island', 'island', 2.4, -0.2]];
+    const ARMS = [[{ en: 'Ferry Building', zh: '渡輪大廈' }, 'ferry', 3.75, Math.PI - 0.35], [{ en: 'Embarcadero', zh: '內河碼頭' }, null, 3.3, 0.12], [{ en: 'Golden Gate Bridge', zh: '金門大橋' }, 'bridge', 2.85, 0.3], [{ en: 'Alcatraz Island', zh: '惡魔島' }, 'island', 2.4, -0.2]];
     ARMS.forEach(([text, icon, y, yaw], i) => {
       // each board points along local -z (forward), turned by yaw toward its place
       const mat = ink({ map: BX.armSignTexture(text, { icon, dir: 1, seed: 931 + i }), facing: 0.15, hatch: 0 });
@@ -285,8 +285,9 @@ function buildBayArea(scene, ctx) {
       const g = new THREE.BoxGeometry(0.05, 0.38, 1.9); g.translate(0, y, -1.0); g.rotateY(yaw);
       put(g, [mat, matB, M.dark, M.dark, M.dark, M.dark], pid + 0.002);
     });
-    const ap = ink({ map: BX.armSignTexture('Airport', { icon: 'plane', dir: 1, seed: 939 }), facing: 0.15, hatch: 0 });
-    const apB = ink({ map: BX.armSignTexture('Airport', { icon: 'plane', dir: -1, seed: 939 }), facing: 0.15, hatch: 0 });
+    const AIRPORT = { en: 'Airport', zh: '機場' };
+    const ap = ink({ map: BX.armSignTexture(AIRPORT, { icon: 'plane', dir: 1, seed: 939 }), facing: 0.15, hatch: 0 });
+    const apB = ink({ map: BX.armSignTexture(AIRPORT, { icon: 'plane', dir: -1, seed: 939 }), facing: 0.15, hatch: 0 });
     const g = new THREE.BoxGeometry(0.05, 0.38, 1.5); g.translate(0, 1.85, 0.8);
     put(g, [apB, ap, M.dark, M.dark, M.dark, M.dark], pid + 0.002);
     solidC({ x, z, r: 0.3 });
@@ -393,7 +394,7 @@ function buildBayArea(scene, ctx) {
     const roof = new THREE.ConeGeometry(1.35, 0.6, 4); roof.rotateY(Math.PI / 4); roof.translate(0, 2.72, 0); put(roof, M.ironMid, bid);
     const g = new THREE.PlaneGeometry(1.1, 0.7); g.rotateY(-Math.PI / 2); g.translate(-0.81, 1.35, 0); put(g, M.glass, bid + 0.002);
     const sg = new THREE.PlaneGeometry(1.3, 0.3); sg.rotateY(-Math.PI / 2); sg.translate(-0.82, 2.0, 0);
-    put(sg, ink({ map: BX.shopSignTexture('CABLE CAR', { sub: 'TICKETS', dark: true, W: 900, H: 210, seed: 983 }), facing: 0.1, hatch: 0 }), bid + 0.004);
+    put(sg, ink({ map: BX.shopSignTexture({ en: 'CABLE CAR', zh: '叮噹車' }, { sub: { en: 'TICKETS', zh: '售票處' }, dark: true, W: 900, H: 210, seed: 983 }), facing: 0.1, hatch: 0 }), bid + 0.004);
     solid(x - 0.85, x + 0.85, z - 0.75, z + 0.75);
   }
 
@@ -459,7 +460,7 @@ function buildBayArea(scene, ctx) {
     putF(boxG(fw + 0.6, 0.5, 0.9, 0, H - 2, 0.3), M.ledge, sid + 0.004);
     putF(boxG(fw * 0.4, 1.4, 0.4, 0, H - 1.5, 0.1), M.stucco2, sid + 0.004);
     const ng = new THREE.PlaneGeometry(4.6, 0.95); ng.translate(0, H - 0.95, 0.32);
-    putF(ng, ink({ map: BX.shopSignTexture('PIER 1', { dark: false, W: 900, H: 190, seed: 985 }), facing: 0.1, hatch: 0 }), sid + 0.01);
+    putF(ng, ink({ map: BX.shopSignTexture({ en: 'PIER 1', zh: '一號碼頭' }, { dark: false, W: 900, H: 190, seed: 985 }), facing: 0.1, hatch: 0 }), sid + 0.01);
     blocker(new THREE.BoxGeometry(xb - xa, H, zb - za), (xa + xb) / 2, WALK_Y + H / 2, zc);
   }
 
@@ -511,7 +512,7 @@ function buildBayArea(scene, ctx) {
     putF(cylG(0.08, 0.12, 6, tx, H + 40.9, -6, 6), M.iron, fid + 0.018);
     // a name over the middle doors
     const ng = new THREE.PlaneGeometry(9, 1.2); ng.translate(tx, H - 1.0, 0.15);
-    putF(ng, ink({ map: BX.shopSignTexture('FERRY BUILDING', { dark: false, W: 1500, H: 200, seed: 987 }), facing: 0.1, hatch: 0 }), fid + 0.02);
+    putF(ng, ink({ map: BX.shopSignTexture({ en: 'FERRY BUILDING', zh: '渡輪大廈' }, { dark: false, W: 1500, H: 200, seed: 987 }), facing: 0.1, hatch: 0 }), fid + 0.02);
     blocker(new THREE.BoxGeometry(w, H + 30, D), (x0 + x1) / 2, H / 2, z0 + D / 2);
   }
 
@@ -715,13 +716,12 @@ function buildBayArea(scene, ctx) {
   const card = document.createElement('div'); card.className = 'lb-card bay-card hidden'; card.id = 'bay-card';
   card.setAttribute('role', 'dialog'); card.setAttribute('aria-live', 'polite');
   hud.appendChild(card);
-  const mapImg = BX.mapCardImage();
   const CARD = { title: 'The San Francisco waterfront', alt: 'A map of the waterfront: the Golden Gate Bridge, Alcatraz, the Ferry Building and the Embarcadero.', text: 'You are on the Embarcadero, the city\'s waterfront. The Golden Gate is to the north-west, Alcatraz out in the bay.' };
   let cardOpen = false, cardTimer = 0;
   const renderCard = () => {
     card.replaceChildren();
     const title = document.createElement('div'); title.className = 'title'; title.textContent = tr(CARD.title); card.append(title);
-    const img = document.createElement('img'); img.src = mapImg; img.alt = tr(CARD.alt); card.append(img);
+    const img = document.createElement('img'); img.src = BX.mapCardImage(getLang()); img.alt = tr(CARD.alt); card.append(img);
     const p = document.createElement('p'); p.textContent = tr(CARD.text); card.append(p);
     const more = document.createElement('div'); more.className = 'more';
     const [a, b] = tr('press {key} to close').split('{key}'); const k = document.createElement('kbd'); k.textContent = 'E';

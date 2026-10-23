@@ -24,10 +24,11 @@ export const REC = 0.5;       // the storefront glass sits this far back from th
 // fascia sign materials, shared by signs with the same text and shape; the cache lives
 // on the scene's material set (M.signs), so it goes when the scene is disposed
 function signMat(M, text, sub, w, h, dark = true) {
-  const key = `${text}|${sub}|${Math.round((w / h) * 4)}|${dark}`;
+  const en = text.en ?? text;
+  const key = `${en}|${sub.en ?? sub}|${Math.round((w / h) * 4)}|${dark}`;
   if (!M.signs.has(key)) {
     const W = Math.min(2048, Math.round(200 * (w / h)));
-    M.signs.set(key, ink({ map: BX.shopSignTexture(text, { sub, dark, W, H: 200, seed: text.length * 7 + 11 }), facing: 0.15, hatch: 0 }));
+    M.signs.set(key, ink({ map: BX.shopSignTexture(text, { sub, dark, W, H: 200, seed: en.length * 7 + 11 }), facing: 0.15, hatch: 0 }));
   }
   return M.signs.get(key);
 }

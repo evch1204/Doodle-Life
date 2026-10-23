@@ -73,7 +73,7 @@ The journey begins at home, in the **doodle loft**, a furnished room with a desk
 - **Things to do in every city.** Talk to the barista or the tea house auntie, sit on a bench and watch the boats, look through the pier's binoculars, take a photo, collect the hidden items, and follow the objective list.
 - **A character from a reference sheet.** A chibi traveler with a hoodie and backpack, using inverse kinematics for the legs and hair and backpack that follow through on movement. They walk, turn, sit, lie down, reach and pick things up.
 - **A photo album.** Snapshots become postcards and stay in an album for the session.
-- **English and 中文.** Switch any time from the settings. Every string the player sees is translated, and the in-world signs stay in Chinese as part of the art.
+- **English and 中文.** Switch any time from the settings. Everything follows it: the HUD and dialogue, and every shop sign, street sign, menu and poster in the world, which redraw in place with wording written for each board.
 - **Seamless travel.** Check in at a gate, walk down the jetway, and land in the city. Coming home puts you back in front of the gate you left from.
 - **Self-contained.** Every texture, including the sky panoramas, is drawn with a wobbly-pen canvas helper when the page loads. Sound effects are synthesized. No image or audio files are shipped.
 
@@ -196,6 +196,7 @@ The test scripts drive the game in headless Chrome through [Playwright](https://
 | `node scripts/playtest_shanghai.mjs <dir>` | The Bund: the river boundary along the whole railing, the café, interactions, animation |
 | `node scripts/playtest_bayarea.mjs <dir>` | The Embarcadero: the cable car, the bay and pier boundaries, both ends, the lookout, benches |
 | `node scripts/i18n_check.mjs [dir]` | Language switching, a Chinese entry for every reachable string, no text overflow |
+| `node scripts/lettering_check.mjs [dir]` | Every sign, menu and poster in each scene follows the language; saves a sheet of them in each language |
 | `SCENE=<id> node scripts/perf.mjs` | Frame times, mesh and triangle counts from three gameplay views |
 | `node scripts/shots.mjs <dir>` | Review stills (set `SCENE=taiwan`, `shanghai` or `bayarea` for those views) |
 

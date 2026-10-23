@@ -28,7 +28,7 @@ export function buildRoom(scene) {
     crates: [TX.crateTexture(1, 'lines'), TX.crateTexture(2, 'smile'), TX.crateTexture(3, 'T'), TX.crateTexture(4, '')],
     keyboard: TX.keyboardTexture(), tiles: TX.tileTexture(), towel: TX.towelTexture(), basket: TX.basketTexture(),
     stickies: [TX.stickyTexture(1), TX.stickyTexture(2), TX.stickyTexture(3)],
-    labels: [TX.labelTexture('TEA', 5), TX.labelTexture('RICE', 6), TX.labelTexture('SUGAR', 7)],
+    labels: [TX.labelTexture({ en: 'TEA', zh: '茶' }, 5), TX.labelTexture({ en: 'RICE', zh: '米' }, 6), TX.labelTexture({ en: 'SUGAR', zh: '糖' }, 7)],
     cabinet: TX.cabinetTexture(9), cereal: TX.cerealTexture(),
     tea: TX.posterTea(), clock: TX.clockTexture(), calendar: TX.calendarTexture(), mirror: TX.mirrorTexture(),
   };

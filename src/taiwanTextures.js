@@ -1,9 +1,27 @@
 import * as THREE from 'three';
-import { Sketch, makeRng } from './sketch.js';
+import { Sketch, makeRng, HANZI, say, letteredTexture } from './sketch.js';
 
 // Line-art textures for the Taiwan chapter (Jiufen): white paper, black ink, same pen as the room.
+// Writing is { en, zh } and follows the language setting; boards are laid out for the
+// hanzi (the shapes in the scene are sized for them) and English is fitted into the same board.
 
-export const HANZI = '"DFKai-SB","KaiTi","BiauKai","STKaiti","Microsoft JhengHei","PingFang TC",serif';
+export { HANZI };
+
+// The English on each hanzi sign: what a sign there would say, short enough for its board.
+const SIGN_EN = {
+  珍珠奶茶: 'Bubble Tea', 珍奶: 'Boba', 奶茶: 'Milk Tea', 臭豆腐: 'Stinky Tofu', 芋圓: 'Taro Balls',
+  鳳梨酥: 'Pineapple Cakes', 茶館: 'Tea House', 茶: 'Tea', 麵: 'Noodles', 牛肉麵: 'Beef Noodles',
+  水果: 'Fruit', 九份老街: 'Jiufen Old Street', 九份: 'Jiufen', 小籠包: 'Soup Dumplings',
+  烤肉串: 'Skewers', 郵: 'Post', 機場: 'Airport', 外灘: 'The Bund', 福德宮: 'Fude Temple',
+  福: 'Good Luck', 營業中: 'Open', 好吃: 'Tasty!', 便宜: 'Cheap!',
+  民宿: 'Guesthouse', 書: 'Books', 古早味: 'Old-Time Snacks', 酒: 'Rice Wine', 老街: 'Old Street',
+};
+// a sign's text as { en, zh }: a plain string is the hanzi, its English looked up above
+const bi = (t) => {
+  if (typeof t !== 'string') return t;
+  if (t && !SIGN_EN[t]) console.warn(`no English for the sign ${t}`);
+  return { zh: t, en: SIGN_EN[t] ?? t };
+};
 
 // Irregular stone paving, 2 m tile (triplanar).
 export function pavingTexture(seed = 31) {
@@ -109,52 +127,76 @@ export function latticeTexture(seed = 49) {
   return s.texture();
 }
 
-// Wooden sign board with brush characters. vertical: one char per line.
-export function signTexture(text, { vertical = true, seed = 51, border = true, w = 128, h = 0, size = 0, invert = false } = {}) {
-  const chars = [...text];
-  const W = vertical ? w : Math.max(w, chars.length * 120 + 40);
+// Wooden sign board with brush characters. vertical: one char per line (English runs
+// along the board, turned). aspect: the board's width / height, for a horizontal board.
+export function signTexture(text, { vertical = true, seed = 51, border = true, w = 128, h = 0, size = 0, invert = false, aspect = 0 } = {}) {
+  text = bi(text);
+  const chars = [...say(text, 'zh')];
   const H = h || (vertical ? chars.length * 116 + 40 : 160);
-  const s = new Sketch(W, H, { seed, bg: invert ? '#000' : '#fff' });
-  const ink = invert ? '#fff' : '#000';
-  if (border) {
-    s.rect(6, 6, W - 12, H - 12, { w: 5, j: 0.8, color: ink });
-    s.rect(16, 16, W - 32, H - 32, { w: 1.6, j: 0.6, color: ink, alpha: 0.7 });
-  }
-  const fs = size || (vertical ? Math.min(W * 0.7, 96) : Math.min(H * 0.62, 100));
-  chars.forEach((c, i) => {
-    if (vertical) s.text(c, W / 2, 20 + (i + 0.5) * ((H - 40) / chars.length), fs, { font: HANZI, color: ink });
-    else s.text(c, 20 + (i + 0.5) * ((W - 40) / chars.length), H / 2 + 4, fs, { font: HANZI, color: ink });
+  const W = !vertical && aspect ? Math.round(H * aspect) : vertical ? w : Math.max(w, chars.length * 120 + 40);
+  return letteredTexture((lang) => {
+    const s = new Sketch(W, H, { seed, bg: invert ? '#000' : '#fff' });
+    const ink = invert ? '#fff' : '#000';
+    if (border) {
+      s.rect(6, 6, W - 12, H - 12, { w: 5, j: 0.8, color: ink });
+      s.rect(16, 16, W - 32, H - 32, { w: 1.6, j: 0.6, color: ink, alpha: 0.7 });
+    }
+    const pad = border ? 26 : 8;
+    if (lang !== 'zh') {
+      // English: along the board (turned to read top to bottom on a vertical one)
+      if (vertical && H > W * 1.3) s.fitText(say(text, lang), W / 2, H / 2, H - pad * 2, W - pad * 2, { lines: 2, color: ink, rot: Math.PI / 2 });
+      else s.fitText(say(text, lang), W / 2, H / 2 + 3, W - pad * 2, H - pad * 2, { lines: 2, color: ink });
+      return s;
+    }
+    const fs = size || (vertical ? Math.min(W * 0.7, 96) : Math.min(H * 0.62, 100));
+    // horizontal: evenly spaced, but not drifting apart on a long board
+    const step = Math.min((W - 40) / chars.length, fs * 1.25);
+    chars.forEach((c, i) => {
+      if (vertical) s.text(c, W / 2, 20 + (i + 0.5) * ((H - 40) / chars.length), fs, { font: HANZI, color: ink });
+      else s.text(c, W / 2 + (i - (chars.length - 1) / 2) * step, H / 2 + 4, fs, { font: HANZI, color: ink });
+    });
+    return s;
   });
-  return s.texture();
 }
 
 // Paper lantern skin: vertical ribs wrap around, horizontal bands, optional big character.
 export function lanternTexture(char = '', seed = 53) {
-  const W = 512, H = 256, s = new Sketch(W, H, { seed });
-  for (let i = 0; i < 16; i++) {
-    const x = (i / 16) * W;
-    s.stroke([[x, 26], [x + 2, H / 2], [x, H - 26]], { w: 1.4, j: 0.4, alpha: 0.5 });
-  }
-  s.line(0, 20, W, 20, { w: 4, j: 0.4 });
-  s.line(0, H - 20, W, H - 20, { w: 4, j: 0.4 });
-  // shaded edges so the round lantern reads as darker paper
-  s.hatch(0, 22, W, 28, { gap: 7, lw: 1.2, alpha: 0.4, angle: 1.2 });
-  s.hatch(0, H - 50, W, 28, { gap: 7, lw: 1.2, alpha: 0.4, angle: 1.2 });
-  if (char) {
+  // a plain lantern has no writing, so it need not follow the language
+  const lettered = char ? letteredTexture : (draw, o) => draw('zh').texture(o);
+  char = bi(char);
+  return lettered((lang) => {
+    const W = 512, H = 256, s = new Sketch(W, H, { seed });
+    for (let i = 0; i < 16; i++) {
+      const x = (i / 16) * W;
+      s.stroke([[x, 26], [x + 2, H / 2], [x, H - 26]], { w: 1.4, j: 0.4, alpha: 0.5 });
+    }
+    s.line(0, 20, W, 20, { w: 4, j: 0.4 });
+    s.line(0, H - 20, W, H - 20, { w: 4, j: 0.4 });
+    // shaded edges so the round lantern reads as darker paper
+    s.hatch(0, 22, W, 28, { gap: 7, lw: 1.2, alpha: 0.4, angle: 1.2 });
+    s.hatch(0, H - 50, W, 28, { gap: 7, lw: 1.2, alpha: 0.4, angle: 1.2 });
+    const str = say(char, lang);
     // character front and back (u = 0.25 and 0.75 face +z / -z on a lathe)
-    for (const u of [0.25, 0.75]) s.text(char, u * W, H / 2 + 4, 150, { font: HANZI });
-  }
-  return s.texture({ repeat: true });
+    if (str) for (const u of [0.25, 0.75]) {
+      if (lang === 'zh') s.text(str, u * W, H / 2 + 4, 150, { font: HANZI });
+      else s.fitText(str, u * W, H / 2 + 4, 190, 150, { max: 110, lines: 2 });
+    }
+    return s;
+  }, { repeat: true });
 }
 
 // Noren (split doorway curtain) with a character.
 export function norenTexture(text, seed = 55) {
-  const W = 512, H = 256, s = new Sketch(W, H, { seed });
-  s.hatch(0, 0, W, H, { gap: 12, lw: 1.3, alpha: 0.3, angle: 0.2 });
-  const n = 3;
-  for (let i = 1; i < n; i++) s.line((i / n) * W, 40, (i / n) * W, H, { w: 4, j: 0.6 });
-  [...text].forEach((c, i, arr) => s.text(c, ((i + 0.5) / arr.length) * W, H * 0.55, 120, { font: HANZI }));
-  return s.texture();
+  text = bi(text);
+  return letteredTexture((lang) => {
+    const W = 512, H = 256, s = new Sketch(W, H, { seed });
+    s.hatch(0, 0, W, H, { gap: 12, lw: 1.3, alpha: 0.3, angle: 0.2 });
+    const n = 3;
+    for (let i = 1; i < n; i++) s.line((i / n) * W, 40, (i / n) * W, H, { w: 4, j: 0.6 });
+    if (lang === 'zh') [...say(text, 'zh')].forEach((c, i, arr) => s.text(c, ((i + 0.5) / arr.length) * W, H * 0.55, 120, { font: HANZI }));
+    else s.fitText(say(text, lang), W / 2, H * 0.56, W - 50, H * 0.5, { max: 104 });
+    return s;
+  });
 }
 
 // Bubble tea cup: tea line, pearls at the bottom, a smiley.
@@ -174,14 +216,17 @@ export function bobaTexture() {
 
 // Pineapple cake box: lid with characters and a pineapple doodle.
 export function cakeBoxTexture() {
+  return letteredTexture((lang) => {
   const W = 512, H = 256, s = new Sketch(W, H, { seed: 59 });
   s.rect(10, 10, W - 20, H - 20, { w: 5, j: 0.8 });
-  s.text('鳳梨酥', W * 0.62, H * 0.5, 84, { font: HANZI });
+  if (lang === 'zh') s.text('鳳梨酥', W * 0.62, H * 0.5, 84, { font: HANZI });
+  else s.fitText('Pineapple\nCakes', W * 0.64, H * 0.5, 270, 170, { max: 76 });
   const cx = 110, cy = 140;
   s.ellipse(cx, cy, 44, 58, { w: 3 });
   for (let i = -2; i <= 2; i++) { s.line(cx - 40, cy + i * 22 - 20, cx + 40, cy + i * 22 + 20, { w: 1.4, alpha: 0.7 }); s.line(cx + 40, cy + i * 22 - 20, cx - 40, cy + i * 22 + 20, { w: 1.4, alpha: 0.7 }); }
   for (const a of [-0.6, -0.2, 0.2, 0.6]) s.stroke([[cx, cy - 56], [cx + Math.sin(a) * 40, cy - 56 - Math.cos(a) * 46]], { w: 3 });
-  return s.texture();
+  return s;
+  });
 }
 
 // Steamer basket: woven bamboo bands.
@@ -193,18 +238,25 @@ export function bambooTexture() {
   return s.texture({ repeat: true });
 }
 
-// Small paper notices / menus taped to walls.
-export function noticeTexture(lines, seed = 63) {
-  const W = 256, H = 340, s = new Sketch(W, H, { seed });
-  s.rect(8, 8, W - 16, H - 16, { w: 3, j: 1 });
-  lines.forEach((c, i) => s.text(c, W / 2, 60 + i * 70, 56, { font: HANZI }));
-  for (let i = 0; i < 4; i++) s.line(40, 60 + lines.length * 70 + i * 22, W - 40 - s.rand(0, 60), 60 + lines.length * 70 + i * 22, { w: 2, alpha: 0.6 });
-  return s.texture();
+// Small paper notices / menus taped to walls, a line of hanzi per row.
+export function noticeTexture(rows, seed = 63) {
+  rows = rows.map(bi);
+  return letteredTexture((lang) => {
+    const W = 256, H = 340, s = new Sketch(W, H, { seed });
+    const lines = rows.map((r) => say(r, lang));
+    s.rect(8, 8, W - 16, H - 16, { w: 3, j: 1 });
+    lines.forEach((c, i) => {
+      if (lang === 'zh') s.text(c, W / 2, 60 + i * 70, 56, { font: HANZI });
+      else s.fitText(c, W / 2, 60 + i * 70, W - 50, 62, { max: 54 });
+    });
+    for (let i = 0; i < 4; i++) s.line(40, 60 + lines.length * 70 + i * 22, W - 40 - s.rand(0, 60), 60 + lines.length * 70 + i * 22, { w: 2, alpha: 0.6 });
+    return s;
+  });
 }
 
 // Shrine plaque / incense board.
-export function plaqueTexture(text) {
-  return signTexture(text, { vertical: false, seed: 65, w: 420, h: 150, size: 92 });
+export function plaqueTexture(text, aspect = 0) {
+  return signTexture(text, { vertical: false, seed: 65, w: 420, h: 150, size: 92, aspect });
 }
 
 // ---------------------------------------------------------------------------

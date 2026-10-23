@@ -116,12 +116,12 @@ function buildShanghai(scene) {
     lifeRing: ink({ map: TX.lifeRingTexture(), repeat: [1, 1], facing: 0.5, hatchFreq: 40 }),
     coffee: ink({ map: TX.coffeeSignTexture(), facing: 0.2, hatch: 0.3 }),
     fascia: ink({ map: TX.fasciaTexture(), facing: 0.2, hatch: 0.3 }),
-    menuA: ink({ map: TX.menuTexture(['MENU', 'Espresso', 'Americano', 'Latte', 'Mocha', 'Tea']), facing: 0 }),
-    menuB: ink({ map: TX.menuTexture(['CAKES', 'Egg tart', 'Scone', 'Cookie', 'Croissant'], 366), facing: 0 }),
+    menuA: ink({ map: TX.menuTexture([{ en: 'MENU', zh: '菜單' }, { en: 'Espresso', zh: '濃縮咖啡' }, { en: 'Americano', zh: '美式咖啡' }, { en: 'Latte', zh: '拿鐵' }, { en: 'Mocha', zh: '摩卡' }, { en: 'Tea', zh: '茶' }]), facing: 0 }),
+    menuB: ink({ map: TX.menuTexture([{ en: 'CAKES', zh: '甜點' }, { en: 'Egg tart', zh: '蛋塔' }, { en: 'Scone', zh: '司康' }, { en: 'Cookie', zh: '餅乾' }, { en: 'Croissant', zh: '可頌' }], 366), facing: 0 }),
     awning: ink({ map: TX.awningTexture(), facing: 0.35, side: THREE.DoubleSide }),
     photoSign: ink({ map: TX.photoSignTexture(), facing: 0.1, hatch: 0.3 }),
     plaque: ink({ map: TX.plaqueTexture(), facing: 0.1, hatch: 0.3 }),
-    bund: ink({ map: TX.verticalSign('外灘'), facing: 0.2, hatch: 0.3 }),
+    bund: ink({ map: TX.verticalSign({ en: 'THE BUND', zh: '外灘' }), facing: 0.2, hatch: 0.3 }),
     boatWin: ink({ map: TX.boatWindowTexture(), repeat: [3, 1], facing: 0.4, hatchFreq: 2 }),
     boat: ink({ tone: 0.98, facing: 0.5, hatchFreq: 2 }),
     hull: ink({ tone: 0.55, facing: 0.4, hatchFreq: 2.5 }),
@@ -470,8 +470,8 @@ function buildShanghai(scene) {
   {
     const g = group(root, 2.6, 0, 5.1, 0.35);
     box(g, 0.08, 1.4, 0.08, 0, 0, 0, M.woodDark);
-    facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.08, 0, M.wood, signMat('機場', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
-    facedBox(g, 0.6, 0.2, 0.04, -0.15, 0.8, 0.02, M.wood, signMat('外灘', { vertical: false, seed: 23, w: 300, h: 120, size: 70 }), [4, 5]).rotation.y = 0.5;
+    facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.08, 0, M.wood, signMat('機場', { vertical: false, seed: 21, h: 120, size: 70, aspect: 0.72 / 0.22 }), [4, 5]);
+    facedBox(g, 0.6, 0.2, 0.04, -0.15, 0.8, 0.02, M.wood, signMat('外灘', { vertical: false, seed: 23, h: 120, size: 70, aspect: 0.6 / 0.2 }), [4, 5]).rotation.y = 0.5;
     solidCircle(2.6, 5.1, 0.12);
     actionSpot('home', 'Back to the airport', { x: 2.3, z: 4.6, radius: 0.85, prompt: [2.6, 1.6, 5.1], act: (ctx) => ctx.travel('lobby') });
   }

@@ -1,9 +1,11 @@
-import { makeRng } from './sketch.js';
+import { makeRng, say, letteredTexture } from './sketch.js';
 import { Sketch } from './sketch.js';
+import { getLang, onLang } from './i18n.js';
 
 // All textures are line art: white paper, black ink. Pixel densities are
 // picked so drawn lines land at roughly the same on-screen weight as the
-// post-process outlines (~2px).
+// post-process outlines (~2px). Writing is { en, zh } and follows the
+// language setting.
 
 // Floor: planks running front-to-back, 2.4m tile.
 export function floorTexture() {
@@ -119,25 +121,28 @@ export function spineTextures() {
   return out;
 }
 
-function poster(lines, extra, seed) {
-  const W = 512, H = 720, s = new Sketch(W, H, { seed });
-  s.rect(10, 10, W - 20, H - 20, { w: 8, j: 1.6 });
-  const top = 150, step = 130;
-  lines.forEach((t, i) => s.text(t, W / 2, top + i * step, 118, { rot: s.rand(-0.03, 0.03) }));
-  extra(s, top + lines.length * step);
-  // tape
-  s.rect(W / 2 - 50, -6, 100, 34, { w: 4, j: 0.6, fill: '#fff' });
-  return s.texture();
+function poster(text, extra, seed) {
+  return letteredTexture((lang) => {
+    const W = 512, H = 720, s = new Sketch(W, H, { seed });
+    s.rect(10, 10, W - 20, H - 20, { w: 8, j: 1.6 });
+    const top = 150, step = 130, lines = say(text, lang);
+    lines.forEach((t, i) => s.fitText(t, W / 2, top + i * step, W - 80, 124, { max: 118, rot: s.rand(-0.03, 0.03) }));
+    extra(s, top + lines.length * step, lang);
+    // tape
+    s.rect(W / 2 - 50, -6, 100, 34, { w: 4, j: 0.6, fill: '#fff' });
+    return s;
+  });
 }
 
 export function posterBetterDays() {
-  return poster(['Better', 'Days', 'Ahead'], (s, y) => {
-    s.smiley(256, y - 14, 56, { w: 7 });
+  return poster({ en: ['Better', 'Days', 'Ahead'], zh: ['明天', '會更好'] }, (s, y) => {
+    s.smiley(256, y + 30, 56, { w: 7 });
   }, 61);
 }
 
 export function posterSmallSteps() {
-  return poster(['Small', 'Steps', 'Big', 'Dreams'], (s, y) => {
+  return poster({ en: ['Small', 'Steps', 'Big', 'Dreams'], zh: ['一小步', '大夢想'] }, (s, y, lang) => {
+    if (lang === 'zh') { s.star(370, y + 40, 38, { w: 7 }); s.star(160, y + 90, 30, { w: 6 }); return; }
     s.star(380, 150 + 2 * 130, 38, { w: 7 });
     s.star(250, y - 10, 30, { w: 6 });
   }, 62);
@@ -186,6 +191,7 @@ export function rugTexture() {
 
 // Fridge door with doodle magnets.
 export function fridgeTexture() {
+  return letteredTexture((lang) => {
   const W = 256, H = 560, s = new Sketch(W, H, { seed: 91 });
   s.line(0, 190, W, 190, { w: 6 });
   s.line(210, 60, 210, 150, { w: 9 });
@@ -198,10 +204,11 @@ export function fridgeTexture() {
   s.ellipse(132, 278, 10, 10, { w: 3 });
   s.ellipse(70, 360, 24, 20, { w: 4 });
   s.stroke([[56, 352], [62, 340], [70, 352]], { w: 3 });
-  s.text('DO', 140, 400, 52);
+  s.fitText(lang === 'zh' ? '待辦' : 'DO', 140, 400, 120, 56, { max: 52 });
   s.rect(40, 430, 80, 60, { w: 4, j: 0.8 });
   s.line(50, 450, 110, 450, { w: 3 });
-  return s.texture();
+  return s;
+  });
 }
 
 export function crateTexture(seed, label) {
@@ -447,15 +454,14 @@ export function nearTexture() {
 
 // Monitor screens are redrawn at runtime (off / on / cycling text), so these
 // return the Sketch plus a redraw function.
-const CHAT = [
-  ['mom', 'did you eat yet?'],
-  ['me', 'yes!! noodles again'],
-  ['note', 'drink water. stretch.'],
-  ['me', 'small steps, big dreams'],
-  ['todo', 'finish the room sketch'],
-  ['friend', 'call this weekend?'],
-];
-const SKETCH_TITLES = ['untitled_room.png', 'castle_on_hill.png', 'self_portrait_v3.png', 'cat_doodles.png'];
+const CHAT = {
+  en: [['mom', 'did you eat yet?'], ['me', 'yes!! noodles again'], ['note', 'drink water. stretch.'], ['me', 'small steps, big dreams'], ['todo', 'finish the room sketch'], ['friend', 'call this weekend?']],
+  zh: [['媽', '吃飯了沒？'], ['我', '吃了！！又是麵'], ['備忘', '喝水。伸展一下。'], ['我', '一小步，大夢想'], ['待辦', '把房間草圖畫完'], ['朋友', '這週末通個電話？']],
+};
+const SKETCH_TITLES = {
+  en: ['untitled_room.png', 'castle_on_hill.png', 'self_portrait_v3.png', 'cat_doodles.png'],
+  zh: ['未命名房間.png', '山丘上的城堡.png', '自畫像_v3.png', '貓咪塗鴉.png'],
+};
 
 export function screenSketches() {
   const land = new Sketch(512, 320, { seed: 201 });
@@ -470,7 +476,8 @@ export function screenSketches() {
     if (!on) return off(s);
     s.ctx.fillStyle = '#fff'; s.ctx.fillRect(0, 0, s.w, s.h);
     s.rect(0, 0, s.w, 34, { w: 0, fill: '#1a1a1a', j: 0 });
-    s.text(SKETCH_TITLES[k % SKETCH_TITLES.length], 70, 18, 22, { align: 'left', color: '#fff' });
+    const titles = say(SKETCH_TITLES);
+    s.fitText(titles[k % titles.length], 70, 18, s.w - 84, 26, { max: 22, align: 'left', color: '#fff' });
     for (let i = 0; i < 3; i++) s.ellipse(20 + i * 16, 17, 5, 5, { w: 0, fill: '#fff', j: 0 });
     // tool column
     s.line(56, 34, 56, s.h, { w: 3, j: 0 });
@@ -510,23 +517,29 @@ export function screenSketches() {
     if (!on) return off(s);
     s.ctx.fillStyle = '#fff'; s.ctx.fillRect(0, 0, s.w, s.h);
     s.rect(0, 0, s.w, 40, { w: 0, fill: '#1a1a1a', j: 0 });
-    s.text('messages', s.w / 2, 21, 24, { color: '#fff' });
+    s.text(getLang() === 'zh' ? '訊息' : 'messages', s.w / 2, 21, 24, { color: '#fff' });
+    const chat = say(CHAT);
     let y = 64;
     for (let i = 0; i < 4; i++) {
-      const [who, msg] = CHAT[(k + i) % CHAT.length];
-      const mine = who === 'me';
+      const [who, msg] = chat[(k + i) % chat.length];
+      const mine = who === 'me' || who === '我';
       const w = 200, h = 66, x = mine ? s.w - w - 12 : 12;
       s.rect(x, y, w, h, { w: 3, j: 0.6, fill: mine ? '#ddd' : '#fff' });
       s.text(who, x + 10, y + 16, 18, { align: 'left' });
-      s.text(msg, x + 10, y + 44, 20, { align: 'left' });
+      s.fitText(msg, x + 10, y + 44, w - 20, 24, { max: 20, align: 'left' });
       y += h + 14;
     }
     s.rect(12, s.h - 46, s.w - 24, 34, { w: 3 });
     port.tex && (port.tex.needsUpdate = true);
   };
+  // a language switch redraws whatever the screens show now
+  let shown = [false, 0];
+  const show = (fn) => (on, k) => { shown = [on, k]; fn(on, k); };
   drawLand(false, 0); drawPort(false, 0);
   land.tex = land.texture(); port.tex = port.texture();
-  return { land, port, drawLand, drawPort };
+  const offLang = onLang(() => { drawLand(...shown); drawPort(...shown); });
+  land.tex.addEventListener('dispose', offLang);
+  return { land, port, drawLand: show(drawLand), drawPort: show(drawPort) };
 }
 
 export function keyboardTexture() {
@@ -559,10 +572,12 @@ export function tileTexture() {
 }
 
 export function labelTexture(text, seed) {
-  const s = new Sketch(256, 128, { seed });
-  s.rect(30, 24, 196, 80, { w: 5, j: 0.6 });
-  s.text(text, 128, 66, 52);
-  return s.texture();
+  return letteredTexture((lang) => {
+    const s = new Sketch(256, 128, { seed });
+    s.rect(30, 24, 196, 80, { w: 5, j: 0.6 });
+    s.fitText(say(text, lang), 128, 66, 170, 60, { max: 52 });
+    return s;
+  });
 }
 
 export function towelTexture() {
@@ -587,17 +602,19 @@ export function cabinetTexture(seed) {
 }
 
 export function cerealTexture() {
-  const s = new Sketch(160, 256, { seed: 251 });
-  s.rect(6, 6, 148, 244, { w: 5 });
-  s.text('O\'s', 80, 70, 56);
-  s.ellipse(80, 160, 40, 34, { w: 4 });
-  for (const [x, y] of [[66, 150], [92, 166], [78, 176]]) s.ellipse(x, y, 7, 7, { w: 3 });
-  return s.texture();
+  return letteredTexture((lang) => {
+    const s = new Sketch(160, 256, { seed: 251 });
+    s.rect(6, 6, 148, 244, { w: 5 });
+    s.fitText(lang === 'zh' ? '麥片' : 'O\'s', 80, 70, 130, 64, { max: 56 });
+    s.ellipse(80, 160, 40, 34, { w: 4 });
+    for (const [x, y] of [[66, 150], [92, 166], [78, 176]]) s.ellipse(x, y, 7, 7, { w: 3 });
+    return s;
+  });
 }
 
 export function posterTea() {
-  return poster(['Tea', 'First', 'Then'], (s, y) => {
-    s.text('everything', 256, y - 30, 64);
+  return poster({ en: ['Tea', 'First', 'Then'], zh: ['先喝茶', '其他的', '再說'] }, (s, y, lang) => {
+    if (lang !== 'zh') s.text('everything', 256, y - 30, 64);
     s.ellipse(256, y + 70, 46, 30, { w: 6 });
     s.arc(312, y + 70, 18, 16, -1.3, 1.3, { w: 6 });
     for (let i = 0; i < 3; i++) s.stroke([[226 + i * 28, y + 20], [236 + i * 28, y], [226 + i * 28, y - 16]], { w: 4 });
@@ -618,9 +635,10 @@ export function clockTexture() {
 }
 
 export function calendarTexture() {
+  return letteredTexture((lang) => {
   const s = new Sketch(256, 320, { seed: 271 });
   s.rect(8, 8, 240, 304, { w: 6 });
-  s.text('OCTOBER', 128, 44, 40);
+  s.fitText(lang === 'zh' ? '十月' : 'OCTOBER', 128, 44, 210, 46, { max: 40 });
   s.line(20, 72, 236, 72, { w: 4 });
   for (let r = 0; r < 5; r++) for (let c = 0; c < 7; c++) {
     const x = 22 + c * 31, y = 86 + r * 42;
@@ -628,7 +646,8 @@ export function calendarTexture() {
     if (r * 7 + c === 15) s.ellipse(x + 14, y + 18, 18, 18, { w: 4 });
     if (r * 7 + c < 15 && r * 7 + c > 2) { s.line(x + 4, y + 4, x + 24, y + 32, { w: 2.5 }); s.line(x + 24, y + 4, x + 4, y + 32, { w: 2.5 }); }
   }
-  return s.texture();
+  return s;
+  });
 }
 
 export function mirrorTexture() {

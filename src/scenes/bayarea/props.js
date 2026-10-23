@@ -50,8 +50,8 @@ export function bayMaterials() {
     shopWin: ['plain', 'bread', 'books', 'gifts'].reduce((o, k, i) => ({ ...o, [k]: ink({ map: BX.shopWindowTexture(k, 960 + i), facing: 0.1, hatch: 0 }) }), {}),
     boards: ink({ map: TW.boardsTexture(), tri: 1 / 2, facing: 0.3, mapAmt: 0.6, tone: 0.92, hatch: 0.6 }),
     plaster: ink({ map: TW.plasterTexture(), tri: 1 / 3, facing: 0.15, mapAmt: 0.5, tone: 0.97, hatch: 0.35 }),
-    menuA: ink({ map: TX.menuTexture(['MENU', 'Espresso', 'Cappuccino', 'Latte', 'Mocha', 'Tea']), facing: 0 }),
-    menuB: ink({ map: TX.menuTexture(['PASTRIES', 'Croissant', 'Scone', 'Sourdough', 'Muffin'], 366), facing: 0 }),
+    menuA: ink({ map: TX.menuTexture([{ en: 'MENU', zh: '菜單' }, { en: 'Espresso', zh: '濃縮咖啡' }, { en: 'Cappuccino', zh: '卡布奇諾' }, { en: 'Latte', zh: '拿鐵' }, { en: 'Mocha', zh: '摩卡' }, { en: 'Tea', zh: '茶' }]), facing: 0 }),
+    menuB: ink({ map: TX.menuTexture([{ en: 'PASTRIES', zh: '糕點' }, { en: 'Croissant', zh: '可頌' }, { en: 'Scone', zh: '司康' }, { en: 'Sourdough', zh: '酸麵包' }, { en: 'Muffin', zh: '瑪芬' }], 366), facing: 0 }),
     street: ink({ map: BX.streetTexture(), tri: 1 / 4, mapAmt: 0.7, tone: 0.9, facing: 0.15, hatch: 0.5 }),
     rail: ink({ tone: 0.5, facing: 0.5, hatch: 0 }),
     signs: new Map(), // fascia sign materials by text (street.js)

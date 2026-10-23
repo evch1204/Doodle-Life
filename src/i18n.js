@@ -1,7 +1,8 @@
 // The single string table for every player-facing string (HUD, prompts,
 // captions, dialogue, travel card, settings, journal). Keys are the English
-// source text; t() returns the entry for the current language. In-world
-// signs drawn into textures (茶, 臭豆腐, ...) are art and are not translated.
+// source text; t() returns the entry for the current language. Writing drawn
+// into textures (signs, menus, posters) carries its own { en, zh } wording in the
+// texture modules, and redraws on a switch (letteredTexture in sketch.js).
 // Templates use {name} placeholders: t('Explore the old streets ({n}/{m})', { n, m }).
 
 const ZH = {
