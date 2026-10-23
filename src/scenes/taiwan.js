@@ -393,7 +393,10 @@ function buildTaiwan(scene) {
       box(g, 0.03, 0.03, 0.55, sx, H1 + 0.5 + [...sg].length * 0.3, 0.3, M.black);
     }
     // a horizontal shop board over the opening
-    if (o.board) facedBox(g, Math.min(W - 0.6, [...o.board].length * 0.48 + 0.4), 0.42, 0.06, 0, H1 + 1.42, 0.08, M.woodDark, signMat(o.board, { vertical: false, seed: 3 }), [4]);
+    if (o.board) {
+      const bw = Math.min(W - 0.6, [...o.board].length * 0.48 + 0.4);
+      facedBox(g, bw, 0.42, 0.06, 0, H1 + 1.42, 0.08, M.woodDark, signMat(o.board, { vertical: false, seed: 3, aspect: bw / 0.42 }), [4]);
+    }
     // lanterns under the eaves
     if (o.lanterns !== false) {
       for (const sx of [-1, 1]) lantern(g, sx * (W / 2 - 0.55), top - 0.2, 0.55, 0.12, o.lanternMat ?? M.lantern, 0.32);
@@ -530,7 +533,7 @@ function buildTaiwan(scene) {
     // tall enough that Taipei 101 shows under the sign from the start of the street
     for (const sx of [-1, 1]) box(g, 0.2, 3.95, 0.2, sx * 1.42, 0, 0, M.woodDark);
     box(g, 3.3, 0.18, 0.24, 0, 3.7, 0, M.woodDark);
-    facedBox(g, 1.9, 0.5, 0.08, 0, 3.15, 0, M.woodDark, signMat('九份老街', { vertical: false, seed: 9 }), [4, 5]);
+    facedBox(g, 1.9, 0.5, 0.08, 0, 3.15, 0, M.woodDark, signMat('九份老街', { vertical: false, seed: 9, aspect: 1.9 / 0.5 }), [4, 5]);
     box(g, 3.7, 0.08, 0.7, 0, 3.9, 0, M.roof, { r: 0.02 });
     for (const sx of [-1, 1]) lantern(g, sx * 1.1, 3.65, 0.2, 0.13, M.lanternFu, 0.15);
     solidCircle(-1.42, -1.75, 0.14);
@@ -610,7 +613,7 @@ function buildTaiwan(scene) {
       box(g, 0.34, 0.3, 0.34, sx * 1.0, 0, 0, M.steps);
     }
     box(g, 2.5, 0.16, 0.22, 0, 2.55, 0, M.woodDark);
-    facedBox(g, 1.15, 0.38, 0.06, 0, 2.1, 0, M.dark, ink({ map: TX.plaqueTexture('福德宮'), facing: 0.2 }), [4, 5]);
+    facedBox(g, 1.15, 0.38, 0.06, 0, 2.1, 0, M.dark, ink({ map: TX.plaqueTexture('福德宮', 1.15 / 0.38), facing: 0.2 }), [4, 5]);
     box(g, 2.9, 0.08, 0.6, 0, 2.95, 0, M.roof);
     for (const sx of [-1, 1]) { const t = cyl(g, 0.02, 0.06, 0.25, sx * 1.48, 2.95, 0, M.mid, { seg: 8 }); t.rotation.z = -sx * 1.0; }
     box(g, 0.1, 0.1, 2.0, 0, 3.05, 0, M.mid).rotation.z = Math.PI / 2;
@@ -660,7 +663,7 @@ function buildTaiwan(scene) {
     for (const sx of [-1, 1]) box(g, 0.06, 1.25, 0.06, sx * 0.66, 0.9, 0.3, M.woodDark);
     const sh = box(g, 1.55, 0.06, 0.9, 0, 2.15, 0.12, M.roof);
     sh.rotation.x = -0.18;
-    facedBox(g, 0.9, 0.3, 0.04, 0, 1.75, 0.31, M.woodDark, signMat('小籠包', { vertical: false, seed: 13 }), [4]);
+    facedBox(g, 0.9, 0.3, 0.04, 0, 1.75, 0.31, M.woodDark, signMat('小籠包', { vertical: false, seed: 13, aspect: 0.9 / 0.3 }), [4]);
     for (const [x, n] of [[-0.3, 3], [0.18, 2]]) {
       for (let i = 0; i < n; i++) {
         const b = add(new THREE.CylinderGeometry(0.2, 0.2, 0.11, 24, 1, false), [M.bamboo, M.paper, M.paper], g);
@@ -699,7 +702,7 @@ function buildTaiwan(scene) {
     const brush = cyl(bk, 0.008, 0.008, 0.3, 0.09, 0.1, 0.05, M.wood, { seg: 5 }); brush.rotation.z = -0.35;
     // sign on a post
     box(g, 0.05, 1.2, 0.05, 0.55, 0.85, -0.25, M.woodDark);
-    facedBox(g, 0.62, 0.3, 0.04, 0.3, 1.75, -0.25, M.woodDark, signMat('烤肉串', { vertical: false, seed: 31 }), [4]);
+    facedBox(g, 0.62, 0.3, 0.04, 0.3, 1.75, -0.25, M.woodDark, signMat('烤肉串', { vertical: false, seed: 31, aspect: 0.62 / 0.3 }), [4]);
     // smoke from the grill
     addSteam(g, new THREE.Vector3(-0.15, 1.05, 0), 5, { spread: 0.25, rise: 0.55, size: 0.022 });
     solidLocal(g, -0.65, 0.65, -0.35, 0.35);
@@ -1061,8 +1064,8 @@ function buildTaiwan(scene) {
   {
     const g = group(root, 1.1, 0, 1.6, -0.4);
     box(g, 0.08, 1.35, 0.08, 0, 0, 0, M.woodDark);
-    facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.05, 0, M.wood, signMat('機場', { vertical: false, seed: 21, w: 300, h: 120, size: 70 }), [4, 5]);
-    facedBox(g, 0.6, 0.2, 0.04, -0.15, 0.78, 0.02, M.wood, signMat('九份', { vertical: false, seed: 22, w: 300, h: 120, size: 70 }), [4, 5]).rotation.y = 0.5;
+    facedBox(g, 0.72, 0.22, 0.04, 0.22, 1.05, 0, M.wood, signMat('機場', { vertical: false, seed: 21, h: 120, size: 70, aspect: 0.72 / 0.22 }), [4, 5]);
+    facedBox(g, 0.6, 0.2, 0.04, -0.15, 0.78, 0.02, M.wood, signMat('九份', { vertical: false, seed: 22, h: 120, size: 70, aspect: 0.6 / 0.2 }), [4, 5]).rotation.y = 0.5;
     solidCircle(1.1, 1.6, 0.12);
     actionSpot('home', 'Back to the airport', { x: 0.75, z: 1.25, radius: 0.85, prompt: [1.1, 1.6, 1.6], act: (ctx) => ctx.travel('lobby') });
   }

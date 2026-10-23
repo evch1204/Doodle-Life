@@ -1,4 +1,10 @@
 import * as THREE from 'three';
+import { getLang, onLang } from './i18n.js';
+
+// Brush hanzi (Jiufen's signs). The pen hand is Patrick Hand for Latin and LXGW WenKai
+// (pen-written, shipped with the game, like the HUD) for Chinese.
+export const HANZI = '"DFKai-SB","KaiTi","BiauKai","STKaiti","LXGW WenKai TC","Microsoft JhengHei","PingFang TC",serif';
+export const HAND = `"Patrick Hand", "LXGW WenKai TC", ${HANZI}`;
 
 // Deterministic RNG so every texture is drawn the same way each load.
 export function makeRng(seed = 1) {
@@ -103,7 +109,7 @@ export class Sketch {
     ctx.restore();
   }
 
-  text(str, x, y, size, { align = 'center', color = '#000', rot = 0, font = '"Patrick Hand"' } = {}) {
+  text(str, x, y, size, { align = 'center', color = '#000', rot = 0, font = HAND } = {}) {
     const ctx = this.ctx;
     ctx.save();
     ctx.translate(x, y);
@@ -114,6 +120,41 @@ export class Sketch {
     ctx.fillStyle = color;
     ctx.fillText(str, 0, 0);
     ctx.restore();
+  }
+
+  // Write str in the w x h box centred on (x, y) (x is the left edge for align 'left'), at
+  // the largest size up to max that fits. It wraps onto up to `lines` rows, at spaces or
+  // between any two hanzi ('\n' always breaks), so a translation never runs off its board.
+  // rot turns the box about (x, y). Returns the size used.
+  fitText(str, x, y, w, h, { max = h, lines = 1, lead = 1.15, font = HAND, weight = 400, color = '#000', align = 'center', rot = 0 } = {}) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.font = `${weight} 100px ${font}`;
+    // try each row count; more rows only when they buy a clearly bigger size
+    let rows = null, size = 0;
+    for (let n = 1; n <= lines; n++) {
+      const r = layoutLines(ctx, String(str), n);
+      if (r.rows.length > Math.max(n, r.hard)) continue;
+      const sz = Math.min(max, (w * 100) / r.widest, h / (1 + (r.rows.length - 1) * lead));
+      if (!rows || sz > size * 1.08) { rows = r.rows; size = sz; }
+    }
+    ctx.translate(x, y);
+    ctx.rotate(rot);
+    ctx.font = `${weight} ${size}px ${font}`;
+    ctx.textAlign = align;
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = color;
+    rows.forEach((r, i) => ctx.fillText(r, 0, (i - (rows.length - 1) / 2) * size * lead));
+    ctx.restore();
+    return size;
+  }
+
+  // Hanzi stacked down a column (a vertical sign), centred on (x, y) in a w x h box.
+  columnText(str, x, y, w, h, { max = w, font = HANZI, color = '#000' } = {}) {
+    const chars = [...str];
+    const step = h / chars.length, size = Math.min(max, w, step * 0.92);
+    chars.forEach((c, i) => this.text(c, x, y - h / 2 + (i + 0.5) * step, size, { font, color }));
+    return size;
   }
 
   star(cx, cy, r, o = {}) {
@@ -142,4 +183,75 @@ export class Sketch {
     t.magFilter = THREE.LinearFilter;
     return t;
   }
+}
+
+// ---- writing that follows the language setting -------------------------------------------
+// Signs, menus and posters read in the player's language, like the HUD. Their text is
+// { en, zh } (a plain string reads the same in both); say() picks the current one.
+export const say = (s, lang = getLang()) => (s == null || typeof s !== 'object' ? s : s[lang] ?? s.en);
+
+// A texture with writing on it: draw(lang) returns its Sketch. On a language switch it is
+// drawn again and swapped in under the same texture, so meshes and materials stay put.
+const lettered = new Set();
+export function letteredTexture(draw, opts) {
+  const tex = draw(getLang()).texture(opts);
+  const entry = { tex, draw };
+  lettered.add(entry);
+  tex.addEventListener('dispose', () => lettered.delete(entry));
+  return tex;
+}
+// every live texture with writing on it (scripts/lettering_check.mjs lays them out)
+export const letteredTextures = () => [...lettered].map((e) => e.tex);
+function redrawLettering(lang = getLang()) {
+  for (const e of lettered) { e.tex.image = e.draw(lang).canvas; e.tex.needsUpdate = true; }
+}
+onLang(redrawLettering);
+// WenKai arrives in slices as new characters are first drawn; once a slice lands,
+// draw the writing again so no sign keeps the fallback face
+let fontsPending = false;
+document.fonts?.addEventListener('loadingdone', () => {
+  if (fontsPending) return;
+  fontsPending = true;
+  requestAnimationFrame(() => { fontsPending = false; redrawLettering(); });
+});
+
+// Break text into rows for fitText: '\n' always breaks; each paragraph is wrapped (at
+// spaces, or between hanzi) to the narrowest width that keeps the total within maxLines.
+const CLOSING = /^[、，。！？：；）」』·•・]$/;
+function tokens(par) {
+  const out = [];
+  for (const m of par.matchAll(/(\s*)([\u2E80-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF\u3000-\u303F]|[^\s\u2E80-\u9FFF\uF900-\uFAFF\uFF00-\uFFEF\u3000-\u303F]+)/g)) {
+    const tok = { t: m[2], sp: m[1] };
+    // closing punctuation and bullets stay on the line before them
+    if (out.length && CLOSING.test(tok.t)) out[out.length - 1].t += tok.sp + tok.t;
+    else out.push(tok);
+  }
+  return out;
+}
+const joinRow = (toks) => toks.map((k, i) => (i ? k.sp : '') + k.t).join('');
+function wrap(ctx, toks, limit) {
+  const rows = [];
+  let row = [];
+  for (const k of toks) {
+    if (row.length && ctx.measureText(joinRow([...row, k])).width > limit) { rows.push(row); row = [k]; } else row.push(k);
+  }
+  if (row.length) rows.push(row);
+  return rows.map(joinRow);
+}
+function layoutLines(ctx, str, maxLines) {
+  const pars = str.split('\n').map(tokens);
+  const width = (r) => ctx.measureText(r).width;
+  const widest = (rows) => Math.max(...rows.map(width), 1);
+  const at = (limit) => pars.flatMap((p) => wrap(ctx, p, limit));
+  let rows = pars.map(joinRow);
+  if (maxLines > pars.length) {
+    // the narrowest wrap that keeps the row count within maxLines, by bisection
+    let lo = Math.max(...pars.flat().map((k) => width(k.t)), 1), hi = widest(rows);
+    for (let i = 0; i < 18 && hi - lo > 1; i++) {
+      const mid = (lo + hi) / 2;
+      if (at(mid).length <= maxLines) hi = mid; else lo = mid;
+    }
+    rows = at(hi);
+  }
+  return { rows, widest: widest(rows), hard: pars.length };
 }

@@ -3,7 +3,7 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { ink } from '../ink.js';
 import { makeRng } from '../sketch.js';
 import * as LX from '../lobbyTextures.js';
-import { t as tr, onLang } from '../i18n.js';
+import { t as tr, onLang, getLang } from '../i18n.js';
 import { Batch } from './kit.js';
 
 // The airport lobby: the destination picker. A round departure hall, every
@@ -15,7 +15,7 @@ import { Batch } from './kit.js';
 // Gates come from GATES: adding a city is one entry here (plus its prompt in
 // i18n.js); the hall spaces the gates evenly around the back wall.
 //   id        stable id (remembered as the last gate)
-//   nameEn / nameZh   the sign
+//   nameEn / nameZh   the sign, in the player's language
 //   icon      sign glyph: 'pearl' | 't101' | 'bridge' | 'globe' (lobbyTextures.js ICONS)
 //   sceneArt  the view through the arch: 'pudong' | 'taipei' | 'bayarea' | 'worldmap'
 //   prompt    (optional) the prompt, when "Check in to {nameEn}" does not read well
@@ -92,7 +92,7 @@ function buildLobby(scene, ctx) {
     dark: ink({ tone: 0.22, hatch: 0 }),
     glass: ink({ tone: 0.88, facing: 0.1, hatch: 0 }),
     paper: ink(),
-    banner: ink({ map: LX.bannerTexture('Choose Your Next Destination'), facing: 0.15, hatch: 0 }),
+    banner: ink({ map: LX.bannerTexture({ en: 'Choose Your Next Destination', zh: '選擇你的下一個目的地' }), facing: 0.15, hatch: 0 }),
     skyBoard: ink({ map: LX.skyBoardTexture(), facing: 0.1, hatch: 0 }),
     clock: ink({ map: LX.clockFaceTexture(), facing: 0.05, hatch: 0 }),
     info: ink({ map: LX.infoTexture(), facing: 0.1, hatch: 0 }),
@@ -491,7 +491,7 @@ function buildLobby(scene, ctx) {
     gates.forEach((r, i) => {
       const label = tr(promptFor(r.g));
       gateBtns[i].setAttribute('aria-label', label);
-      gateBtns[i].textContent = `${r.g.nameEn} ${r.g.nameZh}`;
+      gateBtns[i].textContent = getLang() === 'zh' ? r.g.nameZh : r.g.nameEn;
       gateBtns[i].title = label;
     });
   };

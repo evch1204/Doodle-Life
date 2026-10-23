@@ -1,12 +1,14 @@
-import { Sketch, makeRng } from './sketch.js';
+import { Sketch, makeRng, say, letteredTexture } from './sketch.js';
 import { planeGlyph } from './lobbyTextures.js';
 
 // Line-art textures for the Bay Area chapter (the San Francisco waterfront):
 // the same wobbly pen on paper. Shop signs are painted boards (a serif);
-// wayfinding is dark boards with a clean sans, like the airport.
+// wayfinding is dark boards with a clean sans, like the airport. Writing is
+// { en, zh } and follows the language setting (each font falls back to a
+// Chinese face of the same kind).
 
-const SERIF = 'Georgia, "Times New Roman", serif';
-const SANS = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+const SERIF = 'Georgia, "Times New Roman", "Songti TC", "Noto Serif TC", PMingLiU, serif';
+const SANS = '"Helvetica Neue", Helvetica, Arial, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif';
 const BOARD = '#2c2622';
 const CREAM = '#f3ede3';
 
@@ -72,6 +74,7 @@ const GLYPHS = { bridge: bridgeGlyph, ferry: ferryGlyph, island: islandGlyph, bo
 // One arm of the fingerpost: a dark board, the name, a small line icon, an arrow.
 // dir 1 points right, -1 left (the board is drawn the same on both faces).
 export function armSignTexture(text, { icon = null, dir = 1, seed = 931 } = {}) {
+  return letteredTexture((lang) => {
   const W = 1024, H = 200, s = new Sketch(W, H, { seed, bg: BOARD });
   const ctx = s.ctx;
   s.rect(10, 10, W - 20, H - 20, { w: 4, j: 0.3, color: '#e9e2d6', alpha: 0.65 });
@@ -84,99 +87,108 @@ export function armSignTexture(text, { icon = null, dir = 1, seed = 931 } = {}) 
   let tx = x0;
   if (icon === 'plane') { planeGlyph(ctx, x0 + 56, ay, 92, '#fff'); tx = x0 + 128; }
   else if (icon) { GLYPHS[icon](s, x0 + 64, ay + 4, 1.0, { color: '#fff', w: 3.4 }); tx = x0 + 148; }
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  fit(ctx, text, x1 - tx, 92, SANS, 500, 40);
-  ctx.fillText(text, tx, ay + 4);
-  return s.texture();
+  s.fitText(say(text, lang), tx, ay + 4, x1 - tx, 100, { max: 92, font: SANS, weight: 500, color: '#fff', align: 'left' });
+  return s;
+  });
 }
 
 // A street-name blade (on a lamp post): white letters on a dark green-black board.
 export function streetNameTexture(text, seed = 933) {
-  const W = 768, H = 160, s = new Sketch(W, H, { seed, bg: '#24282a' });
-  s.rect(8, 8, W - 16, H - 16, { w: 4, j: 0.2, color: '#fff', alpha: 0.85 });
-  const ctx = s.ctx;
-  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  fit(ctx, text, W - 80, 92, SANS, 600);
-  ctx.fillText(text, W / 2, H / 2 + 4);
-  return s.texture();
+  return letteredTexture((lang) => {
+    const W = 768, H = 160, s = new Sketch(W, H, { seed, bg: '#24282a' });
+    s.rect(8, 8, W - 16, H - 16, { w: 4, j: 0.2, color: '#fff', alpha: 0.85 });
+    s.fitText(say(text, lang), W / 2, H / 2 + 4, W - 80, 100, { max: 92, font: SANS, weight: 600, color: '#fff' });
+    return s;
+  });
 }
 
-// The pole banner: "San Francisco" over the bridge and a wave line.
+// The pole banner: "San Francisco" (舊金山 down the banner) over the bridge and a wave line.
 export function cityBannerTexture(seed = 935) {
+  return letteredTexture((lang) => {
   const W = 256, H = 640, s = new Sketch(W, H, { seed, bg: '#35302b' });
   s.rect(12, 12, W - 24, H - 40, { w: 3, j: 0.3, color: '#e9e2d6', alpha: 0.75 });
   const ctx = s.ctx;
   ctx.fillStyle = CREAM; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `400 58px ${SERIF}`; ctx.fillText('San', W / 2, 150);
-  fit(ctx, 'Francisco', W - 40, 54, SERIF); ctx.fillText('Francisco', W / 2, 216);
+  if (lang === 'zh') s.columnText('舊金山', W / 2, 180, 90, 240, { font: SERIF, color: CREAM });
+  else {
+    ctx.font = `400 58px ${SERIF}`; ctx.fillText('San', W / 2, 150);
+    fit(ctx, 'Francisco', W - 40, 54, SERIF); ctx.fillText('Francisco', W / 2, 216);
+  }
   bridgeGlyph(s, W / 2, 380, 1.45, { color: CREAM, w: 2.6 });
   for (const y of [470, 492]) s.stroke([[50, y], [80, y - 8], [110, y], [140, y - 8], [170, y], [200, y - 8]], { w: 3, j: 0.2, color: CREAM });
   for (let x = 18; x < W - 10; x += 14) s.line(x, H - 30, x, H - 6, { w: 3, j: 0.2, color: '#35302b' });
-  return s.texture();
+  return s;
+  });
 }
 
 // ---- shop signs --------------------------------------------------------------------------
 // The café's hanging sign: CAFE / BAY VIEW / COFFEE · TEA · PASTRIES.
 export function cafeSignTexture(seed = 937) {
-  const W = 1024, H = 600, s = new Sketch(W, H, { seed, bg: BOARD });
-  s.rect(14, 14, W - 28, H - 28, { w: 6, j: 0.3, color: '#e9e2d6', alpha: 0.9 });
-  s.rect(36, 36, W - 72, H - 72, { w: 2.4, j: 0.3, color: '#e9e2d6', alpha: 0.6 });
-  const ctx = s.ctx;
-  ctx.fillStyle = CREAM; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `400 150px ${SERIF}`; ctx.fillText('CAFE', W / 2, 170);
-  ctx.font = `400 128px ${SERIF}`; ctx.fillText('BAY VIEW', W / 2, 325);
-  s.line(170, 412, W - 170, 412, { w: 2.4, j: 0.3, color: CREAM, alpha: 0.7 });
-  fit(ctx, 'COFFEE  •  TEA  •  PASTRIES', W - 140, 64, SERIF); ctx.fillText('COFFEE  •  TEA  •  PASTRIES', W / 2, 482);
-  return s.texture();
+  return letteredTexture((lang) => {
+    const W = 1024, H = 600, s = new Sketch(W, H, { seed, bg: BOARD });
+    s.rect(14, 14, W - 28, H - 28, { w: 6, j: 0.3, color: '#e9e2d6', alpha: 0.9 });
+    s.rect(36, 36, W - 72, H - 72, { w: 2.4, j: 0.3, color: '#e9e2d6', alpha: 0.6 });
+    const zh = lang === 'zh', o = { font: SERIF, color: CREAM };
+    s.fitText(zh ? '灣景' : 'CAFE', W / 2, 170, W - 160, 150, { max: zh ? 140 : 150, ...o });
+    s.fitText(zh ? '咖啡館' : 'BAY VIEW', W / 2, 325, W - 160, 128, { max: zh ? 112 : 128, ...o });
+    s.line(170, 412, W - 170, 412, { w: 2.4, j: 0.3, color: CREAM, alpha: 0.7 });
+    s.fitText(zh ? '咖啡・茶・糕點' : 'COFFEE  •  TEA  •  PASTRIES', W / 2, 482, W - 140, 70, { max: 64, ...o });
+    return s;
+  });
 }
 
 // A painted shop sign: a board with a name (and an optional smaller line).
 // dark: cream letters on a dark board; else dark letters on cream.
 export function shopSignTexture(text, { sub = '', dark = true, seed = 911, W = 1024, H = 200 } = {}) {
   const bg = dark ? BOARD : '#efe9dc', fg = dark ? CREAM : '#211c18';
-  const s = new Sketch(W, H, { seed, bg });
-  s.rect(10, 10, W - 20, H - 20, { w: 5, j: 0.3, color: fg, alpha: 0.75 });
-  const ctx = s.ctx;
-  ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  if (sub) {
-    fit(ctx, text, W - 90, H * 0.44, SERIF, 700); ctx.fillText(text, W / 2, H * 0.4);
-    fit(ctx, sub, W - 120, H * 0.2, SERIF, 400); ctx.fillText(sub, W / 2, H * 0.76);
-  } else {
-    fit(ctx, text, W - 90, H * 0.56, SERIF, 700); ctx.fillText(text, W / 2, H / 2 + 4);
-  }
-  return s.texture();
+  return letteredTexture((lang) => {
+    const s = new Sketch(W, H, { seed, bg });
+    s.rect(10, 10, W - 20, H - 20, { w: 5, j: 0.3, color: fg, alpha: 0.75 });
+    const o = { font: SERIF, color: fg };
+    if (sub) {
+      s.fitText(say(text, lang), W / 2, H * 0.4, W - 90, H * 0.44, { weight: 700, ...o });
+      s.fitText(say(sub, lang), W / 2, H * 0.76, W - 120, H * 0.2, o);
+    } else s.fitText(say(text, lang), W / 2, H / 2 + 4, W - 90, H * 0.56, { weight: 700, ...o });
+    return s;
+  });
 }
 
 // The A-frame chalkboard: hand lettering and a smile.
-export function chalkboardTexture(lines = ['Good', 'Food', 'Better', 'Views'], seed = 939) {
+export function chalkboardTexture(text = { en: ['Good', 'Food', 'Better', 'Views'], zh: ['美食', '配上', '美景'] }, seed = 939) {
+  return letteredTexture((lang) => {
   const W = 384, H = 560, s = new Sketch(W, H, { seed, bg: '#2a2725' });
   s.rect(8, 8, W - 16, H - 16, { w: 14, j: 0.4, color: '#6f6559' });
   for (let i = 0; i < 40; i++) { const x = s.rand(30, W - 30), y = s.rand(30, H - 30); s.line(x, y, x + s.rand(10, 30), y + s.rand(-4, 4), { w: 1, j: 0.2, color: '#fff', alpha: 0.06 }); }
-  lines.forEach((t, i) => s.text(t, W / 2, 96 + i * 92, 86, { color: '#f4f1ea' }));
+  // four rows' room; fewer rows sit in its middle
+  const lines = say(text, lang), y0 = 96 + ((4 - lines.length) * 92) / 2;
+  lines.forEach((t, i) => s.fitText(t, W / 2, y0 + i * 92, W - 70, 88, { max: 86, color: '#f4f1ea' }));
   s.arc(W / 2, H - 92, 34, 22, 0.3, Math.PI - 0.3, { w: 5, j: 0.3, color: '#f4f1ea' });
   for (const dx of [-16, 16]) s.ellipse(W / 2 + dx, H - 108, 3, 4, { w: 0, j: 0, fill: '#f4f1ea' });
-  return s.texture();
+  return s;
+  });
 }
 
 // The face of the round Fisherman's Wharf sign (on a disc; the wheel's
 // handles are geometry): the name round the rim, a crab in the middle.
 export function wharfWheelTexture(seed = 941) {
+  return letteredTexture((lang) => {
   const S = 768, s = new Sketch(S, S, { seed, bg: BOARD });
   const c = S / 2, ctx = s.ctx;
   s.ellipse(c, c, 368, 368, { w: 4, j: 0.2, color: '#e9e2d6' });
   s.ellipse(c, c, 200, 200, { w: 4, j: 0.2, color: '#e9e2d6', fill: '#efe9dc' });
   ctx.fillStyle = CREAM; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  // the name round the top of the rim, letter by letter
-  const name = "FISHERMAN'S WHARF";
-  ctx.font = `700 70px ${SERIF}`;
-  const span = 2.7, a0 = -Math.PI / 2 - span / 2;
-  [...name].forEach((ch, i) => {
+  // the name round the top of the rim, letter by letter (four hanzi spread wider apart)
+  const zh = lang === 'zh';
+  const name = [...(zh ? '漁人碼頭' : "FISHERMAN'S WHARF")];
+  ctx.font = `700 ${zh ? 92 : 70}px ${SERIF}`;
+  const span = zh ? 1.9 : 2.7, a0 = -Math.PI / 2 - span / 2;
+  name.forEach((ch, i) => {
     const a = a0 + (span * (i + 0.5)) / name.length;
     ctx.save(); ctx.translate(c + Math.cos(a) * 290, c + Math.sin(a) * 290); ctx.rotate(a + Math.PI / 2); ctx.fillText(ch, 0, 0); ctx.restore();
   });
-  ctx.font = `400 52px ${SERIF}`;
-  const sub = 'SAN FRANCISCO', span2 = 1.7, b0 = Math.PI / 2 + span2 / 2;
-  [...sub].forEach((ch, i) => {
+  ctx.font = `400 ${zh ? 64 : 52}px ${SERIF}`;
+  const sub = [...(zh ? '舊金山' : 'SAN FRANCISCO')], span2 = zh ? 0.9 : 1.7, b0 = Math.PI / 2 + span2 / 2;
+  sub.forEach((ch, i) => {
     const a = b0 - (span2 * (i + 0.5)) / sub.length;
     ctx.save(); ctx.translate(c + Math.cos(a) * 292, c + Math.sin(a) * 292); ctx.rotate(a - Math.PI / 2); ctx.fillText(ch, 0, 0); ctx.restore();
   });
@@ -190,34 +202,41 @@ export function wharfWheelTexture(seed = 941) {
     s.line(c + sx * 14 * k, c - 24 * k, c + sx * 18 * k, c - 44 * k, { w: 4, j: 0.2 });
     s.ellipse(c + sx * 18 * k, c - 48 * k, 5, 5, { w: 0, j: 0, fill: '#000' });
   }
-  return s.texture();
+  return s;
+  });
 }
 
 // ---- maps and boards ---------------------------------------------------------------------
 // The visitor map board on the promenade: "BAY AREA", the map, a key, the bridge.
 export function mapBoardTexture() {
-  const W = 768, H = 1024, s = new Sketch(W, H, { seed: 907, bg: '#efe9dc' });
-  s.rect(12, 12, W - 24, H - 24, { w: 8, j: 0.4 });
-  const ctx = s.ctx;
-  ctx.fillStyle = '#211c18'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.font = `700 76px ${SANS}`; ctx.fillText('BAY AREA', 46, 84);
-  s.line(46, 130, W - 46, 130, { w: 3, j: 0.3 });
-  s.rect(46, 150, W - 92, 470, { w: 3, j: 0.3 });
-  drawBayMap(s, 52, 156, W - 104, 458, { labels: false });
-  const keys = ['San Francisco', 'Golden Gate Bridge', 'Alcatraz Island', 'Ferry Building'];
-  keys.forEach((k, i) => {
-    s.ellipse(66, 668 + i * 50, 8, 8, { w: 0, j: 0, fill: '#000' });
-    ctx.font = `500 38px ${SANS}`; ctx.fillStyle = '#211c18'; ctx.fillText(k, 92, 670 + i * 50);
+  return letteredTexture((lang) => {
+    const W = 768, H = 1024, s = new Sketch(W, H, { seed: 907, bg: '#efe9dc' });
+    s.rect(12, 12, W - 24, H - 24, { w: 8, j: 0.4 });
+    const zh = lang === 'zh', ink = '#211c18';
+    s.fitText(zh ? '舊金山灣區' : 'BAY AREA', 46, 84, W - 92, 80, { max: 76, font: SANS, weight: 700, color: ink, align: 'left' });
+    s.line(46, 130, W - 46, 130, { w: 3, j: 0.3 });
+    s.rect(46, 150, W - 92, 470, { w: 3, j: 0.3 });
+    drawBayMap(s, 52, 156, W - 104, 458, { labels: false });
+    const keys = zh ? ['舊金山', '金門大橋', '惡魔島', '渡輪大廈'] : ['San Francisco', 'Golden Gate Bridge', 'Alcatraz Island', 'Ferry Building'];
+    keys.forEach((k, i) => {
+      s.ellipse(66, 668 + i * 50, 8, 8, { w: 0, j: 0, fill: '#000' });
+      s.fitText(k, 92, 670 + i * 50, W - 150, 44, { max: 38, font: SANS, weight: 500, color: ink, align: 'left' });
+    });
+    s.rect(46, 880, W - 92, 110, { w: 2.4, j: 0.3 });
+    bridgeGlyph(s, W / 2, 930, 2.6, { w: 2 });
+    return s;
   });
-  s.rect(46, 880, W - 92, 110, { w: 2.4, j: 0.3 });
-  bridgeGlyph(s, W / 2, 930, 2.6, { w: 2 });
-  return s.texture();
 }
 
 // The waterfront, simplified: the city's corner of the peninsula, the Golden
 // Gate with its bridge, Marin above it, Alcatraz in the bay, the Ferry Building
 // and the Embarcadero along the eastern shore ("you are here").
-export function drawBayMap(s, x0, y0, w, h, { labels = true } = {}) {
+const MAP_LABELS = {
+  en: { bridge: 'Golden Gate Bridge', marin: 'Marin', alcatraz: 'Alcatraz', sf: 'San Francisco', ferry: 'Ferry Building', here: 'you are here', bay: 'San Francisco Bay', n: 'N' },
+  zh: { bridge: '金門大橋', marin: '馬林郡', alcatraz: '惡魔島', sf: '舊金山', ferry: '渡輪大廈', here: '你在這裡', bay: '舊金山灣', n: '北' },
+};
+export function drawBayMap(s, x0, y0, w, h, { labels = true, lang = 'en' } = {}) {
+  const L = MAP_LABELS[lang] ?? MAP_LABELS.en;
   const ctx = s.ctx;
   const X = (u) => x0 + u * w, Y = (v) => y0 + v * h;
   const poly = (pts) => { ctx.beginPath(); pts.forEach(([u, v], i) => (i ? ctx.lineTo(X(u), Y(v)) : ctx.moveTo(X(u), Y(v)))); ctx.closePath(); };
@@ -241,52 +260,52 @@ export function drawBayMap(s, x0, y0, w, h, { labels = true } = {}) {
   s.ellipse(X(0.62), Y(0.385), 10, 10, { w: 0, j: 0, fill: '#000' });
   s.ellipse(X(0.62), Y(0.385), 18, 18, { w: 2.6, j: 0.2 });
   if (labels) {
-    s.text('Golden Gate Bridge', X(0.17), Y(0.33), 30, { align: 'left', rot: -0.05 });
-    s.text('Marin', X(0.26), Y(0.06), 34);
-    s.text('Alcatraz', X(0.5), Y(0.18), 28);
-    s.text('San Francisco', X(0.34), Y(0.72), 40);
-    s.text('Ferry Building', X(0.73), Y(0.58), 26, { align: 'right' });
-    s.text('you are here', X(0.6), Y(0.45), 28);
-    s.text('San Francisco Bay', X(0.86), Y(0.3), 28, { rot: 1.1 });
+    s.text(L.bridge, X(0.17), Y(0.33), 30, { align: 'left', rot: -0.05 });
+    s.text(L.marin, X(0.26), Y(0.06), 34);
+    s.text(L.alcatraz, X(0.5), Y(0.18), 28);
+    s.text(L.sf, X(0.34), Y(0.72), 40);
+    s.text(L.ferry, X(0.73), Y(0.58), 26, { align: 'right' });
+    s.text(L.here, X(0.6), Y(0.45), 28);
+    s.text(L.bay, X(0.86), Y(0.3), 28, { rot: 1.1 });
   }
   // a compass rose
   const cx = X(0.92), cy = Y(0.86);
   s.line(cx, cy - 30, cx, cy + 30, { w: 2.4, j: 0 }); s.line(cx - 20, cy, cx + 20, cy, { w: 1.6, j: 0 });
   s.stroke([[cx - 8, cy - 14], [cx, cy - 34], [cx + 8, cy - 14]], { w: 2.4, j: 0, closed: true, fill: '#000' });
-  s.text('N', cx, cy - 50, 26);
+  s.text(L.n, cx, cy - 50, 26);
 }
 
 // The map card (the HUD), drawn on a canvas and handed over as an image URL.
-export function mapCardImage() {
+export function mapCardImage(lang = 'en') {
   const W = 760, H = 560, s = new Sketch(W, H, { seed: 909, bg: '#efe9dc' });
-  drawBayMap(s, 20, 20, W - 40, H - 40);
+  drawBayMap(s, 20, 20, W - 40, H - 40, { lang });
   return s.canvas.toDataURL('image/png');
 }
 
 // The interpretive plaque at the pier's lookout: the bridge and a few facts.
 export function lookoutPlaqueTexture(seed = 943) {
-  const W = 768, H = 512, s = new Sketch(W, H, { seed, bg: '#efe9dc' });
-  s.rect(10, 10, W - 20, H - 20, { w: 7, j: 0.3 });
-  const ctx = s.ctx;
-  ctx.fillStyle = '#211c18'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `700 54px ${SANS}`; ctx.fillText('GOLDEN GATE BRIDGE', W / 2, 70);
-  bridgeGlyph(s, W / 2, 230, 3.6, { w: 1.6 });
-  for (let i = 0; i < 14; i++) { const x = s.rand(80, W - 80), y = s.rand(300, 330); s.line(x, y, x + 30, y, { w: 1.4, j: 0.3, alpha: 0.5 }); }
-  ctx.font = `400 34px ${SANS}`;
-  ctx.fillText('Opened 1937  ·  1.7 miles long', W / 2, 382);
-  ctx.fillText('Towers 746 ft above the water', W / 2, 432);
-  return s.texture();
+  return letteredTexture((lang) => {
+    const W = 768, H = 512, s = new Sketch(W, H, { seed, bg: '#efe9dc' });
+    s.rect(10, 10, W - 20, H - 20, { w: 7, j: 0.3 });
+    const zh = lang === 'zh', o = { font: SANS, color: '#211c18' };
+    s.fitText(zh ? '金門大橋' : 'GOLDEN GATE BRIDGE', W / 2, 70, W - 80, 64, { max: zh ? 60 : 54, weight: 700, ...o });
+    bridgeGlyph(s, W / 2, 230, 3.6, { w: 1.6 });
+    for (let i = 0; i < 14; i++) { const x = s.rand(80, W - 80), y = s.rand(300, 330); s.line(x, y, x + 30, y, { w: 1.4, j: 0.3, alpha: 0.5 }); }
+    s.fitText(zh ? '1937 年通車  ·  全長 1.7 英里' : 'Opened 1937  ·  1.7 miles long', W / 2, 382, W - 80, 40, { max: 34, ...o });
+    s.fitText(zh ? '橋塔高出水面 746 英尺' : 'Towers 746 ft above the water', W / 2, 432, W - 80, 40, { max: 34, ...o });
+    return s;
+  });
 }
 
 // ---- the cable car -----------------------------------------------------------------------
 // The roof-end destination board.
-export function cableCarSignTexture(text = 'POWELL & HYDE STS.', seed = 945) {
-  const W = 1024, H = 128, s = new Sketch(W, H, { seed, bg: '#f2ede2' });
-  s.rect(6, 6, W - 12, H - 12, { w: 5, j: 0.2 });
-  const ctx = s.ctx;
-  ctx.fillStyle = '#1c1916'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  fit(ctx, text, W - 60, 84, SERIF, 700); ctx.fillText(text, W / 2, H / 2 + 4);
-  return s.texture();
+export function cableCarSignTexture(text = { en: 'POWELL & HYDE STS.', zh: '鮑威爾街與海德街' }, seed = 945) {
+  return letteredTexture((lang) => {
+    const W = 1024, H = 128, s = new Sketch(W, H, { seed, bg: '#f2ede2' });
+    s.rect(6, 6, W - 12, H - 12, { w: 5, j: 0.2 });
+    s.fitText(say(text, lang), W / 2, H / 2 + 4, W - 60, 92, { max: 84, font: SERIF, weight: 700, color: '#1c1916' });
+    return s;
+  });
 }
 // The dash panel at each end: the car number in a round plate.
 export function cableCarNumberTexture(num = '28', seed = 947) {
@@ -302,13 +321,14 @@ export function cableCarNumberTexture(num = '28', seed = 947) {
 }
 // Painted lettering along the car's side panel (u along the car).
 export function cableCarSideTexture(seed = 949) {
-  const W = 1024, H = 128, s = new Sketch(W, H, { seed, bg: '#d9d2c4' });
-  s.rect(6, 6, W - 12, H - 12, { w: 3, j: 0.2 });
-  for (const x of [W * 0.12, W * 0.88]) s.ellipse(x, H / 2, 24, 24, { w: 3, j: 0.2 });
-  const ctx = s.ctx;
-  ctx.fillStyle = '#1c1916'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = `700 60px ${SERIF}`; ctx.fillText('MUNICIPAL  RAILWAY', W / 2, H / 2 + 4);
-  return s.texture();
+  return letteredTexture((lang) => {
+    const W = 1024, H = 128, s = new Sketch(W, H, { seed, bg: '#d9d2c4' });
+    s.rect(6, 6, W - 12, H - 12, { w: 3, j: 0.2 });
+    for (const x of [W * 0.12, W * 0.88]) s.ellipse(x, H / 2, 24, 24, { w: 3, j: 0.2 });
+    // between the two roundels
+    s.fitText(lang === 'zh' ? '市營鐵路' : 'MUNICIPAL  RAILWAY', W / 2, H / 2 + 4, W * 0.66, 70, { max: 60, font: SERIF, weight: 700, color: '#1c1916' });
+    return s;
+  });
 }
 
 // ---- surfaces ----------------------------------------------------------------------------

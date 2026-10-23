@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { Sketch, makeRng } from './sketch.js';
-import { HANZI } from './taiwanTextures.js';
+import { Sketch, makeRng, HANZI, say, letteredTexture } from './sketch.js';
 
 // Line-art textures for the Shanghai chapter (the Bund): white paper, black ink,
-// the same wobbly pen as the room and Jiufen.
+// the same wobbly pen as the room and Jiufen. Writing is { en, zh } and follows
+// the language setting.
 
 // Square granite paving, 2 m tile (triplanar): 4 x 4 slabs with a few
 // speckles and the odd hairline crack.
@@ -42,53 +42,65 @@ export function kerbTexture(seed = 303) {
   return s.texture({ repeat: true });
 }
 
-// The 外灘 pylon sign (and other vertical hanzi signs) - dark board, light characters.
+// The 外灘 pylon sign (and other vertical signs) - dark board, light characters
+// (English runs down the board).
 export function verticalSign(text, seed = 351) {
-  const chars = [...text];
+  const chars = [...text.zh];
   const W = 160, H = chars.length * 150 + 60;
-  const s = new Sketch(W, H, { seed, bg: '#5a5a5a' });
-  s.hatch(0, 0, W, H, { gap: 9, lw: 1.2, alpha: 0.3, angle: 0.8, j: 0.3 });
-  s.rect(8, 8, W - 16, H - 16, { w: 5, j: 0.6, color: '#fff' });
-  chars.forEach((c, i) => s.text(c, W / 2, 30 + (i + 0.5) * ((H - 60) / chars.length), 112, { font: HANZI, color: '#fff' }));
-  return s.texture();
+  return letteredTexture((lang) => {
+    const s = new Sketch(W, H, { seed, bg: '#5a5a5a' });
+    s.hatch(0, 0, W, H, { gap: 9, lw: 1.2, alpha: 0.3, angle: 0.8, j: 0.3 });
+    s.rect(8, 8, W - 16, H - 16, { w: 5, j: 0.6, color: '#fff' });
+    if (lang === 'zh') chars.forEach((c, i) => s.text(c, W / 2, 30 + (i + 0.5) * ((H - 60) / chars.length), 112, { font: HANZI, color: '#fff' }));
+    else s.fitText(say(text, lang), W / 2, H / 2, H - 60, W - 50, { color: '#fff', rot: Math.PI / 2 });
+    return s;
+  });
 }
 
 // "Coffee" hanging sign: a board with a cup doodle and steam.
 export function coffeeSignTexture(seed = 361) {
+  return letteredTexture((lang) => {
   const W = 512, H = 300, s = new Sketch(W, H, { seed });
   s.rect(10, 10, W - 20, H - 20, { w: 7, j: 0.8 });
   s.rect(26, 26, W - 52, H - 52, { w: 2, j: 0.6, alpha: 0.7 });
-  s.text('Coffee', W * 0.6, H * 0.52, 118);
+  if (lang === 'zh') s.text('咖啡', W * 0.63, H * 0.52, 124, { font: HANZI });
+  else s.text('Coffee', W * 0.6, H * 0.52, 118);
   // cup
   const cx = 104, cy = 170;
   s.stroke([[cx - 46, cy - 34], [cx - 38, cy + 34], [cx + 38, cy + 34], [cx + 46, cy - 34]], { w: 5, j: 0.6, closed: true, fill: '#fff' });
   s.arc(cx + 50, cy - 6, 18, 18, -Math.PI / 2, Math.PI / 2, { w: 5, j: 0.4 });
   s.line(cx - 64, cy + 44, cx + 64, cy + 44, { w: 5, j: 0.5 });
   for (const dx of [-18, 0, 18]) s.stroke([[cx + dx, cy - 50], [cx + dx + 8, cy - 70], [cx + dx - 4, cy - 88], [cx + dx + 6, cy - 106]], { w: 3.4, j: 0.5 });
-  return s.texture();
+  return s;
+  });
 }
 
 // Fascia sign over the windows.
 export function fasciaTexture(seed = 363) {
-  const W = 1024, H = 160, s = new Sketch(W, H, { seed, bg: '#3c3c3c' });
-  s.rect(8, 8, W - 16, H - 16, { w: 4, j: 0.6, color: '#fff' });
-  s.text('BUND  COFFEE', W * 0.42, H * 0.55, 92, { color: '#fff' });
-  s.text('咖啡', W * 0.86, H * 0.53, 86, { font: HANZI, color: '#fff' });
-  return s.texture();
+  return letteredTexture((lang) => {
+    const W = 1024, H = 160, s = new Sketch(W, H, { seed, bg: '#3c3c3c' });
+    s.rect(8, 8, W - 16, H - 16, { w: 4, j: 0.6, color: '#fff' });
+    if (lang === 'zh') s.text('外灘咖啡', W / 2, H * 0.53, 96, { font: HANZI, color: '#fff' });
+    else s.text('BUND  COFFEE', W / 2, H * 0.55, 92, { color: '#fff' });
+    return s;
+  });
 }
 
-// Chalk menu board.
+// Chalk menu board: a heading, then items, each { en, zh }.
 export function menuTexture(items, seed = 365) {
-  const W = 384, H = 512, s = new Sketch(W, H, { seed, bg: '#2e2e2e' });
-  s.rect(10, 10, W - 20, H - 20, { w: 8, j: 0.6, color: '#8a8a8a' });
-  s.text(items[0], W / 2, 62, 64, { color: '#fff' });
-  s.line(70, 102, W - 70, 102, { w: 2.4, j: 0.6, color: '#fff', alpha: 0.8 });
-  items.slice(1).forEach((it, i) => {
-    s.text(it, 40, 150 + i * 62, 42, { color: '#fff', align: 'left' });
-    for (let d = 0; d < 5; d++) s.ellipse(W - 110 + d * 10, 158 + i * 62, 1.6, 1.6, { w: 0, j: 0, fill: '#ddd' });
-    s.text(`${18 + ((i * 7) % 15)}`, W - 44, 150 + i * 62, 40, { color: '#fff', align: 'right' });
+  return letteredTexture((lang) => {
+    const W = 384, H = 512, s = new Sketch(W, H, { seed, bg: '#2e2e2e' });
+    s.rect(10, 10, W - 20, H - 20, { w: 8, j: 0.6, color: '#8a8a8a' });
+    s.fitText(say(items[0], lang), W / 2, 62, W - 100, 64, { color: '#fff' });
+    s.line(70, 102, W - 70, 102, { w: 2.4, j: 0.6, color: '#fff', alpha: 0.8 });
+    items.slice(1).forEach((it, i) => {
+      // the name stops short of the dot leader and the price
+      s.fitText(say(it, lang), 40, 150 + i * 62, W - 170, 48, { max: 42, color: '#fff', align: 'left' });
+      for (let d = 0; d < 5; d++) s.ellipse(W - 110 + d * 10, 158 + i * 62, 1.6, 1.6, { w: 0, j: 0, fill: '#ddd' });
+      s.text(`${18 + ((i * 7) % 15)}`, W - 44, 150 + i * 62, 40, { color: '#fff', align: 'right' });
+    });
+    return s;
   });
-  return s.texture();
 }
 
 // Striped awning.
@@ -124,6 +136,7 @@ export function lifeRingTexture(seed = 371) {
 
 // Small sign with a camera icon (the photo spot).
 export function photoSignTexture(seed = 373) {
+  return letteredTexture((lang) => {
   const W = 256, H = 256, s = new Sketch(W, H, { seed });
   s.rect(8, 8, W - 16, H - 16, { w: 6, j: 0.6 });
   const cx = W / 2, cy = 112;
@@ -132,12 +145,14 @@ export function photoSignTexture(seed = 373) {
   s.ellipse(cx, cy + 8, 30, 30, { w: 6, j: 0.4 });
   s.ellipse(cx, cy + 8, 14, 14, { w: 0, j: 0, fill: '#000' });
   s.ellipse(cx + 44, cy - 20, 6, 6, { w: 0, j: 0, fill: '#000' });
-  s.text('PHOTO', cx, 206, 50);
-  return s.texture();
+  s.fitText(lang === 'zh' ? '拍照' : 'PHOTO', cx, 206, W - 60, 54, { max: 50 });
+  return s;
+  });
 }
 
 // Brass viewpoint plaque: a little skyline outline + "外灘 THE BUND".
 export function plaqueTexture(seed = 375) {
+  return letteredTexture((lang) => {
   const W = 512, H = 256, s = new Sketch(W, H, { seed, bg: '#d8d8d8' });
   s.rect(8, 8, W - 16, H - 16, { w: 6, j: 0.6 });
   const base = 150;
@@ -147,8 +162,10 @@ export function plaqueTexture(seed = 375) {
   s.ellipse(150, 108, 16, 16, { w: 3, j: 0.3, fill: '#fff' });
   s.ellipse(150, 68, 10, 10, { w: 3, j: 0.3, fill: '#fff' });
   for (const [x, h, w] of [[70, 40, 26], [100, 60, 20], [210, 70, 22], [250, 96, 18], [300, 112, 20], [345, 84, 24], [400, 50, 30], [440, 34, 26]]) s.rect(x - w / 2, base - h, w, h, { w: 2.4, j: 0.4 });
-  s.text('外灘  THE BUND', W / 2, 200, 52, { font: `"Patrick Hand", ${HANZI}` });
-  return s.texture();
+  if (lang === 'zh') s.text('外灘', W / 2, 200, 56, { font: HANZI });
+  else s.text('THE BUND', W / 2, 200, 52);
+  return s;
+  });
 }
 
 // Boat: a strip of cabin windows along the side.
