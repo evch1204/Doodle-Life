@@ -31,6 +31,7 @@ uniform float uLightI;
 uniform float uGrazeFix;
 uniform float uTone;
 uniform float uFacing;
+uniform float uSoftShade;
 uniform float uHatchAmt;
 uniform float uHatchFreq;
 uniform float uMapAmt;
@@ -103,7 +104,13 @@ const FRAG_MAIN = /* glsl */`
   h = max(h, hatchLines(hp, -0.75, 1.0, 0.07, 7.0) * smoothstep(0.58, 0.68, dark) * 0.85);
   h *= uHatchAmt;
 
-  vec3 col = mix(uInk, uPaper, uTone);
+  #ifdef INK_ALBEDO
+    // the surface's own colour (material colour x vertex colour x map), as a
+    // display value like everything else in the colour pass
+    vec3 col = pow(max(diffuseColor.rgb, vec3(0.0)), vec3(1.0 / 2.2));
+  #else
+    vec3 col = mix(uInk, uPaper, uTone);
+  #endif
   #ifdef INK_MAP
     #ifdef INK_TRI
       vec2 muv = tp * uTriScale;
@@ -114,7 +121,10 @@ const FRAG_MAIN = /* glsl */`
     col = mix(col, uInk, (1.0 - m) * uMapAmt);
   #endif
   col = mix(col, uInk, h * 0.72 * smoothstep(0.25, 0.6, uTone));
-  col *= mix(0.94, 1.0, lightness);
+  // Optional rounded-form shading for characters; scenery keeps its drawn look.
+  float form = mix(0.62, 1.0, smoothstep(-0.85, 0.95, facing));
+  form *= mix(0.86, 1.0, wn.y * 0.5 + 0.5);
+  col *= mix(mix(0.94, 1.0, lightness), form * mix(0.84, 1.0, shadowF), uSoftShade);
   gl_FragColor = vec4(col, diffuseColor.a);
 `;
 
@@ -139,16 +149,21 @@ function inkCompile(shader) {
  *  facing:   how much the surface darkens when turned away from the light (walls use 0)
  *  map:      grayscale line art texture (white paper / black ink)
  *  tri:      if set, map is projected in world space with this many repeats per meter
+ *  albedo:   colour from the material colour / vertex colours / map instead of tone
+ *            (the player chibi); map then is a colour texture
  */
 export function ink({
   tone = 1, facing = 1, hatch = 1, hatchFreq = 21,
   map = null, mapAmt = 1, tri = 0, repeat = [1, 1],
-  side = THREE.FrontSide, flat = false, local = false,
+  side = THREE.FrontSide, flat = false, local = false, softShade = 0,
+  albedo = false, color = 0xffffff, vertexColors = false,
 } = {}) {
-  const m = new THREE.MeshLambertMaterial({ color: 0xffffff, side, flatShading: flat });
+  const m = new THREE.MeshLambertMaterial({ color: albedo ? color : 0xffffff, side, flatShading: flat, vertexColors });
+  if (albedo && map) { m.map = map; map = null; }
   m.userData.ink = {
     uTone: { value: tone },
     uFacing: { value: facing },
+    uSoftShade: { value: softShade },
     uHatchAmt: { value: hatch },
     uHatchFreq: { value: hatchFreq },
     uMap: { value: map },
@@ -160,6 +175,7 @@ export function ink({
   if (map) m.defines.INK_MAP = '';
   if (map && tri) m.defines.INK_TRI = '';
   if (local) m.defines.INK_LOCAL = '';
+  if (albedo) m.defines.INK_ALBEDO = '';
   m.onBeforeCompile = inkCompile;
   m.customProgramCacheKey = () => 'ink';
   return m;
@@ -191,13 +207,20 @@ const normalMaterial = new THREE.ShaderMaterial({
   vertexShader: /* glsl */`
     // optional per-vertex id (merged geometry keeps a line between its parts);
     // meshes without the attribute read 0 and use the per-mesh uniform
+    #include <common>
+    #include <skinning_pars_vertex>
     attribute float inkIdAttr;
     varying vec3 vN;
     varying float vId;
     void main() {
-      vN = normalize(normalMatrix * normal);
+      #include <skinbase_vertex>
+      #include <beginnormal_vertex>
+      #include <skinnormal_vertex>
+      #include <begin_vertex>
+      #include <skinning_vertex>
+      vN = normalize(normalMatrix * objectNormal);
       vId = inkIdAttr;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
     }`,
   fragmentShader: /* glsl */`
     uniform float uId;
