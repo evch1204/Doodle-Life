@@ -1,6 +1,7 @@
 // Character review: front / side / back / 3/4 stills, gameplay-camera stills
 // (room + Taiwan) and a recording of walking, turning, stopping and idling.
 // Usage: node scripts/charreview.mjs <outDir>
+// RECORD_VIDEO=0 skips video when Playwright ffmpeg is unavailable.
 import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 import { createHarness } from './harness.mjs';
@@ -8,7 +9,7 @@ import { createHarness } from './harness.mjs';
 const out = process.argv[2] || 'review/character';
 fs.mkdirSync(out, { recursive: true });
 const URL = process.env.URL || 'http://localhost:5173/';
-const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
+const browser = await chromium.launch({ channel: 'chrome', headless: true, args: [process.platform === 'darwin' ? '--use-angle=metal' : '--use-angle=d3d11', '--enable-gpu', '--ignore-gpu-blocklist'] });
 
 // ---- turnaround stills -------------------------------------------------------------
 {
@@ -32,7 +33,7 @@ const browser = await chromium.launch({ channel: 'chrome', headless: true, args:
 }
 
 // ---- gameplay camera stills + recording ------------------------------------------------
-const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, recordVideo: { dir: out, size: { width: 1280, height: 800 } } });
+const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 }, recordVideo: process.env.RECORD_VIDEO === '0' ? undefined : { dir: out, size: { width: 1280, height: 800 } } });
 const page = await ctx.newPage();
 page.on('pageerror', (e) => console.log('[pageerror]', e.message));
 await page.goto(URL + '?scene=room');

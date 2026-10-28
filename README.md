@@ -198,6 +198,7 @@ The test scripts drive the game in headless Chrome through [Playwright](https://
 | `node scripts/i18n_check.mjs [dir]` | Language switching, a Chinese entry for every reachable string, no text overflow |
 | `node scripts/lettering_check.mjs [dir]` | Every sign, menu and poster in each scene follows the language; saves a sheet of them in each language |
 | `SCENE=<id> node scripts/perf.mjs` | Frame times, mesh and triangle counts from three gameplay views |
+| `RECORD_VIDEO=0 node scripts/charreview.mjs <dir>` | Character views in the room plus walking, turning, and Taiwan stairs; omit `RECORD_VIDEO=0` to record video |
 | `node scripts/shots.mjs <dir>` | Review stills (set `SCENE=taiwan`, `shanghai` or `bayarea` for those views) |
 
 `TIMEOUT_SCALE=3` stretches the walking timeouts on a slow machine. The scripts launch Chrome with `--use-angle=d3d11`, which uses the GPU on Windows. On macOS, use `--use-angle=metal` instead; otherwise Chrome renders on the CPU and the walking checks time out.
