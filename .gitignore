@@ -3,3 +3,5 @@ dist
 # recordings stay local (large)
 review/**/*.webm
 review/**/*.mp4
+# the Hunyuan3D source scan of the player (78 MB); tools/chibi/prep.py reads it
+review/chibi-ref/hunyuan.glb

@@ -71,7 +71,7 @@ The journey begins at home, in the **doodle loft**, a furnished room with a desk
 
 - **Landmarks modelled from their structure.** These are 3D buildings, not painted backdrops. They include the Golden Gate Bridge (towers, cables, hangers, the truss deck), Taipei 101, the Oriental Pearl Tower, Jin Mao, the Shanghai World Financial Center, the Bund's facades, Coit Tower, the Salesforce Tower and the Transamerica Pyramid.
 - **Things to do in every city.** Talk to the barista or the tea house auntie, sit on a bench and watch the boats, look through the pier's binoculars, take a photo, collect the hidden items, and follow the objective list.
-- **A character from a reference sheet.** A chibi traveler with a hoodie and backpack, using inverse kinematics for the legs and hair and backpack that follow through on movement. They walk, turn, sit, lie down, reach and pick things up.
+- **A character from a reference sheet.** A chibi traveler with a hoodie and backpack, generated as a textured 3D model from the sheet and rigged for the game: inverse kinematics for the legs, and hair and a backpack that follow through on movement. They walk, turn, sit, lie down, reach and pick things up.
 - **A photo album.** Snapshots become postcards and stay in an album for the session.
 - **English and 中文.** Switch any time from the settings. Everything follows it: the HUD and dialogue, and every shop sign, street sign, menu and poster in the world, which redraw in place with wording written for each board.
 - **Seamless travel.** Check in at a gate, walk down the jetway, and land in the city. Coming home puts you back in front of the gate you left from.
@@ -143,6 +143,20 @@ The ink look is a post-processing pass (`src/ink.js`) on top of a normal three.j
 3. **Aerial perspective.** Distant lines and tones fade toward the paper. Landmarks use a reserved *bold* id range, so they stay crisp at any distance.
 4. **Paper.** A final pass adds the paper grain and a slight pen wobble.
 
+The player is a sculpted, textured model rather than primitives. [Hunyuan3D 2.1](https://github.com/Tencent-Hunyuan/Hunyuan3D-2.1) generated it from the reference sheet, and `tools/chibi/prep.py` turns that scan into `src/assets/chibi.glb`. The script runs in Blender and does five things:
+
+- welds and decimates the mesh to 36k triangles
+- bakes the scan's colours onto fresh UVs
+- shortens the body to about 2.7 heads
+- smooths the shading normals, so the outline pass doesn't draw the scan's small bumps
+- rigs it for the procedural animation in `src/chibi.js`
+
+```bash
+blender -b -P tools/chibi/prep.py -- --export src/assets/chibi.glb --render review/chibi-build
+```
+
+The source scan (`review/chibi-ref/hunyuan.glb`, 78 MB) stays out of git; keep a copy to rebuild the model.
+
 Scenes are built with a small kit (`src/scenes/kit.js`) that merges geometry into one draw call per material, while each piece keeps its own outline id. The rivers and the bay use a water shader. Its ripple rows are spaced by viewing angle, and the reflections are drawn as pen strokes using the skyline's silhouette.
 
 ## Project structure
@@ -152,7 +166,9 @@ src/
 ├── main.js              entry point
 ├── game.js              renderer, ink pass, player controller, camera, collision, HUD, travel
 ├── ink.js               ink material and outline / paper post pass
-├── character.js         the player and NPCs: chibi rig, leg IK, hair and backpack follow-through
+├── chibi.js             the player: the scanned chibi model, its rig, leg IK and follow-through
+├── character.js         createCharacter (hands the player to chibi.js) and the NPCs
+├── assets/chibi.glb     the player model, built by tools/chibi/prep.py
 ├── i18n.js              English / 中文 string table
 ├── sketch.js            wobbly-pen canvas helper used by every texture
 ├── sound.js             synthesized sound effects
@@ -166,6 +182,7 @@ src/
     ├── shanghai.js      the Bund + shanghai/ (Bund facades, Pudong, the river shader)
     └── bayarea.js       the Embarcadero + bayarea/ (street kit, cable car, bridge, SF terrain, props)
 scripts/                 Playwright playtests, screenshot and performance tools
+tools/chibi/prep.py      Blender script: Hunyuan3D scan -> rigged game model
 review/                  screenshots and playtest results from each milestone
 ```
 
@@ -198,6 +215,7 @@ The test scripts drive the game in headless Chrome through [Playwright](https://
 | `node scripts/i18n_check.mjs [dir]` | Language switching, a Chinese entry for every reachable string, no text overflow |
 | `node scripts/lettering_check.mjs [dir]` | Every sign, menu and poster in each scene follows the language; saves a sheet of them in each language |
 | `SCENE=<id> node scripts/perf.mjs` | Frame times, mesh and triangle counts from three gameplay views |
+| `node scripts/character-model-check.mjs [dir]` | Player turnaround, walking / sitting / lying shots and rig sanity checks, outside any scene |
 | `RECORD_VIDEO=0 node scripts/charreview.mjs <dir>` | Character views in the room plus walking, turning, and Taiwan stairs; omit `RECORD_VIDEO=0` to record video |
 | `node scripts/shots.mjs <dir>` | Review stills (set `SCENE=taiwan`, `shanghai` or `bayarea` for those views) |
 

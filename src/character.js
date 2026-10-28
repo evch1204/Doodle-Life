@@ -3,6 +3,8 @@ import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeom
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { ink } from './ink.js';
 import { makeRng, Sketch } from './sketch.js';
+import { createChibi } from './chibi.js';
+export { loadChibi } from './chibi.js';
 
 // Chibi kid from the character sheet, built as one drawn figure:
 //  - hair is a single sculpted mesh (a sphere pushed out into soft tufts and
@@ -197,6 +199,7 @@ function bunHair() {
  */
 export function createCharacter(opts = {}) {
   const style = opts.style ?? 'player';
+  if (style === 'player') return createChibi(opts);
   const isPlayer = style === 'player';
   const { L1, L2, HIP_Y, hipX, shX, shY, LA1, LA2, neckY, headY, headZ } = DIMS[isPlayer ? 'player' : 'auntie'];
   const rng = makeRng(isPlayer ? 77 : 91);
