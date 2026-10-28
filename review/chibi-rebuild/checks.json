@@ -1,0 +1,20 @@
+{
+  "errors": [],
+  "checks": [
+    {
+      "pose": "stand",
+      "finite": true,
+      "hairOffset": 0.0036666319644348046
+    },
+    {
+      "pose": "sit",
+      "finite": true,
+      "hairOffset": 8.533862607537637e-10
+    },
+    {
+      "pose": "lie",
+      "finite": true,
+      "hairOffset": 1.5057378060194086e-9
+    }
+  ]
+}
