@@ -40,8 +40,9 @@ export function createChibi() {
     if (!o.isMesh) return;
     const map = o.material.map;
     map.colorSpace = THREE.SRGBColorSpace;
-    // the scan's own colours, softly shaded so it still sits in the drawn world
-    o.material = ink({ albedo: true, local: true, map, facing: 0.35, softShade: 0.6, hatch: 0.06, hatchFreq: 40 });
+    // the scan's colours moved onto the world's paper / ink ramp (black lifted
+    // to ink-grey, a little of the hue kept), with pen hatching in the shadows
+    o.material = ink({ albedo: true, local: true, map, facing: 0.6, softShade: 0.55, hatch: 0.45, hatchFreq: 40, palette: [0.8, 0.22, 0.4] });
     o.castShadow = o.receiveShadow = true;
     o.frustumCulled = false; // skinned bounds don't follow the pose
     o.userData.outlineGroup = 0.2;

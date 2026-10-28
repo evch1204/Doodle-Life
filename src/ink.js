@@ -37,6 +37,7 @@ uniform float uHatchFreq;
 uniform float uMapAmt;
 uniform float uTriScale;
 uniform vec2 uMapRepeat;
+uniform vec3 uPalette;
 uniform sampler2D uMap;
 varying vec3 vInkPos;
 varying vec3 vInkN;
@@ -108,6 +109,12 @@ const FRAG_MAIN = /* glsl */`
     // the surface's own colour (material colour x vertex colour x map), as a
     // display value like everything else in the colour pass
     vec3 col = pow(max(diffuseColor.rgb, vec3(0.0)), vec3(1.0 / 2.2));
+    // uPalette = (amount, lift, chroma): pull the colour toward the world's
+    // ink / paper ramp, lifting pure black to ink-grey and keeping only some
+    // of the original hue
+    float lum = dot(col, vec3(0.299, 0.587, 0.114));
+    vec3 pal = mix(uInk, uPaper, clamp(uPalette.y + lum * (1.0 - uPalette.y) * 1.08, 0.0, 1.0)) + (col - lum) * uPalette.z;
+    col = mix(col, pal, uPalette.x);
   #else
     vec3 col = mix(uInk, uPaper, uTone);
   #endif
@@ -151,12 +158,14 @@ function inkCompile(shader) {
  *  tri:      if set, map is projected in world space with this many repeats per meter
  *  albedo:   colour from the material colour / vertex colours / map instead of tone
  *            (the player chibi); map then is a colour texture
+ *  palette:  albedo only: [amount 0..1 toward the ink / paper ramp, black lift, kept chroma]
  */
 export function ink({
   tone = 1, facing = 1, hatch = 1, hatchFreq = 21,
   map = null, mapAmt = 1, tri = 0, repeat = [1, 1],
   side = THREE.FrontSide, flat = false, local = false, softShade = 0,
   albedo = false, color = 0xffffff, vertexColors = false,
+  palette = [0, 0, 1],
 } = {}) {
   const m = new THREE.MeshLambertMaterial({ color: albedo ? color : 0xffffff, side, flatShading: flat, vertexColors });
   if (albedo && map) { m.map = map; map = null; }
@@ -170,6 +179,7 @@ export function ink({
     uMapAmt: { value: mapAmt },
     uTriScale: { value: tri },
     uMapRepeat: { value: new THREE.Vector2(...repeat) },
+    uPalette: { value: new THREE.Vector3(...palette) },
   };
   m.defines = {};
   if (map) m.defines.INK_MAP = '';
