@@ -22,6 +22,13 @@ export async function loadChibi() {
 const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 const wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
+// The model is built 0.985 m tall (2.7 heads); the world is real scale (seats
+// 0.46 m, chair backs 0.96 m, desks ~0.75 m), so it's shown at 1.55x: ~1.53 m,
+// shoulders at chair-back height, desk at the waist. Everything inside the
+// root (pivots, animation offsets) is in model units; world distances (ground
+// heights, stride) are divided by SCALE on the way in.
+const SCALE = 1.55;
+
 export function createChibi() {
   if (!gltf) throw new Error('loadChibi() must finish before createChibi()');
   const model = cloneSkinned(gltf.scene);
@@ -78,6 +85,8 @@ export function createChibi() {
   const HIP_J = legs[0].thigh.position.y;
   const ANKLE = legs[0].ankle.userData.at.y;
   const shY = arms[0].sh.position.y;
+  const HEIGHT = new THREE.Box3().setFromObject(model).max.y; // model units
+  const LIE_HIPS = 0.1; // torso back ~0.055 behind the hips; the big head needs a little more
 
   // bone -> pivot, with the bone's rest transform expressed in the pivot's frame
   const links = [];
@@ -153,7 +162,7 @@ export function createChibi() {
     // gait: cadence and stride follow speed so planted feet don't slide
     const omega = 8 + 9 * walk;
     if (speed > 0.03 || walk > 0.02) phase += dt * omega;
-    const A = Math.min(0.15, speed / omega) * still;
+    const A = Math.min(0.15, speed / omega / SCALE) * still;
     const lift = 0.06 * Math.min(1, walk * 1.6) * still;
 
     // forward acceleration -> lean spring (leans into starts, settles on stops)
@@ -182,10 +191,11 @@ export function createChibi() {
     const shift = Math.sin(t * 0.43) * (1 - walk) * still;
     const bounce = walk * 0.024 * (Math.abs(Math.sin(phase)) - 0.55) * still;
     let hipsY = HIP_Y + bounce - pick * 0.085 + Math.sin(hop * Math.PI) * 0.13;
-    hipsY = THREE.MathUtils.lerp(hipsY, 0.25, sitW);
-    hipsY = THREE.MathUtils.lerp(hipsY, 0.16, lieW);
+    // seats: thighs rest ~0.15 m above the seat spot; bed: back on the mattress
+    hipsY = THREE.MathUtils.lerp(hipsY, 0.09 + 0.15 / SCALE, sitW);
+    hipsY = THREE.MathUtils.lerp(hipsY, LIE_HIPS, lieW);
     hips.position.y = hipsY;
-    hips.position.z = -0.25 * lieW;
+    hips.position.z = -0.25 / SCALE * lieW;
     hips.position.x = shift * 0.012;
     hips.rotation.z = shift * 0.03 + bank.x * 0.3;
     hips.rotation.y = -0.1 * walk * Math.cos(phase) * still;
@@ -199,7 +209,7 @@ export function createChibi() {
     const gY = [0, 0];
     if (ground) {
       for (let i = 0; i < 2; i++) {
-        const lx = legs[i].thigh.position.x, lz = footZ[i];
+        const lx = legs[i].thigh.position.x * SCALE, lz = footZ[i] * SCALE;
         gY[i] = ground(rx + cs * lx + sn * lz, rz - sn * lx + cs * lz);
       }
       // body rides on the lower foot; the other knee bends to reach its step
@@ -219,7 +229,7 @@ export function createChibi() {
 
     for (let i = 0; i < 2; i++) {
       const leg = legs[i];
-      const relGround = ground ? gY[i] - root.position.y : 0;
+      const relGround = ground ? (gY[i] - root.position.y) / SCALE : 0;
       const ty = relGround + ANKLE + footLift[i] - (hipsY + HIP_J);
       const [th, kn] = legIK(footZ[i], ty);
       // sit: thighs forward, shins hang; lie: legs nearly straight
@@ -290,6 +300,7 @@ export function createChibi() {
     poseSkeleton();
   }
 
+  root.scale.setScalar(SCALE);
   poseSkeleton();
 
   return {
@@ -304,7 +315,9 @@ export function createChibi() {
     resetGround() { groundY = null; },
     get hairOffset() { return hairOff.length(); },
     // vertical walk bounce of the hips (0 when standing still)
-    get bounce() { return pose === 'stand' ? hips.position.y - HIP_Y : 0; },
+    get bounce() { return pose === 'stand' ? (hips.position.y - HIP_Y) * SCALE : 0; },
+    // height above the root the camera follows, per pose (world metres)
+    get focus() { return pose === 'lie' ? 0.55 : (pose === 'sit' ? 0.7 : 0.82) * HEIGHT * SCALE; },
     update,
   };
 }

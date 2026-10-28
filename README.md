@@ -151,6 +151,8 @@ The player is a sculpted, textured model rather than primitives. [Hunyuan3D 2.1]
 - smooths the shading normals, so the outline pass doesn't draw the scan's small bumps
 - rigs it for the procedural animation in `src/chibi.js`
 
+In the game the model is shown at real-world size, about 1.5 m.
+
 ```bash
 blender -b -P tools/chibi/prep.py -- --export src/assets/chibi.glb --render review/chibi-build
 ```

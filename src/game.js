@@ -259,7 +259,7 @@ export async function startGame(SCENES, firstId) {
     camTarget.x += (hero.root.position.x - camTarget.x) * k;
     camTarget.z += (hero.root.position.z - camTarget.z) * k;
     // follow the character's height (stairs, sitting, lying in the loft) gently
-    const ty = hero.root.position.y + (hero.pose === 'lie' ? 0.55 : hero.pose === 'sit' ? 0.85 : 1.0);
+    const ty = hero.root.position.y + hero.focus;
     camTarget.y += (ty - camTarget.y) * (snap ? 1 : 1 - Math.exp(-6 * dt));
     const right = tmp.set(Math.cos(view.yaw), 0, -Math.sin(view.yaw));
     const dir = tmp2.set(Math.sin(view.yaw) * Math.cos(view.pitch), Math.sin(view.pitch), Math.cos(view.yaw) * Math.cos(view.pitch));
