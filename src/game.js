@@ -79,7 +79,7 @@ export async function startGame(SCENES, firstId) {
   let traveling = false;
   // occupy state: null, or { it, path, d, dir: 1 (sitting down) / -1 (getting up), settled, exit,
   // phase: 'walk' | 'turn' (back to the seat) | 'seat' (hopping on / off it) | 'slide' (scooting in / out)
-  // | 'sat', front: the spot before a seat, slide: 0..1 along the seat's slide }
+  // | 'lie' (lying back / sitting up) | 'sat', front: the spot before a seat, slide: 0..1 along the seat's slide }
   let occ = null;
   // scripted walk (ctx.walk): null, or { path, d, speed, onArrive }
   let auto = null;
@@ -369,8 +369,9 @@ export async function startGame(SCENES, firstId) {
   // (via the ladder for the loft bed) and back out to a checked free spot.
   // Seats: the walk ends just in front of the seat; they turn their back to
   // it and hop up onto it (and the reverse to get up). A seat with a `slide`
-  // [dx, dz] then scoots that far (a desk chair rolling in), calling
-  // onSlide(0..1) to move the furniture along.
+  // [dx, dz] then scoots that far: with onSlide(0..1) the furniture comes
+  // along (a desk chair rolling in), without it they scoot back across the
+  // seat (onto a bed), legs coming up onto it. Pose 'lie' then lies back.
   function buildPath(pts) {
     const seg = [];
     let len = 0;
@@ -392,15 +393,15 @@ export async function startGame(SCENES, firstId) {
   function seatFront(s) {
     const d = (s.front ?? 0.25) + 0.12;
     const x = s.seat[0] + Math.sin(s.facing) * d, z = s.seat[2] + Math.cos(s.facing) * d;
-    return new THREE.Vector3(x, heightAt(x, z), z);
+    return new THREE.Vector3(x, s.floor ?? heightAt(x, z), z);
   }
   function occupy(it) {
     const s = it.seat;
     const [ex, ez] = freeSpot(...s.exit);
     const pts = [new THREE.Vector3(player.pos.x, heightAt(player.pos.x, player.pos.z), player.pos.z), new THREE.Vector3(ex, heightAt(ex, ez), ez)];
     for (const v of s.via) pts.push(new THREE.Vector3(...v));
-    const front = s.pose === 'sit' ? seatFront(s) : null;
-    pts.push(front ?? new THREE.Vector3(...s.seat));
+    const front = seatFront(s);
+    pts.push(front);
     occ = { it, path: buildPath(pts), d: 0, dir: 1, settled: false, exit: [ex, ez], phase: 'walk', front };
     player.vel.set(0, 0, 0);
     hero.setBackpack(false);
@@ -412,12 +413,13 @@ export async function startGame(SCENES, firstId) {
     s.onStand?.(ictx);
     // the way out: reverse of the way in, ending at a free floor spot
     const [ex, ez] = freeSpot(...occ.exit);
-    const pts = [occ.front ?? new THREE.Vector3(...s.seat)];
+    const pts = [occ.front];
     for (const v of [...s.via].reverse()) pts.push(new THREE.Vector3(...v));
     pts.push(new THREE.Vector3(ex, heightAt(ex, ez), ez));
-    const phase = !occ.front ? 'walk' : s.slide ? 'slide' : 'seat';
+    const phase = s.pose === 'lie' ? 'lie' : s.slide ? 'slide' : 'seat';
     occ = { it: occ.it, path: buildPath(pts), d: 0, dir: -1, settled: false, exit: [ex, ez], phase, front: occ.front, slide: occ.slide };
-    if (phase !== 'slide') hero.setPose('stand');
+    if (phase === 'seat') hero.setPose('stand');
+    else hero.setPose('sit');
     view.goal = null;
     captionEl.classList.add('hidden');
     captionTimer = 0;
@@ -441,14 +443,23 @@ export async function startGame(SCENES, firstId) {
       if (s.caption) showCaption(s.caption, 3.5);
       s.onSit?.(ictx);
     };
+    if (occ.phase === 'lie') {
+      // lie back / sit up where the slide left them
+      const w = hero.lieAmount;
+      if (occ.dir > 0 && w > 0.999) settle();
+      else if (occ.dir < 0 && w < 0.001) occ.phase = s.slide ? 'slide' : 'seat';
+      return { speed: 0, ground: null };
+    }
     if (occ.phase === 'slide') {
-      // scoot in / out, eased, with the furniture
-      occ.slide = THREE.MathUtils.clamp((occ.slide ?? 0) + occ.dir * dt / 0.7, 0, 1);
+      // scoot in / out, eased, with the furniture or across the seat
+      occ.slide = THREE.MathUtils.clamp((occ.slide ?? 0) + occ.dir * dt / (s.onSlide ? 0.7 : 1.1), 0, 1);
       const e = smooth(occ.slide);
       hero.root.position.set(s.seat[0] + s.slide[0] * e, s.seat[1], s.seat[2] + s.slide[1] * e);
-      hero.setPose('sit', { desk: s.desk ? e : 0 });
+      hero.setPose('sit', { desk: s.desk ? e : 0, front: (s.front ?? 0.25) + (s.onSlide ? 0 : Math.hypot(...s.slide) * e) });
       s.onSlide?.(e);
-      if (occ.dir > 0 && occ.slide >= 1) settle();
+      if (occ.dir > 0 && occ.slide >= 1) {
+        if (s.pose === 'lie') { occ.phase = 'lie'; hero.setPose('lie'); } else settle();
+      }
       else if (occ.dir < 0 && occ.slide <= 0) { occ.phase = 'seat'; hero.setPose('stand'); }
       return { speed: 0, ground: null };
     }
@@ -458,38 +469,36 @@ export async function startGame(SCENES, firstId) {
       hero.root.position.copy(occ.front).lerp(new THREE.Vector3(...s.seat), w);
       if (occ.dir > 0 && w > 0.999) {
         if (s.slide) occ.phase = 'slide';
-        else settle();
+        else if (s.pose === 'lie') { occ.phase = 'lie'; hero.setPose('lie'); } else settle();
       } else if (occ.dir < 0 && w < 0.001) {
         occ.phase = 'walk';
       }
       return { speed: 0, ground: null };
     }
     if (occ.phase === 'sat') return { speed: 0, ground: null };
-    const speed = occ.dir > 0 && occ.d > occ.path.len - 0.6 ? 1.3 : 1.9;
+    const segAt = (d) => {
+      const { i } = pointOnPath(occ.path, d);
+      const a = occ.path.pts[i], b = occ.path.pts[i + 1];
+      return Math.abs(b.y - a.y) > Math.hypot(b.x - a.x, b.z - a.z) * 0.8;
+    };
+    // ladders go hand over hand, slower than walking
+    const speed = segAt(occ.d) ? 0.75 : occ.dir > 0 && occ.d > occ.path.len - 0.6 ? 1.3 : 1.9;
     occ.d = Math.min(occ.path.len, occ.d + dt * speed);
     const { p, i } = pointOnPath(occ.path, occ.d);
     const a = occ.path.pts[i], b = occ.path.pts[i + 1];
     const horiz = Math.hypot(b.x - a.x, b.z - a.z);
-    const climbing = Math.abs(b.y - a.y) > horiz * 0.8;
+    const climbing = segAt(occ.d);
     hero.root.position.copy(p);
     // face along the path while walking; face the ladder while climbing
     let want = player.facing;
     if (horiz > 0.05 && !climbing) want = Math.atan2(b.x - a.x, b.z - a.z);
     if (climbing) want = Math.PI;
-    const finalLeg = occ.dir > 0 && i === occ.path.seg.length - 1;
-    if (finalLeg && !occ.front && occ.d > occ.path.len - 0.35) want = s.facing;
     player.facing = dampAngle(player.facing, want, 10, dt);
     hero.root.rotation.y = player.facing;
     if (occ.d >= occ.path.len) {
-      if (occ.dir > 0 && occ.front) {
+      if (occ.dir > 0) {
         occ.phase = 'turn';
-      } else if (occ.dir > 0 && !occ.settled) {
-        occ.settled = true;
-        hero.setPose(s.pose);
-        if (s.cam) view.goal = { yaw: s.cam.yaw, pitch: s.cam.pitch };
-        if (s.caption) showCaption(s.caption, 3.5);
-        s.onSit?.(ictx);
-      } else if (occ.dir < 0) {
+      } else {
         player.pos.set(p.x, 0, p.z);
         resolve(player.pos, player.radius);
         hero.root.position.set(player.pos.x, heightAt(player.pos.x, player.pos.z), player.pos.z);
@@ -499,7 +508,8 @@ export async function startGame(SCENES, firstId) {
       }
     }
     const moving = occ && !occ.settled && occ.d < occ.path.len;
-    return { speed: moving ? (climbing ? 0.9 : 1.7) : 0, ground: null };
+    // on the ladder the limbs follow the height climbed, rung by rung
+    return { speed: moving && !climbing ? 1.7 : 0, ground: null, climb: climbing ? p.y : null };
   }
 
   function updateAuto(dt) {
@@ -952,7 +962,7 @@ export async function startGame(SCENES, firstId) {
     const mv = updatePlayer(dt);
     const yBefore = hero.root.position.y;
     const turn = occ ? 0 : wrapAngle(wishFacing - player.facing) * (Math.hypot(player.vel.x, player.vel.z) > 0.1 ? 1 : 0);
-    hero.update(dt, t, { speed: mv.speed, maxSpeed: player.maxSpeed, ground: mv.ground, turn });
+    hero.update(dt, t, { speed: mv.speed, maxSpeed: player.maxSpeed, ground: mv.ground, turn, climb: mv.climb });
     // per-frame vertical jump of the body (stairs should never pop)
     if (!occ && !traveling && lastHeroY !== null && dt > 0) maxFrameDy = Math.max(maxFrameDy, Math.abs(hero.root.position.y - yBefore) / dt);
     lastHeroY = hero.root.position.y;

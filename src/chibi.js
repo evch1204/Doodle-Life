@@ -88,6 +88,8 @@ export function createChibi() {
   const shY = arms[0].sh.position.y;
   const HEIGHT = new THREE.Box3().setFromObject(model).max.y; // model units
   const LIE_HIPS = 0.1; // torso back ~0.055 behind the hips; the big head needs a little more
+  const LIE_TIME = 1.2; // lying back from sitting, in seconds
+  const RUNG = 0.32; // ladder rung spacing (world m, vertical)
   // seated: the root is on the seat surface under the hip joints, the hips
   // pivot just high enough that the seat of the trousers rests on it
   const SIT_HIPS = 0.065;
@@ -125,7 +127,7 @@ export function createChibi() {
 
   // ---- animation state (same motion as before) ----------------------------------------
   let phase = 0, walk = 0, hop = 0, reach = 0, reachT = 0, pick = 0, pickT = 0;
-  let sitP = 0, sitW = 0, lieW = 0, packS = 1, swingT = 0;
+  let sitP = 0, sitW = 0, lieP = 0, lieW = 0, climbW = 0, climbY = 0, packS = 1, swingT = 0;
   let pose = 'stand', packVisible = true;
   // the seat being used: how far in front of it the feet start (approach),
   // its floor height and how far its front edge is ahead of the hips (world m)
@@ -159,12 +161,19 @@ export function createChibi() {
     walk += (speed01 - walk) * k(10);
     // sitting is a timed move, not a fade: the game slides the root from the
     // spot in front of the seat onto it by sitW, so feet and seat stay in step
-    sitP = THREE.MathUtils.clamp(sitP + (pose === 'sit' ? 1 : -1) * dt / SIT_TIME, 0, 1);
-    if (o.snap) sitP = pose === 'sit' ? 1 : 0;
+    // lying is sitting, then lying back (and sitting up before getting up)
+    sitP = THREE.MathUtils.clamp(sitP + (pose === 'sit' || pose === 'lie' ? 1 : -1) * dt / SIT_TIME, 0, 1);
+    lieP = THREE.MathUtils.clamp(lieP + (pose === 'lie' ? 1 : -1) * dt / LIE_TIME, 0, 1);
+    if (o.snap) { sitP = pose === 'sit' || pose === 'lie' ? 1 : 0; lieP = pose === 'lie' ? 1 : 0; }
+    lieW = smoothstep(0, 1, lieP);
+    const lieB = Math.sin(Math.PI * lieP); // lying back: hands back on the mattress
+    // on a ladder (o.climb = height climbed): limbs step rung to rung
+    if (o.climb != null) climbY = o.climb;
+    climbW += ((o.climb != null ? 1 : 0) - climbW) * k(8);
+    const cp = climbY / RUNG * Math.PI;
     sitW = smoothstep(0, 1, sitP);
     const hopB = Math.sin(Math.PI * sitP); // mid-move: hands back on the seat, lean in
     const legUp = smoothstep(0.35, 0.9, sitP); // feet leave the floor once the weight is on the seat
-    lieW += ((pose === 'lie' ? 1 : 0) - lieW) * k(7);
     // on / off at once: the bag is part of the body mesh, and a half-shrunk
     // bag stretches the triangles that join it to the back
     packS = packVisible ? 1 : 0;
@@ -207,15 +216,14 @@ export function createChibi() {
     const shift = Math.sin(t * 0.43) * (1 - walk) * still;
     const bounce = walk * 0.024 * (Math.abs(Math.sin(phase)) - 0.55) * still;
     let hipsY = HIP_Y + bounce - pick * 0.085 + Math.sin(hop * Math.PI) * 0.13;
-    // seats: thighs rest ~0.15 m above the seat spot; bed: back on the mattress
+    // seats: trousers on the seat; bed: back on the mattress; ladder: a push per rung
     hipsY = THREE.MathUtils.lerp(hipsY, SIT_HIPS, sitW) - hopB * 0.03;
-    hipsY = THREE.MathUtils.lerp(hipsY, LIE_HIPS, lieW);
+    hipsY = THREE.MathUtils.lerp(hipsY, LIE_HIPS, lieW) + climbW * 0.012 * Math.sin(cp * 2);
     hips.position.y = hipsY;
-    hips.position.z = -0.25 / SCALE * lieW;
     hips.position.x = shift * 0.012;
     hips.rotation.z = shift * 0.03 + bank.x * 0.3;
     hips.rotation.y = -0.1 * walk * Math.cos(phase) * still;
-    hips.rotation.x = -lieW * Math.PI / 2;
+    hips.rotation.x = -lieW * Math.PI / 2 + climbW * 0.12;
 
     // feet: target positions in the root's frame; ground under each foot
     const cs = Math.cos(f), sn = Math.sin(f);
@@ -267,14 +275,23 @@ export function createChibi() {
       const sitK = THREE.MathUtils.lerp(THREE.MathUtils.lerp(hang, plantK, reachW), overK, outW);
       const sitT = -SIT_TH - outW * 0.06;
       const legT = THREE.MathUtils.lerp(th, sitT, legUp), legK = THREE.MathUtils.lerp(kn, sitK, legUp);
-      // lie: legs nearly straight
-      leg.thigh.rotation.x = legT * (1 - lieW) - lieW * 0.08;
-      leg.knee.rotation.x = legK * (1 - lieW) + lieW * 0.12;
+      // lie: legs nearly straight, one knee up
+      const kneeUp = i === 1 ? 1 : 0;
+      leg.thigh.rotation.x = legT * (1 - lieW) - lieW * (0.06 + kneeUp * 0.55);
+      leg.knee.rotation.x = legK * (1 - lieW) + lieW * (0.1 + kneeUp * 1.0);
       leg.thigh.rotation.z = -leg.s * (0.02 + legUp * 0.07);
       // feet flat on the floor; toes droop when hanging, point up when the legs stick out
       const flat = -(leg.thigh.rotation.x + leg.knee.rotation.x);
       const sitA = THREE.MathUtils.lerp(THREE.MathUtils.lerp(flat + 0.35, flat, reachW), 0.2, outW);
-      leg.ankle.rotation.x = THREE.MathUtils.lerp(flat * still + footLift[i] * 2.2, sitA, legUp) * (1 - lieW);
+      leg.ankle.rotation.x = THREE.MathUtils.lerp(flat * still + footLift[i] * 2.2, sitA, legUp) * (1 - lieW) + lieW * kneeUp * 0.35;
+      if (climbW > 0) {
+        // one foot steps up a rung while the other pushes; feet stay level on the rungs
+        const u = 0.5 + 0.5 * Math.sin(cp + i * Math.PI);
+        const ct = -0.3 - 0.95 * u, ck = 0.35 + 1.35 * u;
+        leg.thigh.rotation.x = THREE.MathUtils.lerp(leg.thigh.rotation.x, ct, climbW);
+        leg.knee.rotation.x = THREE.MathUtils.lerp(leg.knee.rotation.x, ck, climbW);
+        leg.ankle.rotation.x = THREE.MathUtils.lerp(leg.ankle.rotation.x, -(ct + ck) - 0.12, climbW);
+      }
     }
 
     // at the desk: bursts of typing, now and then on their own, longer on E
@@ -286,7 +303,9 @@ export function createChibi() {
     const tap = (side) => Math.max(0, Math.sin(t * 19 + side * 1.7) * Math.sin(t * 7.3 + side)) * typeW * deskW;
 
     // spine: lean, counter-twist, sideways bank
-    spine.rotation.x = lean.x + reach * 0.1 + pick * 0.32 - sitW * 0.06 + hopB * 0.3 + deskW * 0.3;
+    // asleep: slow, deep breaths
+    const sleepBreath = Math.sin(t * 1.3) * lieW;
+    spine.rotation.x = lean.x + reach * 0.1 + pick * 0.32 - sitW * 0.06 + hopB * 0.3 + deskW * 0.3 + lieB * 0.25 - sleepBreath * 0.02 + climbW * 0.08;
     spine.rotation.y = 0.16 * walk * Math.cos(phase) * still;
     spine.rotation.z = -shift * 0.04 - bank.x * 0.6;
 
@@ -311,6 +330,23 @@ export function createChibi() {
         a.sh.rotation.z = THREE.MathUtils.lerp(a.sh.rotation.z, side * (kb ? 0.02 : 0.16) + nudge * 0.5, deskW);
         a.elbow.rotation.x = THREE.MathUtils.lerp(a.elbow.rotation.x, -0.4 + (kb ? tap(side) * 0.12 : 0), deskW);
       }
+      if (lieW > 0 || lieB > 0) {
+        // asleep: left hand on the tummy, right arm loose at the side;
+        // lying back / sitting up the hands push on the mattress behind
+        const tummy = side > 0;
+        a.sh.rotation.x = THREE.MathUtils.lerp(a.sh.rotation.x, tummy ? -0.3 : 0.05, lieW) + lieB * 0.7;
+        a.sh.rotation.z = THREE.MathUtils.lerp(a.sh.rotation.z, side * (tummy ? 0.05 : 0.32), lieW) + side * lieB * 0.2;
+        a.sh.position.y += sleepBreath * 0.004;
+        a.elbow.rotation.x = THREE.MathUtils.lerp(a.elbow.rotation.x, tummy ? -1.25 : -0.25, lieW);
+        a.sh.rotation.y = side * (tummy ? -1.25 : 0) * lieW; // the forearm folds across, not up
+      } else a.sh.rotation.y = 0;
+      if (climbW > 0) {
+        // hands up on the rungs, each one reaching up with the opposite foot
+        const v = 0.5 + 0.5 * Math.sin(cp + (side > 0 ? 0 : Math.PI) + Math.PI);
+        a.sh.rotation.x = THREE.MathUtils.lerp(a.sh.rotation.x, -2.15 - 0.5 * v, climbW);
+        a.sh.rotation.z = THREE.MathUtils.lerp(a.sh.rotation.z, side * 0.12, climbW);
+        a.elbow.rotation.x = THREE.MathUtils.lerp(a.elbow.rotation.x, -1.0 + 0.75 * v, climbW);
+      }
     }
 
     // head: leads turns, glances, small bob against the step, settles with lean
@@ -318,6 +354,10 @@ export function createChibi() {
     head.rotation.y = headYaw * 0.6;
     head.rotation.x = -lean.x * 0.6 + Math.sin(phase * 2) * 0.025 * walk + reach * 0.15 + pick * 0.2 + Math.sin(t * 1.3) * 0.03 * lieW - hopB * 0.15 - deskW * 0.34;
     head.rotation.y += deskW * 0.2; // eyes on the main screen, left of the mouse
+    // asleep: head sunk into the pillow, turned to the room; on the ladder, looking up
+    head.rotation.x += lieW * 0.3 - lieB * 0.2 - climbW * 0.3;
+    neck.rotation.y += lieW * 0.25;
+    head.rotation.y += lieW * 0.3;
     head.rotation.z = Math.sin(t * 0.9) * 0.03 * (1 - walk) * still - bank.x * 0.3;
 
     // the pack hangs from the shoulders: it swings back on starts, forward
@@ -367,6 +407,8 @@ export function createChibi() {
     setPose(p, opts) { pose = p; if (opts) seat = { ...seat, ...opts }; if (p !== 'sit') swingT = 0; },
     // 0 standing .. 1 seated; the game moves the root onto the seat by this
     get sitAmount() { return sitW; },
+    // 0 sitting .. 1 lying back
+    get lieAmount() { return lieW; },
     get pose() { return pose; },
     setBackpack(v) { packVisible = v; },
     // at a desk the hand stays on the mouse: a burst of typing instead

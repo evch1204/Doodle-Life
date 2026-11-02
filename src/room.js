@@ -254,12 +254,13 @@ export function buildRoom(scene) {
   // seat's front edge is ahead of that, `exit` = floor spot to stand at,
   // `via` = optional waypoints between them (e.g. the ladder).
   // `slide` = [dx, dz] to scoot after sitting (onSlide(0..1) moves the furniture
-  // along), `desk` = work at the desk once in.
-  function seatSpot(id, label, { x, z, radius = 1.0, prompt, seat, front, slide, onSlide, desk, exit, via = [], pose = 'sit', facing, caption, onSit, onStand, onUse, useLabel, cam }) {
+  // along), `desk` = work at the desk once in, `floor` = floor height in front
+  // of the seat when it isn't the room floor (the loft).
+  function seatSpot(id, label, { x, z, radius = 1.0, prompt, seat, front, slide, onSlide, desk, floor, exit, via = [], pose = 'sit', facing, caption, onSit, onStand, onUse, useLabel, cam }) {
     interactables.push({
       id, label, kind: 'seat', x, z, radius,
       pos: new THREE.Vector3(...prompt),
-      seat: { seat, front, slide, onSlide, desk, exit, via, pose, facing, caption, onSit, onStand, onUse, useLabel, cam },
+      seat: { seat, front, slide, onSlide, desk, floor, exit, via, pose, facing, caption, onSit, onStand, onUse, useLabel, cam },
     });
   }
   function actionSpot(id, label, { x, z, radius = 1.0, prompt, act }) {
@@ -603,12 +604,13 @@ export function buildRoom(scene) {
       act(ctx) { wob(); ctx.sound('strum'); ctx.caption('♪ A slightly out-of-tune G chord.', 2.6); },
     });
 
-    // lie down on the loft bed: walk to the ladder, climb, lie on the mattress
+    // the loft bed: climb the ladder, cross the loft to the foot of the
+    // mattress, sit on its end, scoot back up it and lie down, head on the pillow
     seatSpot('bed', 'Climb into bed', {
       x: 0.28, z: -2.5, radius: 0.85, prompt: [0.28, 1.2, -2.8],
       exit: [0.28, -2.25],
-      via: [[0.28, 0, -2.58], [0.28, 0.95, -2.95], [0.28, 1.86, -3.35], [0.15, 1.86, -3.9]],
-      seat: [-0.3, 2.04, -4.22], pose: 'lie', facing: Math.PI / 2,
+      via: [[0.28, 0, -2.58], [0.28, 0.95, -2.95], [0.28, 1.84, -3.35], [0.3, 1.84, -3.8]],
+      seat: [-0.03, 2.04, -4.25], front: 0.05, floor: 1.84, slide: [-0.9, 0], pose: 'lie', facing: Math.PI / 2,
       cam: { yaw: 0.35, pitch: 0.38, dist: 1.8 },
       caption: 'Just five more minutes…',
     });
