@@ -129,7 +129,9 @@ export function createChibi() {
   let pose = 'stand', packVisible = true;
   // the seat being used: how far in front of it the feet start (approach),
   // its floor height and how far its front edge is ahead of the hips (world m)
-  let seat = { approach: 0.35, floor: null, front: 0.25 };
+  // desk: 0..1 how far pulled in to a desk (lean in, hands on keyboard + mouse)
+  let seat = { approach: 0.35, floor: null, front: 0.25, desk: 0 };
+  let typeT = 0, typeW = 0, idleTypeT = 2;
   const lean = { x: 0, v: 0 }, bank = { x: 0, v: 0 };
   const packSway = { x: 0, v: 0, z: 0, vz: 0 };
   let prevSpeed = 0, prevFacing = null, headYaw = 0, glance = 0, glanceT = 3, glanceDur = 0;
@@ -275,8 +277,16 @@ export function createChibi() {
       leg.ankle.rotation.x = THREE.MathUtils.lerp(flat * still + footLift[i] * 2.2, sitA, legUp) * (1 - lieW);
     }
 
+    // at the desk: bursts of typing, now and then on their own, longer on E
+    const deskW = pose === 'sit' ? seat.desk : 0;
+    idleTypeT -= dt;
+    if (deskW > 0.9 && idleTypeT <= 0) { typeT = Math.max(typeT, 0.8 + rng() * 1.6); idleTypeT = 3 + rng() * 4; }
+    typeT = Math.max(0, typeT - dt);
+    typeW += ((typeT > 0 ? 1 : 0) - typeW) * k(10);
+    const tap = (side) => Math.max(0, Math.sin(t * 19 + side * 1.7) * Math.sin(t * 7.3 + side)) * typeW * deskW;
+
     // spine: lean, counter-twist, sideways bank
-    spine.rotation.x = lean.x + reach * 0.1 + pick * 0.32 - sitW * 0.06 + hopB * 0.3;
+    spine.rotation.x = lean.x + reach * 0.1 + pick * 0.32 - sitW * 0.06 + hopB * 0.3 + deskW * 0.3;
     spine.rotation.y = 0.16 * walk * Math.cos(phase) * still;
     spine.rotation.z = -shift * 0.04 - bank.x * 0.6;
 
@@ -293,12 +303,21 @@ export function createChibi() {
       a.sh.rotation.z = side * (armRest + lieW * 0.25 + walk * 0.04 + hopB * 0.25 + legUp * 0.05);
       a.sh.position.y = shY + breathe * 0.003 * (1 - walk);
       a.elbow.rotation.x = -(0.12 + 0.45 * walk * (0.5 + 0.5 * Math.max(0, -legSign * Math.cos(phase)))) - legUp * 0.3 - pick * 0.3 + (side > 0 ? reach * 0.15 : 0) + hopB * 0.08;
+      if (deskW > 0) {
+        // left hand on the keyboard (fingers tapping), right hand on the mouse (nudging it)
+        const kb = side > 0;
+        const nudge = kb ? 0 : Math.sin(t * 1.1) * 0.04 + Math.sin(t * 2.9) * 0.02;
+        a.sh.rotation.x = THREE.MathUtils.lerp(a.sh.rotation.x, -1.05 + (kb ? 0 : 0.05) + nudge, deskW);
+        a.sh.rotation.z = THREE.MathUtils.lerp(a.sh.rotation.z, side * (kb ? 0.02 : 0.16) + nudge * 0.5, deskW);
+        a.elbow.rotation.x = THREE.MathUtils.lerp(a.elbow.rotation.x, -0.4 + (kb ? tap(side) * 0.12 : 0), deskW);
+      }
     }
 
     // head: leads turns, glances, small bob against the step, settles with lean
     neck.rotation.y = headYaw * 0.4;
     head.rotation.y = headYaw * 0.6;
-    head.rotation.x = -lean.x * 0.6 + Math.sin(phase * 2) * 0.025 * walk + reach * 0.15 + pick * 0.2 + Math.sin(t * 1.3) * 0.03 * lieW - hopB * 0.15;
+    head.rotation.x = -lean.x * 0.6 + Math.sin(phase * 2) * 0.025 * walk + reach * 0.15 + pick * 0.2 + Math.sin(t * 1.3) * 0.03 * lieW - hopB * 0.15 - deskW * 0.34;
+    head.rotation.y += deskW * 0.2; // eyes on the main screen, left of the mouse
     head.rotation.z = Math.sin(t * 0.9) * 0.03 * (1 - walk) * still - bank.x * 0.3;
 
     // the pack hangs from the shoulders: it swings back on starts, forward
@@ -350,7 +369,8 @@ export function createChibi() {
     get sitAmount() { return sitW; },
     get pose() { return pose; },
     setBackpack(v) { packVisible = v; },
-    reach() { reachT = 0.7; },
+    // at a desk the hand stays on the mouse: a burst of typing instead
+    reach() { if (pose === 'sit' && seat.desk > 0.5) typeT = 1.4; else reachT = 0.7; },
     pickup() { pickT = 0.65; },
     resetGround() { groundY = null; },
     get hairOffset() { return hairOff.length(); },

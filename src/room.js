@@ -253,11 +253,13 @@ export function buildRoom(scene) {
   // under the hips, a hand's width from the backrest), `front` = how far the
   // seat's front edge is ahead of that, `exit` = floor spot to stand at,
   // `via` = optional waypoints between them (e.g. the ladder).
-  function seatSpot(id, label, { x, z, radius = 1.0, prompt, seat, front, exit, via = [], pose = 'sit', facing, caption, onSit, onStand, onUse, useLabel, cam }) {
+  // `slide` = [dx, dz] to scoot after sitting (onSlide(0..1) moves the furniture
+  // along), `desk` = work at the desk once in.
+  function seatSpot(id, label, { x, z, radius = 1.0, prompt, seat, front, slide, onSlide, desk, exit, via = [], pose = 'sit', facing, caption, onSit, onStand, onUse, useLabel, cam }) {
     interactables.push({
       id, label, kind: 'seat', x, z, radius,
       pos: new THREE.Vector3(...prompt),
-      seat: { seat, front, exit, via, pose, facing, caption, onSit, onStand, onUse, useLabel, cam },
+      seat: { seat, front, slide, onSlide, desk, exit, via, pose, facing, caption, onSit, onStand, onUse, useLabel, cam },
     });
   }
   function actionSpot(id, label, { x, z, radius = 1.0, prompt, act }) {
@@ -463,6 +465,9 @@ export function buildRoom(scene) {
     seatSpot('deskchair', 'Sit at the desk', {
       x: -3.25, z: -1.9, radius: 0.95, prompt: [-3.25, 1.25, -2.18],
       seat: [-3.25, 0.48, -2.2], front: 0.21, exit: [-2.6, -2.1], facing: Math.PI,
+      // hop on, then roll in until the tummy is at the desk edge
+      slide: [0, -0.28], desk: true,
+      onSlide(e) { c.position.z = -2.18 - 0.28 * e; },
       cam: { yaw: 0.35, pitch: 0.42, dist: 1.9 },
       caption: 'Back to work… or at least, back to doodling.',
       onSit(ctx) { monitors.seated = true; timers.push(setTimeout(() => wake(true), 350)); ctx.sound('click'); },

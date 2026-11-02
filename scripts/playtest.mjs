@@ -163,7 +163,7 @@ s = await pressE(100);
 s = await waitFor((q) => q.occupied && q.occupied.settled);
 await sleep(600);
 s = await st();
-check('sits in desk chair (settled, sit pose, at seat)', s.occupied?.id === 'deskchair' && s.hero.pose === 'sit' && Math.hypot(s.hero.x + 3.25, s.hero.z + 2.2) < 0.05, JSON.stringify(s.hero));
+check('sits in desk chair (settled, sit pose, rolled in to the desk)', s.occupied?.id === 'deskchair' && s.hero.pose === 'sit' && Math.hypot(s.hero.x + 3.25, s.hero.z + 2.48) < 0.05, JSON.stringify(s.hero));
 check('monitors wake up when seated', s.monitorsOn === true);
 await page.screenshot({ path: `${out}/test_desk_seated.png` });
 const cap1 = s.caption;

@@ -78,7 +78,8 @@ export async function startGame(SCENES, firstId) {
   let paused = false;
   let traveling = false;
   // occupy state: null, or { it, path, d, dir: 1 (sitting down) / -1 (getting up), settled, exit,
-  // phase: 'walk' | 'turn' (back to the seat) | 'seat' (hopping on / off it), front: the spot before a seat }
+  // phase: 'walk' | 'turn' (back to the seat) | 'seat' (hopping on / off it) | 'slide' (scooting in / out)
+  // | 'sat', front: the spot before a seat, slide: 0..1 along the seat's slide }
   let occ = null;
   // scripted walk (ctx.walk): null, or { path, d, speed, onArrive }
   let auto = null;
@@ -367,7 +368,9 @@ export async function startGame(SCENES, firstId) {
   // The character follows a polyline from where they stand to the seat
   // (via the ladder for the loft bed) and back out to a checked free spot.
   // Seats: the walk ends just in front of the seat; they turn their back to
-  // it and hop up onto it (and the reverse to get up).
+  // it and hop up onto it (and the reverse to get up). A seat with a `slide`
+  // [dx, dz] then scoots that far (a desk chair rolling in), calling
+  // onSlide(0..1) to move the furniture along.
   function buildPath(pts) {
     const seg = [];
     let len = 0;
@@ -412,8 +415,9 @@ export async function startGame(SCENES, firstId) {
     const pts = [occ.front ?? new THREE.Vector3(...s.seat)];
     for (const v of [...s.via].reverse()) pts.push(new THREE.Vector3(...v));
     pts.push(new THREE.Vector3(ex, heightAt(ex, ez), ez));
-    occ = { it: occ.it, path: buildPath(pts), d: 0, dir: -1, settled: false, exit: [ex, ez], phase: occ.front ? 'seat' : 'walk', front: occ.front };
-    hero.setPose('stand');
+    const phase = !occ.front ? 'walk' : s.slide ? 'slide' : 'seat';
+    occ = { it: occ.it, path: buildPath(pts), d: 0, dir: -1, settled: false, exit: [ex, ez], phase, front: occ.front, slide: occ.slide };
+    if (phase !== 'slide') hero.setPose('stand');
     view.goal = null;
     captionEl.classList.add('hidden');
     captionTimer = 0;
@@ -426,20 +430,35 @@ export async function startGame(SCENES, firstId) {
       hero.root.rotation.y = player.facing;
       if (Math.abs(wrapAngle(s.facing - player.facing)) < 0.06) {
         occ.phase = 'seat';
-        hero.setPose('sit', { approach: Math.hypot(occ.front.x - s.seat[0], occ.front.z - s.seat[2]), floor: occ.front.y, front: s.front ?? 0.25 });
+        hero.setPose('sit', { approach: Math.hypot(occ.front.x - s.seat[0], occ.front.z - s.seat[2]), floor: occ.front.y, front: s.front ?? 0.25, desk: 0 });
       }
       return { speed: 0.5, ground: null };
+    }
+    const settle = () => {
+      occ.settled = true;
+      occ.phase = 'sat';
+      if (s.cam) view.goal = { yaw: s.cam.yaw, pitch: s.cam.pitch };
+      if (s.caption) showCaption(s.caption, 3.5);
+      s.onSit?.(ictx);
+    };
+    if (occ.phase === 'slide') {
+      // scoot in / out, eased, with the furniture
+      occ.slide = THREE.MathUtils.clamp((occ.slide ?? 0) + occ.dir * dt / 0.7, 0, 1);
+      const e = smooth(occ.slide);
+      hero.root.position.set(s.seat[0] + s.slide[0] * e, s.seat[1], s.seat[2] + s.slide[1] * e);
+      hero.setPose('sit', { desk: s.desk ? e : 0 });
+      s.onSlide?.(e);
+      if (occ.dir > 0 && occ.slide >= 1) settle();
+      else if (occ.dir < 0 && occ.slide <= 0) { occ.phase = 'seat'; hero.setPose('stand'); }
+      return { speed: 0, ground: null };
     }
     if (occ.phase === 'seat') {
       // hop on / off: the root slides between the floor spot and the seat
       const w = hero.sitAmount;
       hero.root.position.copy(occ.front).lerp(new THREE.Vector3(...s.seat), w);
       if (occ.dir > 0 && w > 0.999) {
-        occ.settled = true;
-        occ.phase = 'sat';
-        if (s.cam) view.goal = { yaw: s.cam.yaw, pitch: s.cam.pitch };
-        if (s.caption) showCaption(s.caption, 3.5);
-        s.onSit?.(ictx);
+        if (s.slide) occ.phase = 'slide';
+        else settle();
       } else if (occ.dir < 0 && w < 0.001) {
         occ.phase = 'walk';
       }
