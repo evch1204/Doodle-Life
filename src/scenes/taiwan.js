@@ -1119,7 +1119,7 @@ function buildTaiwan(scene) {
   interactables.push({
     id: 'bench', label: 'Sit on the bench', kind: 'seat', x: 2.3, z: -27.0, radius: 0.85,
     pos: new THREE.Vector3(2.3, LY + 0.95, -27.6),
-    seat: { seat: [2.3, LY + 0.28, -27.62], exit: [2.3, -26.9], via: [], pose: 'sit', facing: Math.PI, caption: 'The city lights are coming on.', cam: { yaw: 0.25, pitch: 0.2, dist: 2.6 } },
+    seat: { seat: [2.3, LY + 0.48, -27.52], front: 0.3, exit: [2.3, -26.9], via: [], pose: 'sit', facing: Math.PI, caption: 'The city lights are coming on.', cam: { yaw: 0.25, pitch: 0.2, dist: 2.6 } },
   });
 
   // ---- collectibles: four stars + the bubble tea ------------------------------------

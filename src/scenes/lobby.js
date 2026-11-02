@@ -416,7 +416,7 @@ function buildLobby(scene, ctx) {
   SEATS.forEach(([x, z], i) => {
     interactables.push({
       id: `seat${i}`, label: 'Sit down', kind: 'seat', x: x + 0.8, z, radius: 0.8, pos: new THREE.Vector3(x, 1.0, z),
-      seat: { seat: [x + 0.02, 0.28, z + 0.28], exit: [x + 0.85, z + 0.28], via: [], pose: 'sit', facing: Math.PI / 2, caption: 'Plenty of time before boarding.', cam: { yaw: -Math.PI / 2 + 0.5, pitch: 0.18, dist: 3.0 } },
+      seat: { seat: [x - 0.08, 0.45, z + 0.28], front: 0.34, exit: [x + 0.85, z + 0.28], via: [], pose: 'sit', facing: Math.PI / 2, caption: 'Plenty of time before boarding.', cam: { yaw: -Math.PI / 2 + 0.5, pitch: 0.18, dist: 3.0 } },
     });
   });
   // the info desk

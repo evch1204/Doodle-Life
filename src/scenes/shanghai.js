@@ -923,7 +923,7 @@ function buildShanghai(scene) {
     interactables.push({
       id: `bench${i}`, label: 'Sit on the bench', kind: 'seat', x, z: z - 0.6, radius: 0.8,
       pos: new THREE.Vector3(x, 0.95, z),
-      seat: { seat: [x, 0.28, z + 0.0], exit: [x, z - 0.72], via: [], pose: 'sit', facing: Math.PI, caption: benchCaption, cam: { yaw: 0.1, pitch: 0.12, dist: 3.2 } },
+      seat: { seat: [x, 0.46, z + 0.1], front: 0.32, exit: [x, z - 0.72], via: [], pose: 'sit', facing: Math.PI, caption: benchCaption, cam: { yaw: 0.1, pitch: 0.12, dist: 3.2 } },
     });
   });
   const cafeEnterCaption = 'Bund Coffee. It smells like fresh espresso.';

@@ -249,13 +249,15 @@ export function buildRoom(scene) {
     return c;
   }
 
-  // Seat interactable. `seat` = where the root sits, `exit` = floor spot to
-  // stand at, `via` = optional waypoints between them (e.g. the ladder).
-  function seatSpot(id, label, { x, z, radius = 1.0, prompt, seat, exit, via = [], pose = 'sit', facing, caption, onSit, onStand, onUse, useLabel, cam }) {
+  // Seat interactable. `seat` = where the root sits (sit: on the seat surface,
+  // under the hips, a hand's width from the backrest), `front` = how far the
+  // seat's front edge is ahead of that, `exit` = floor spot to stand at,
+  // `via` = optional waypoints between them (e.g. the ladder).
+  function seatSpot(id, label, { x, z, radius = 1.0, prompt, seat, front, exit, via = [], pose = 'sit', facing, caption, onSit, onStand, onUse, useLabel, cam }) {
     interactables.push({
       id, label, kind: 'seat', x, z, radius,
       pos: new THREE.Vector3(...prompt),
-      seat: { seat, exit, via, pose, facing, caption, onSit, onStand, onUse, useLabel, cam },
+      seat: { seat, front, exit, via, pose, facing, caption, onSit, onStand, onUse, useLabel, cam },
     });
   }
   function actionSpot(id, label, { x, z, radius = 1.0, prompt, act }) {
@@ -460,7 +462,7 @@ export function buildRoom(scene) {
     ];
     seatSpot('deskchair', 'Sit at the desk', {
       x: -3.25, z: -1.9, radius: 0.95, prompt: [-3.25, 1.25, -2.18],
-      seat: [-3.25, 0.32, -2.2], exit: [-3.25, -1.5], facing: Math.PI,
+      seat: [-3.25, 0.48, -2.2], front: 0.21, exit: [-2.6, -2.1], facing: Math.PI,
       cam: { yaw: 0.35, pitch: 0.42, dist: 1.9 },
       caption: 'Back to work… or at least, back to doodling.',
       onSit(ctx) { monitors.seated = true; timers.push(setTimeout(() => wake(true), 350)); ctx.sound('click'); },
@@ -721,7 +723,7 @@ export function buildRoom(scene) {
     });
     seatSpot('sofa', 'Sit on the sofa', {
       x: 2.1, z: -2.66, radius: 0.8, prompt: [2.12, 1.0, -3.35],
-      seat: [2.12, 0.32, -3.32], exit: [2.12, -2.62], facing: 0,
+      seat: [2.12, 0.48, -3.51], front: 0.47, exit: [2.12, -2.62], facing: 0,
       cam: { yaw: 0.45, pitch: 0.3, dist: 2.1 },
       caption: 'The afternoon light is nice from here.',
     });
@@ -955,13 +957,13 @@ export function buildRoom(scene) {
     solidCircle(3.7, 2.25, 0.29);
     seatSpot('chairW', 'Sit at the table', {
       x: 0.8, z: 2.25, radius: 0.75, prompt: [1.4, 1.2, 2.25],
-      seat: [1.36, 0.28, 2.25], exit: [0.7, 2.25], facing: Math.PI / 2,
+      seat: [1.35, 0.46, 2.25], front: 0.26, exit: [1.38, 3.02], facing: Math.PI / 2,
       cam: { yaw: Math.PI / 2 + 0.35, pitch: 0.35, dist: 2.0 },
       caption: 'A quiet meal for one. Not bad.',
     });
     seatSpot('chairE', 'Sit at the table', {
       x: 3.72, z: 2.85, radius: 0.75, prompt: [3.7, 1.2, 2.25],
-      seat: [3.74, 0.28, 2.25], exit: [3.72, 3.02], facing: -Math.PI / 2,
+      seat: [3.75, 0.46, 2.25], front: 0.26, exit: [3.72, 3.02], facing: -Math.PI / 2,
       cam: { yaw: -Math.PI / 2 - 0.35, pitch: 0.35, dist: 2.0 },
       caption: 'From here you can see the whole room.',
     });

@@ -767,7 +767,7 @@ function buildBayArea(scene, ctx) {
     const [ex, ez] = at(s, RAIL_U - 2.1), th = heading(s), [bdx, bdz] = toBridge(x, z);
     interactables.push({
       id: `bench${i}`, label: 'Sit on the bench', kind: 'seat', x: ex, z: ez, radius: 0.9, pos: new THREE.Vector3(x, WALK_Y + 0.95, z),
-      seat: { seat: [x, WALK_Y + 0.28, z], exit: [ex, ez], via: [], pose: 'sit', facing: Math.PI / 2 + th, caption: benchCaption, cam: { yaw: Math.atan2(-bdx, -bdz) - 0.15, pitch: 0.1, dist: 3.2 } },
+      seat: { seat: [x - Math.cos(th) * 0.1, WALK_Y + 0.46, z + Math.sin(th) * 0.1], front: 0.32, exit: [ex, ez], via: [], pose: 'sit', facing: Math.PI / 2 + th, caption: benchCaption, cam: { yaw: Math.atan2(-bdx, -bdz) - 0.15, pitch: 0.1, dist: 3.2 } },
     });
   });
   // Fisherman's Wharf: arriving at the far end

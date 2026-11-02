@@ -88,6 +88,10 @@ export function createChibi() {
   const shY = arms[0].sh.position.y;
   const HEIGHT = new THREE.Box3().setFromObject(model).max.y; // model units
   const LIE_HIPS = 0.1; // torso back ~0.055 behind the hips; the big head needs a little more
+  // seated: the root is on the seat surface under the hip joints, the hips
+  // pivot just high enough that the seat of the trousers rests on it
+  const SIT_HIPS = 0.065;
+  const SIT_TIME = 0.9; // turn-around-and-hop-up, in seconds
 
   // bone -> pivot, with the bone's rest transform expressed in the pivot's frame
   const links = [];
@@ -121,8 +125,11 @@ export function createChibi() {
 
   // ---- animation state (same motion as before) ----------------------------------------
   let phase = 0, walk = 0, hop = 0, reach = 0, reachT = 0, pick = 0, pickT = 0;
-  let sitW = 0, lieW = 0, packS = 1;
+  let sitP = 0, sitW = 0, lieW = 0, packS = 1, swingT = 0;
   let pose = 'stand', packVisible = true;
+  // the seat being used: how far in front of it the feet start (approach),
+  // its floor height and how far its front edge is ahead of the hips (world m)
+  let seat = { approach: 0.35, floor: null, front: 0.25 };
   const lean = { x: 0, v: 0 }, bank = { x: 0, v: 0 };
   const packSway = { x: 0, v: 0, z: 0, vz: 0 };
   let prevSpeed = 0, prevFacing = null, headYaw = 0, glance = 0, glanceT = 3, glanceDur = 0;
@@ -148,7 +155,13 @@ export function createChibi() {
     const ground = o.ground ?? null;
     const k = (r) => 1 - Math.exp(-dt * r);
     walk += (speed01 - walk) * k(10);
-    sitW += ((pose === 'sit' ? 1 : 0) - sitW) * k(9);
+    // sitting is a timed move, not a fade: the game slides the root from the
+    // spot in front of the seat onto it by sitW, so feet and seat stay in step
+    sitP = THREE.MathUtils.clamp(sitP + (pose === 'sit' ? 1 : -1) * dt / SIT_TIME, 0, 1);
+    if (o.snap) sitP = pose === 'sit' ? 1 : 0;
+    sitW = smoothstep(0, 1, sitP);
+    const hopB = Math.sin(Math.PI * sitP); // mid-move: hands back on the seat, lean in
+    const legUp = smoothstep(0.35, 0.9, sitP); // feet leave the floor once the weight is on the seat
     lieW += ((pose === 'lie' ? 1 : 0) - lieW) * k(7);
     // on / off at once: the bag is part of the body mesh, and a half-shrunk
     // bag stretches the triangles that join it to the back
@@ -193,7 +206,7 @@ export function createChibi() {
     const bounce = walk * 0.024 * (Math.abs(Math.sin(phase)) - 0.55) * still;
     let hipsY = HIP_Y + bounce - pick * 0.085 + Math.sin(hop * Math.PI) * 0.13;
     // seats: thighs rest ~0.15 m above the seat spot; bed: back on the mattress
-    hipsY = THREE.MathUtils.lerp(hipsY, 0.09 + 0.15 / SCALE, sitW);
+    hipsY = THREE.MathUtils.lerp(hipsY, SIT_HIPS, sitW) - hopB * 0.03;
     hipsY = THREE.MathUtils.lerp(hipsY, LIE_HIPS, lieW);
     hips.position.y = hipsY;
     hips.position.z = -0.25 / SCALE * lieW;
@@ -228,20 +241,42 @@ export function createChibi() {
       root.position.y = groundY;
     }
 
+    // seated legs: thighs along the seat; when the knees stop short of the
+    // front edge the calves lie over it (flatter the deeper the seat),
+    // otherwise the shins hang, feet on the floor if they reach it, swinging
+    // a little if they don't (a chibi on adult chairs)
+    const floorRel = seat.floor === null ? -seat.approach : (seat.floor - root.position.y) / SCALE;
+    const SIT_TH = 1.45;
+    const kneeH = SIT_HIPS + HIP_J - L1 * Math.cos(SIT_TH) - floorRel; // knee above the floor
+    const edgeGap = seat.front / SCALE - L1 * Math.sin(SIT_TH); // knee to the front edge
+    const outW = smoothstep(0, 0.03, edgeGap);
+    const overK = SIT_TH - Math.PI / 2 + Math.atan2(0.05, Math.max(edgeGap, 0.01)); // calf down over the edge
+    const reachW = smoothstep(L2 + 0.01, L2 - 0.01, kneeH - ANKLE);
+    const plantK = SIT_TH - Math.acos(THREE.MathUtils.clamp((kneeH - ANKLE) / L2, -1, 1));
+    if (sitW > 0.5 && pose === 'sit') swingT += dt;
     for (let i = 0; i < 2; i++) {
       const leg = legs[i];
-      const relGround = ground ? (gY[i] - root.position.y) / SCALE : 0;
+      const relGround = ground ? (gY[i] - root.position.y) / SCALE : (sitP > 0 ? floorRel : 0);
       const ty = relGround + ANKLE + footLift[i] - (hipsY + HIP_J);
-      const [th, kn] = legIK(footZ[i], ty);
-      // sit: thighs forward, shins hang; lie: legs nearly straight
-      leg.thigh.rotation.x = th * still - sitW * 1.5 - lieW * 0.08;
-      leg.knee.rotation.x = kn * still + sitW * 1.35 + lieW * 0.12;
-      leg.thigh.rotation.z = -leg.s * (0.02 + sitW * 0.06);
-      leg.ankle.rotation.x = -(leg.thigh.rotation.x + leg.knee.rotation.x) * still + footLift[i] * 2.2 - sitW * 0.1;
+      // while hopping up the feet stay where they were, in front of the seat
+      const [th, kn] = legIK(footZ[i] + sitW * seat.approach / SCALE, ty);
+      const swing = Math.sin(swingT * 2.1 + i * 2.4) * 0.14 * smoothstep(0, 2, swingT) * (Math.sin(swingT * 0.37) > 0.2 ? 1 : 0.25);
+      const hang = SIT_TH - 0.12 + swing;
+      const sitK = THREE.MathUtils.lerp(THREE.MathUtils.lerp(hang, plantK, reachW), overK, outW);
+      const sitT = -SIT_TH - outW * 0.06;
+      const legT = THREE.MathUtils.lerp(th, sitT, legUp), legK = THREE.MathUtils.lerp(kn, sitK, legUp);
+      // lie: legs nearly straight
+      leg.thigh.rotation.x = legT * (1 - lieW) - lieW * 0.08;
+      leg.knee.rotation.x = legK * (1 - lieW) + lieW * 0.12;
+      leg.thigh.rotation.z = -leg.s * (0.02 + legUp * 0.07);
+      // feet flat on the floor; toes droop when hanging, point up when the legs stick out
+      const flat = -(leg.thigh.rotation.x + leg.knee.rotation.x);
+      const sitA = THREE.MathUtils.lerp(THREE.MathUtils.lerp(flat + 0.35, flat, reachW), 0.2, outW);
+      leg.ankle.rotation.x = THREE.MathUtils.lerp(flat * still + footLift[i] * 2.2, sitA, legUp) * (1 - lieW);
     }
 
     // spine: lean, counter-twist, sideways bank
-    spine.rotation.x = lean.x + reach * 0.1 + pick * 0.32 - sitW * 0.06;
+    spine.rotation.x = lean.x + reach * 0.1 + pick * 0.32 - sitW * 0.06 + hopB * 0.3;
     spine.rotation.y = 0.16 * walk * Math.cos(phase) * still;
     spine.rotation.z = -shift * 0.04 - bank.x * 0.6;
 
@@ -251,18 +286,19 @@ export function createChibi() {
     for (const a of arms) {
       const side = a.s;
       const legSign = side < 0 ? 1 : -1; // each arm swings with the opposite leg
-      let x = legSign * swing - sitW * 0.3 - pick * 0.95;
+      // getting on / off a seat the hands go back onto it and push
+      let x = legSign * swing - legUp * 0.3 - pick * 0.95 + hopB * 0.55;
       if (side > 0) x -= reach * 1.3;
       a.sh.rotation.x = x;
-      a.sh.rotation.z = side * (armRest + lieW * 0.25 + walk * 0.04);
+      a.sh.rotation.z = side * (armRest + lieW * 0.25 + walk * 0.04 + hopB * 0.25 + legUp * 0.05);
       a.sh.position.y = shY + breathe * 0.003 * (1 - walk);
-      a.elbow.rotation.x = -(0.12 + 0.45 * walk * (0.5 + 0.5 * Math.max(0, -legSign * Math.cos(phase)))) - sitW * 0.75 - pick * 0.3 + (side > 0 ? reach * 0.15 : 0);
+      a.elbow.rotation.x = -(0.12 + 0.45 * walk * (0.5 + 0.5 * Math.max(0, -legSign * Math.cos(phase)))) - legUp * 0.3 - pick * 0.3 + (side > 0 ? reach * 0.15 : 0) + hopB * 0.08;
     }
 
     // head: leads turns, glances, small bob against the step, settles with lean
     neck.rotation.y = headYaw * 0.4;
     head.rotation.y = headYaw * 0.6;
-    head.rotation.x = -lean.x * 0.6 + Math.sin(phase * 2) * 0.025 * walk + reach * 0.15 + pick * 0.2 + Math.sin(t * 1.3) * 0.03 * lieW;
+    head.rotation.x = -lean.x * 0.6 + Math.sin(phase * 2) * 0.025 * walk + reach * 0.15 + pick * 0.2 + Math.sin(t * 1.3) * 0.03 * lieW - hopB * 0.15;
     head.rotation.z = Math.sin(t * 0.9) * 0.03 * (1 - walk) * still - bank.x * 0.3;
 
     // the pack hangs from the shoulders: it swings back on starts, forward
@@ -308,7 +344,10 @@ export function createChibi() {
     root,
     head,
     hair: hairG,
-    setPose(p) { pose = p; },
+    // opts (sitting): { approach, floor, front } of the seat, see `seat` above
+    setPose(p, opts) { pose = p; if (opts) seat = { ...seat, ...opts }; if (p !== 'sit') swingT = 0; },
+    // 0 standing .. 1 seated; the game moves the root onto the seat by this
+    get sitAmount() { return sitW; },
     get pose() { return pose; },
     setBackpack(v) { packVisible = v; },
     reach() { reachT = 0.7; },
